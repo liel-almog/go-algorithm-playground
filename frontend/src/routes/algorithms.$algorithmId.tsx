@@ -3,6 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../lib/api'
 import type { SolveResult } from '../lib/api'
 import { findPuzzleAlgorithm } from '../lib/algorithms'
+import {
+  generateLocalPuzzle,
+  solvePuzzleLocally,
+} from '../lib/clientAlgorithms'
 
 export const Route = createFileRoute('/algorithms/$algorithmId')({
   component: PuzzleAlgorithmPage,
@@ -30,8 +34,8 @@ function PuzzleAlgorithmPage() {
     try {
       const puzzle = await api.randomPuzzle(scramble)
       setTiles(puzzle.tiles)
-    } catch (reason) {
-      setError(errorMessage(reason))
+    } catch {
+      setTiles(generateLocalPuzzle(scramble))
     } finally {
       setIsGenerating(false)
     }
@@ -67,7 +71,15 @@ function PuzzleAlgorithmPage() {
       const solution = await api.solvePuzzle(tiles, algorithm.id)
       setResult(solution)
     } catch (reason) {
-      setError(errorMessage(reason))
+      if (algorithm.id === 'astar') {
+        try {
+          setResult(solvePuzzleLocally(tiles))
+        } catch (fallbackReason) {
+          setError(errorMessage(fallbackReason))
+        }
+      } else {
+        setError(errorMessage(reason))
+      }
     } finally {
       setIsSolving(false)
     }
@@ -92,9 +104,9 @@ function PuzzleAlgorithmPage() {
   return (
     <div className="lab-page">
       <LabHeader
-        eyebrow={`${algorithm.category} search · 8-puzzle`}
-        title={algorithm.name}
-        description={algorithm.description}
+        eyebrow="state-space search · classic 8-puzzle"
+        title="The 8-puzzle problem"
+        description={`Arrange eight sliding tiles using ${algorithm.name}. Generate a valid board, solve it, then replay every move.`}
         badge={
           algorithm.optimal ? 'Shortest path guaranteed' : 'Heuristic first'
         }
@@ -169,7 +181,7 @@ function PuzzleAlgorithmPage() {
           <div className="request-preview">
             <span>Request</span>
             <code>
-              POST /api/solve
+              POST /api/solve · local fallback
               <br />
               algorithm: “{algorithm.id}”
             </code>
@@ -277,7 +289,7 @@ function LabHeader({
   return (
     <section className="lab-header section-wrap">
       <Link to="/" className="back-link">
-        ← All algorithms
+        ← All problems
       </Link>
       <div className="lab-title-row">
         <div>

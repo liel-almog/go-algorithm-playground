@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { LabHeader } from './algorithms.$algorithmId'
 import { api } from '../lib/api'
 import type { Edge, MinCutResult } from '../lib/api'
+import { solveMinCutLocally } from '../lib/clientAlgorithms'
 
 export const Route = createFileRoute('/algorithms/karger')({
   component: KargerPage,
@@ -30,12 +31,8 @@ function KargerPage() {
     setResult(null)
     try {
       setResult(await api.minimumCut(graph.vertices, graph.edges, trials))
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : 'The backend did not respond.',
-      )
+    } catch {
+      setResult(solveMinCutLocally(graph.vertices, graph.edges, trials))
     } finally {
       setIsSolving(false)
     }
@@ -45,8 +42,8 @@ function KargerPage() {
     <div className="lab-page graph-lab">
       <LabHeader
         eyebrow="randomized graph · minimum cut"
-        title="Karger’s algorithm"
-        description="Contract random edges again and again until two groups remain. Repeated trials turn a lucky guess into a dependable result."
+        title="The minimum cut problem"
+        description="Find the smallest set of edges whose removal separates a graph. Karger’s contractions make the hidden split visible."
         badge="Probabilistic result"
       />
 
@@ -128,7 +125,7 @@ function KargerPage() {
           <div className="request-preview">
             <span>Request</span>
             <code>
-              POST /api/graphs/min-cut
+              POST /api/graphs/min-cut · local fallback
               <br />
               trials: {trials}
             </code>

@@ -17,10 +17,10 @@ function RootComponent() {
         </Link>
         <nav aria-label="Main navigation">
           <Link to="/" activeOptions={{ exact: true }}>
-            Explore
+            Library
           </Link>
           <Link to="/" hash="workflow">
-            How it works
+            Method
           </Link>
         </nav>
       </header>

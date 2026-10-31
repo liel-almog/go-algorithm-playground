@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlgorithmsAlgorithmIdRouteImport } from './routes/algorithms.$algorithmId'
 import { Route as AlgorithmsKargerRouteImport } from './routes/algorithms.karger'
+import { Route as ProblemsMatrixVerificationRouteImport } from './routes/problems.matrix-verification'
+import { Route as ProblemsPolynomialIdentityRouteImport } from './routes/problems.polynomial-identity'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +30,71 @@ const AlgorithmsKargerRoute = AlgorithmsKargerRouteImport.update({
   path: '/algorithms/karger',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProblemsMatrixVerificationRoute =
+  ProblemsMatrixVerificationRouteImport.update({
+    id: '/problems/matrix-verification',
+    path: '/problems/matrix-verification',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsPolynomialIdentityRoute =
+  ProblemsPolynomialIdentityRouteImport.update({
+    id: '/problems/polynomial-identity',
+    path: '/problems/polynomial-identity',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/algorithms/$algorithmId' | '/algorithms/karger'
+  fullPaths:
+    | '/'
+    | '/algorithms/$algorithmId'
+    | '/algorithms/karger'
+    | '/problems/matrix-verification'
+    | '/problems/polynomial-identity'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/algorithms/$algorithmId' | '/algorithms/karger'
-  id: '__root__' | '/' | '/algorithms/$algorithmId' | '/algorithms/karger'
+  to:
+    | '/'
+    | '/algorithms/$algorithmId'
+    | '/algorithms/karger'
+    | '/problems/matrix-verification'
+    | '/problems/polynomial-identity'
+  id:
+    | '__root__'
+    | '/'
+    | '/algorithms/$algorithmId'
+    | '/algorithms/karger'
+    | '/problems/matrix-verification'
+    | '/problems/polynomial-identity'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlgorithmsAlgorithmIdRoute: typeof AlgorithmsAlgorithmIdRoute
   AlgorithmsKargerRoute: typeof AlgorithmsKargerRoute
+  ProblemsMatrixVerificationRoute: typeof ProblemsMatrixVerificationRoute
+  ProblemsPolynomialIdentityRoute: typeof ProblemsPolynomialIdentityRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlgorithmsKargerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/matrix-verification': {
+      id: '/problems/matrix-verification'
+      path: '/problems/matrix-verification'
+      fullPath: '/problems/matrix-verification'
+      preLoaderRoute: typeof ProblemsMatrixVerificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/polynomial-identity': {
+      id: '/problems/polynomial-identity'
+      path: '/problems/polynomial-identity'
+      fullPath: '/problems/polynomial-identity'
+      preLoaderRoute: typeof ProblemsPolynomialIdentityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +141,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlgorithmsAlgorithmIdRoute: AlgorithmsAlgorithmIdRoute,
   AlgorithmsKargerRoute: AlgorithmsKargerRoute,
+  ProblemsMatrixVerificationRoute: ProblemsMatrixVerificationRoute,
+  ProblemsPolynomialIdentityRoute: ProblemsPolynomialIdentityRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

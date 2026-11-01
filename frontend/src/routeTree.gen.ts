@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlgorithmsAlgorithmIdRouteImport } from './routes/algorithms.$algorithmId'
 import { Route as AlgorithmsKargerRouteImport } from './routes/algorithms.karger'
+import { Route as ProblemsEightPuzzleRouteImport } from './routes/problems.eight-puzzle'
 import { Route as ProblemsMatrixVerificationRouteImport } from './routes/problems.matrix-verification'
 import { Route as ProblemsPolynomialIdentityRouteImport } from './routes/problems.polynomial-identity'
 
@@ -28,6 +29,11 @@ const AlgorithmsAlgorithmIdRoute = AlgorithmsAlgorithmIdRouteImport.update({
 const AlgorithmsKargerRoute = AlgorithmsKargerRouteImport.update({
   id: '/algorithms/karger',
   path: '/algorithms/karger',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsEightPuzzleRoute = ProblemsEightPuzzleRouteImport.update({
+  id: '/problems/eight-puzzle',
+  path: '/problems/eight-puzzle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProblemsMatrixVerificationRoute =
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/algorithms/karger': typeof AlgorithmsKargerRoute
+  '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/'
     | '/algorithms/$algorithmId'
     | '/algorithms/karger'
+    | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
     | '/problems/polynomial-identity'
   fileRoutesByTo: FileRoutesByTo
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/'
     | '/algorithms/$algorithmId'
     | '/algorithms/karger'
+    | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
     | '/problems/polynomial-identity'
   id:
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/algorithms/$algorithmId'
     | '/algorithms/karger'
+    | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
     | '/problems/polynomial-identity'
   fileRoutesById: FileRoutesById
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlgorithmsAlgorithmIdRoute: typeof AlgorithmsAlgorithmIdRoute
   AlgorithmsKargerRoute: typeof AlgorithmsKargerRoute
+  ProblemsEightPuzzleRoute: typeof ProblemsEightPuzzleRoute
   ProblemsMatrixVerificationRoute: typeof ProblemsMatrixVerificationRoute
   ProblemsPolynomialIdentityRoute: typeof ProblemsPolynomialIdentityRoute
 }
@@ -120,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlgorithmsKargerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/eight-puzzle': {
+      id: '/problems/eight-puzzle'
+      path: '/problems/eight-puzzle'
+      fullPath: '/problems/eight-puzzle'
+      preLoaderRoute: typeof ProblemsEightPuzzleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/matrix-verification': {
       id: '/problems/matrix-verification'
       path: '/problems/matrix-verification'
@@ -141,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlgorithmsAlgorithmIdRoute: AlgorithmsAlgorithmIdRoute,
   AlgorithmsKargerRoute: AlgorithmsKargerRoute,
+  ProblemsEightPuzzleRoute: ProblemsEightPuzzleRoute,
   ProblemsMatrixVerificationRoute: ProblemsMatrixVerificationRoute,
   ProblemsPolynomialIdentityRoute: ProblemsPolynomialIdentityRoute,
 }

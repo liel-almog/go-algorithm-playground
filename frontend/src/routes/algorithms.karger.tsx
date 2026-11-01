@@ -204,9 +204,7 @@ function KargerPage() {
       </div>
       <div className="next-lab section-wrap">
         <span>Try another family</span>
-        <Link to="/algorithms/$algorithmId" params={{ algorithmId: 'astar' }}>
-          Explore informed search →
-        </Link>
+        <Link to="/problems/eight-puzzle">Explore informed search →</Link>
       </div>
     </div>
   )

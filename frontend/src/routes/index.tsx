@@ -31,9 +31,7 @@ const problemCatalog: Problem[] = [
     keywords: 'astar heuristic sliding tiles state space shortest path',
     art: <PuzzleArt />,
     tone: 0,
-    link: (
-      <Link to="/algorithms/$algorithmId" params={{ algorithmId: 'astar' }} />
-    ),
+    link: <Link to="/problems/eight-puzzle" />,
   },
   {
     number: '02',

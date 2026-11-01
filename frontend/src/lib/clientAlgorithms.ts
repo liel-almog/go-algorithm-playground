@@ -22,6 +22,13 @@ export function generateLocalPuzzle(scramble: number) {
     empty = next
   }
 
+  // A longer random walk can occasionally loop back to the goal. Keep every
+  // generated exercise meaningful while preserving solvability.
+  if (tiles.join(',') === puzzleGoal) {
+    const next = empty === 8 ? 7 : empty + 1
+    ;[tiles[empty], tiles[next]] = [tiles[next], tiles[empty]]
+  }
+
   return tiles
 }
 

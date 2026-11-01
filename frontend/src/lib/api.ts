@@ -54,7 +54,7 @@ export const api = {
 
   randomPuzzle: (scramble: number) =>
     request<{ size: number; tiles: number[]; scramble: number }>(
-      '/api/puzzles/random',
+      '/api/problems/eight-puzzle/generate',
       {
         method: 'POST',
         headers: jsonHeaders,
@@ -63,7 +63,7 @@ export const api = {
     ),
 
   solvePuzzle: (tiles: number[], algorithm: string) =>
-    request<SolveResult>('/api/solve', {
+    request<SolveResult>('/api/problems/eight-puzzle/solve', {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({ size: 3, tiles, algorithm }),

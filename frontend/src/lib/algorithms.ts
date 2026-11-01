@@ -18,14 +18,6 @@ export const puzzleAlgorithms: Algorithm[] = [
     category: 'uninformed',
   },
   {
-    id: 'greedy',
-    name: 'Greedy best-first',
-    description:
-      'Chases the board that looks closest to solved, trading guarantees for speed.',
-    optimal: false,
-    category: 'informed',
-  },
-  {
     id: 'dfs',
     name: 'Iterative deepening DFS',
     description:

@@ -4,7 +4,7 @@ A self-contained algorithms hub built with Go 1.27. The Go server exposes every 
 
 The hub currently includes:
 
-- an eight-puzzle lab with A*, breadth-first, greedy best-first, and iterative-deepening DFS
+- an eight-puzzle lab with A*, breadth-first search, and iterative-deepening DFS
 - guaranteed-solvable random boards and step-by-step solution playback
 - lowest-cost comparisons on the same board and multi-run random benchmarks
 - a graph lab for Karger’s randomized minimum-cut algorithm with repeated trials
@@ -35,11 +35,35 @@ go build -o bin/algorithm-playground ./cmd/server
 | ------ | ------------------------- | -------------------------------------------------- |
 | `GET`  | `/api/health`             | Server and registry status                         |
 | `GET`  | `/api/algorithms`         | Discover every registered solver                   |
+| `GET`  | `/api/problems`           | Problem descriptions, solution approaches, and limits |
 | `POST` | `/api/puzzles/random`     | Generate a solvable puzzle                         |
 | `POST` | `/api/solve`              | Run one solver and return its path and metrics     |
 | `POST` | `/api/compare`            | Rank algorithms on one board                       |
 | `POST` | `/api/experiments/random` | Compare average cost across random boards          |
 | `POST` | `/api/graphs/min-cut`     | Find a graph’s minimum cut with Karger contraction |
+
+Each problem also has a dedicated, independently extensible route group:
+
+| Problem | Solve endpoint | Generate endpoint |
+| --- | --- | --- |
+| Eight puzzle | `POST /api/problems/eight-puzzle/solve` | `POST /api/problems/eight-puzzle/generate` |
+| Minimum cut | `POST /api/problems/minimum-cut/solve` | `POST /api/problems/minimum-cut/generate` |
+| Matrix verification | `POST /api/problems/matrix-verification/solve` | `POST /api/problems/matrix-verification/generate` |
+| Polynomial identity | `POST /api/problems/polynomial-identity/solve` | `POST /api/problems/polynomial-identity/generate` |
+
+All request bodies are decoded as strict JSON and validated with
+`go-playground/validator`. Unknown fields, trailing JSON values, missing fields,
+and out-of-range values return a JSON `400 Bad Request` response.
+
+### Resource limits
+
+- solve requests have a 5-second deadline
+- at most 4 CPU-heavy requests run concurrently (or half the available CPUs on smaller machines)
+- search boards are limited to 2x2 through 4x4; experiments remain capped at 3x3 and 5 runs
+- minimum cut is limited to 50 vertices, 1,000 edges, 500 trials, and 250,000 edge-trial units
+- matrix verification is limited to 10x10 matrices and 10 rounds
+- polynomial verification is limited to degree 20 and 10 rounds
+- JSON request bodies are limited to 256 KiB
 
 Example:
 

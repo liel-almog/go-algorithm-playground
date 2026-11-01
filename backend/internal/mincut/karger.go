@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	maxVertices = 50
+	maxEdges    = 1_000
+	maxTrials   = 500
+)
+
 type Edge struct {
 	From string `json:"from"`
 	To   string `json:"to"`
@@ -37,10 +43,10 @@ func Solve(ctx context.Context, graph Graph, trials int) (Result, error) {
 	}
 	if trials == 0 {
 		n := len(graph.Vertices)
-		trials = max(1, int(math.Ceil(float64(n*n)*math.Log(float64(n)+1))))
+		trials = min(maxTrials, max(1, int(math.Ceil(float64(n*n)*math.Log(float64(n)+1)))))
 	}
-	if trials < 1 || trials > 10_000 {
-		return Result{}, errors.New("trials must be between 1 and 10000")
+	if trials < 1 || trials > maxTrials {
+		return Result{}, errors.New("trials must be between 1 and 500")
 	}
 
 	best := Result{Algorithm: "karger", CutSize: math.MaxInt, Trials: trials}
@@ -62,9 +68,59 @@ func Solve(ctx context.Context, graph Graph, trials int) (Result, error) {
 	return best, nil
 }
 
+// Generate returns a connected simple graph. The cycle guarantees connectivity;
+// the additional random chords make generated examples more interesting.
+func Generate(vertexCount int) (Graph, error) {
+	if vertexCount < 3 || vertexCount > maxVertices {
+		return Graph{}, errors.New("vertex count must be between 3 and 50")
+	}
+	vertices := make([]string, vertexCount)
+	for i := range vertices {
+		vertices[i] = vertexName(i)
+	}
+
+	edges := make([]Edge, 0, vertexCount*2)
+	seen := make(map[[2]int]struct{}, vertexCount*2)
+	addEdge := func(from, to int) {
+		if from == to {
+			return
+		}
+		if from > to {
+			from, to = to, from
+		}
+		key := [2]int{from, to}
+		if _, exists := seen[key]; exists {
+			return
+		}
+		seen[key] = struct{}{}
+		edges = append(edges, Edge{From: vertices[from], To: vertices[to]})
+	}
+	for i := range vertexCount {
+		addEdge(i, (i+1)%vertexCount)
+	}
+	for i := range vertexCount {
+		addEdge(i, (i+2)%vertexCount)
+	}
+	for range max(1, vertexCount/3) {
+		addEdge(rand.IntN(vertexCount), rand.IntN(vertexCount))
+	}
+	return Graph{Vertices: vertices, Edges: edges}, nil
+}
+
+func vertexName(index int) string {
+	name := ""
+	for {
+		name = string(rune('A'+index%26)) + name
+		index = index/26 - 1
+		if index < 0 {
+			return name
+		}
+	}
+}
+
 func validate(graph Graph) (map[string]int, error) {
-	if len(graph.Vertices) < 2 || len(graph.Vertices) > 100 {
-		return nil, errors.New("a graph must have between 2 and 100 vertices")
+	if len(graph.Vertices) < 2 || len(graph.Vertices) > maxVertices {
+		return nil, errors.New("a graph must have between 2 and 50 vertices")
 	}
 	indices := make(map[string]int, len(graph.Vertices))
 	for index, vertex := range graph.Vertices {
@@ -76,8 +132,8 @@ func validate(graph Graph) (map[string]int, error) {
 		}
 		indices[vertex] = index
 	}
-	if len(graph.Edges) < 1 || len(graph.Edges) > 10_000 {
-		return nil, errors.New("a graph must have between 1 and 10000 edges")
+	if len(graph.Edges) < 1 || len(graph.Edges) > maxEdges {
+		return nil, errors.New("a graph must have between 1 and 1000 edges")
 	}
 	adjacency := make([][]int, len(graph.Vertices))
 	for _, edge := range graph.Edges {

@@ -625,6 +625,63 @@ button {
   font-size: 0.65rem;
   font-weight: 700;
 }
+.concept-explainer {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  margin-bottom: 22px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.concept-copy {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 16px;
+  padding: 24px 26px;
+}
+.concept-solution {
+  border-left: 1px solid var(--line);
+  background: #f1f4ed;
+}
+.concept-number {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
+  font:
+    0.62rem 'DM Mono',
+    monospace;
+}
+.concept-copy p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.concept-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 17px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.concept-steps li {
+  color: #556159;
+  font-size: 0.63rem;
+  line-height: 1.45;
+}
+.concept-steps li > span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--orange);
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+}
 .lab-layout {
   display: grid;
   grid-template-columns: 265px 1fr;
@@ -1128,6 +1185,13 @@ button {
   .lab-layout {
     grid-template-columns: 1fr;
   }
+  .concept-explainer {
+    grid-template-columns: 1fr;
+  }
+  .concept-solution {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
   .control-panel {
     grid-row: auto;
     position: static;
@@ -1214,6 +1278,18 @@ button {
   }
   .lab-title-row h1 {
     font-size: 2.8rem;
+  }
+  .concept-copy {
+    grid-template-columns: 1fr;
+    padding: 21px;
+  }
+  .concept-steps {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .concept-steps li > span {
+    display: inline;
+    margin-right: 7px;
   }
   .puzzle-stage {
     min-height: 360px;

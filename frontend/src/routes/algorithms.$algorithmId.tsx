@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../lib/api'
 import type { SolveResult } from '../lib/api'
 import { findPuzzleAlgorithm } from '../lib/algorithms'
+import { ConceptExplainer } from '../components/ConceptExplainer'
 import {
   generateLocalPuzzle,
   solvePuzzleLocally,
@@ -87,6 +88,7 @@ function PuzzleAlgorithmPage() {
 
   const visibleTiles = result?.path[step] ?? tiles
   const currentMove = step > 0 ? result?.moves[step - 1] : undefined
+  const explanation = algorithm ? puzzleExplanations[algorithm.id] : undefined
 
   if (!algorithm) {
     return (
@@ -109,6 +111,22 @@ function PuzzleAlgorithmPage() {
         description={`Arrange eight sliding tiles using ${algorithm.name}. Generate a valid board, solve it, then replay every move.`}
         badge={
           algorithm.optimal ? 'Shortest path guaranteed' : 'Heuristic first'
+        }
+      />
+
+      <ConceptExplainer
+        problem="The 8-puzzle has eight numbered tiles and one empty space on a 3 × 3 board. A move slides one neighboring tile into the gap. The goal is to reach the ordered board in as few legal moves as possible, without searching every possible arrangement."
+        algorithmName={algorithm.name}
+        algorithm={
+          explanation?.algorithm ??
+          'The solver explores legal board arrangements until it reaches the ordered goal state.'
+        }
+        steps={
+          explanation?.steps ?? [
+            'Start from the shuffled board.',
+            'Explore boards reachable by one legal slide.',
+            'Stop at the ordered board and reconstruct the moves.',
+          ]
         }
       />
 
@@ -273,6 +291,39 @@ function PuzzleAlgorithmPage() {
       </div>
     </div>
   )
+}
+
+const puzzleExplanations: Record<
+  string,
+  { algorithm: string; steps: [string, string, string] }
+> = {
+  astar: {
+    algorithm:
+      'A* ranks every candidate board by moves already made plus a Manhattan-distance estimate of the moves still needed. It always expands the most promising total score first, so this admissible estimate preserves the shortest-path guarantee.',
+    steps: [
+      'Score the starting board with g + h.',
+      'Expand the lowest-scoring board and add its legal moves.',
+      'Reach the goal, then follow parent links back to the start.',
+    ],
+  },
+  bfs: {
+    algorithm:
+      'Breadth-first search explores all boards one move away, then two moves away, and so on. The first time it reaches the goal must therefore be through a shortest sequence, although storing every frontier can use a lot of memory.',
+    steps: [
+      'Place the starting board in a queue.',
+      'Visit every unseen neighbor level by level.',
+      'Return the first path that reaches the ordered board.',
+    ],
+  },
+  dfs: {
+    algorithm:
+      'Iterative deepening repeatedly runs depth-first search with limits of 0, 1, 2 moves and upward. It gets the low memory use of depth-first search while finding the shallowest—and therefore shortest—solution.',
+    steps: [
+      'Set an initial depth limit.',
+      'Search one path at a time without crossing that limit.',
+      'Increase the limit until the goal is found.',
+    ],
+  },
 }
 
 function LabHeader({

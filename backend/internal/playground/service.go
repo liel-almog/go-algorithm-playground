@@ -166,11 +166,17 @@ func (s *Service) Experiment(ctx context.Context, request ExperimentRequest) (ma
 	if request.Runs == 0 {
 		request.Runs = 5
 	}
-	if request.Runs < 1 || request.Runs > 20 {
-		return nil, errors.New("runs must be between 1 and 20")
+	if request.Size > 3 {
+		return nil, errors.New("experiment puzzle size must be at most 3")
+	}
+	if request.Scramble > 100 {
+		return nil, errors.New("experiment scramble must be at most 100")
+	}
+	if request.Runs < 1 || request.Runs > 5 {
+		return nil, errors.New("runs must be between 1 and 5")
 	}
 	if len(request.Algorithms) == 0 {
-		request.Algorithms = []string{"astar", "bfs", "greedy"}
+		request.Algorithms = []string{"astar", "bfs", "dfs"}
 	}
 	totals := make(map[string]*Aggregate)
 	for _, id := range request.Algorithms {
@@ -180,11 +186,17 @@ func (s *Service) Experiment(ctx context.Context, request ExperimentRequest) (ma
 		totals[id] = &Aggregate{Algorithm: id}
 	}
 	for range request.Runs {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		board, err := puzzle.Random(request.Size, request.Scramble)
 		if err != nil {
 			return nil, err
 		}
-		comparison, _ := s.compareBoard(ctx, board, request.Algorithms)
+		comparison, err := s.compareBoard(ctx, board, request.Algorithms)
+		if err != nil {
+			return nil, err
+		}
 		for _, result := range comparison.Results {
 			total := totals[result.Algorithm]
 			total.Successes++
@@ -241,12 +253,15 @@ func (s *Service) compareBoard(ctx context.Context, board puzzle.Board, ids []st
 			ids = append(ids, meta.ID)
 		}
 	}
-	if len(ids) > 8 {
-		return Comparison{}, errors.New("at most 8 algorithms may be compared")
+	if len(ids) > 4 {
+		return Comparison{}, errors.New("at most 4 algorithms may be compared")
 	}
 	result := Comparison{Errors: make(map[string]string), Rule: "fewest moves, then fewest expanded states, then fastest runtime"}
 	seen := make(map[string]bool)
 	for _, id := range ids {
+		if err := ctx.Err(); err != nil {
+			return Comparison{}, err
+		}
 		if seen[id] {
 			continue
 		}

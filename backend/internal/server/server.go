@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/liel-almog/go-algorithm-playground/internal/playground"
 )
 
@@ -20,37 +22,39 @@ type Server struct {
 	playground     *playground.Service
 	allowedOrigins []string
 	handler        http.Handler
+	validator      *validator.Validate
+	algorithmSlots chan struct{}
 }
 
 type boardRequest struct {
-	Size  int   `json:"size"`
-	Tiles []int `json:"tiles"`
+	Size  int   `json:"size" validate:"required,min=2,max=4"`
+	Tiles []int `json:"tiles" validate:"required,min=4,max=16,dive,gte=0,lte=15"`
 }
 type solveRequest struct {
 	boardRequest
-	Algorithm string `json:"algorithm"`
+	Algorithm string `json:"algorithm" validate:"required"`
 }
 type randomRequest struct {
-	Size     int `json:"size"`
-	Scramble int `json:"scramble"`
+	Size     int `json:"size" validate:"omitempty,min=2,max=4"`
+	Scramble int `json:"scramble" validate:"omitempty,min=1,max=200"`
 }
 type compareRequest struct {
 	boardRequest
-	Algorithms []string `json:"algorithms"`
+	Algorithms []string `json:"algorithms" validate:"omitempty,max=4,dive,required"`
 }
 type experimentRequest struct {
-	Size       int      `json:"size"`
-	Scramble   int      `json:"scramble"`
-	Runs       int      `json:"runs"`
-	Algorithms []string `json:"algorithms"`
+	Size       int      `json:"size" validate:"omitempty,min=2,max=3"`
+	Scramble   int      `json:"scramble" validate:"omitempty,min=1,max=100"`
+	Runs       int      `json:"runs" validate:"omitempty,min=1,max=5"`
+	Algorithms []string `json:"algorithms" validate:"omitempty,max=4,dive,required"`
 }
 type minCutRequest struct {
-	Vertices []string `json:"vertices"`
+	Vertices []string `json:"vertices" validate:"required,min=2,max=50,dive,required,max=100"`
 	Edges    []struct {
-		From string `json:"from"`
-		To   string `json:"to"`
-	} `json:"edges"`
-	Trials int `json:"trials"`
+		From string `json:"from" validate:"required,max=100"`
+		To   string `json:"to" validate:"required,max=100"`
+	} `json:"edges" validate:"required,min=1,max=1000,dive"`
+	Trials int `json:"trials" validate:"required,min=1,max=500"`
 }
 
 func New(service *playground.Service, allowedOrigins []string) *Server {
@@ -60,20 +64,31 @@ func New(service *playground.Service, allowedOrigins []string) *Server {
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
 	}
-	server := &Server{playground: service, allowedOrigins: allowedOrigins}
+	server := &Server{
+		playground: service, allowedOrigins: allowedOrigins,
+		validator: newValidator(), algorithmSlots: algorithmSlots(),
+	}
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", server.index)
 	mux.HandleFunc("GET /api/health", server.health)
 	mux.HandleFunc("GET /api/algorithms", server.algorithms)
 	mux.HandleFunc("POST /api/puzzles/random", server.randomPuzzle)
-	mux.HandleFunc("POST /api/solve", server.solve)
-	mux.HandleFunc("POST /api/compare", server.compare)
-	mux.HandleFunc("POST /api/experiments/random", server.experiment)
-	mux.HandleFunc("POST /api/graphs/min-cut", server.minimumCut)
+	mux.HandleFunc("POST /api/solve", server.limitAlgorithm(server.solve))
+	mux.HandleFunc("POST /api/compare", server.limitAlgorithm(server.compare))
+	mux.HandleFunc("POST /api/experiments/random", server.limitAlgorithm(server.experiment))
+	mux.HandleFunc("POST /api/graphs/min-cut", server.limitAlgorithm(server.minimumCut))
+	server.registerProblemRoutes(mux)
 	server.handler = server.recoverPanic(server.cors(server.logRequests(mux)))
 	return server
 }
 
 func (s *Server) Handler() http.Handler { return s.handler }
+
+func (s *Server) index(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("<!doctype html><title>Algorithm Playground</title><h1>Algorithm Playground API</h1>"))
+}
 
 func AllowedOriginsFromEnv() []string {
 	value := strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGINS"))
@@ -104,7 +119,11 @@ func (s *Server) algorithms(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) minimumCut(w http.ResponseWriter, r *http.Request) {
 	var request minCutRequest
-	if !decode(w, r, &request) {
+	if !s.decodeAndValidate(w, r, &request) {
+		return
+	}
+	if len(request.Edges)*request.Trials > maxMinCutWork {
+		writeError(w, http.StatusBadRequest, errors.New("edges multiplied by trials must not exceed 250000"))
 		return
 	}
 	edges := make([]playground.Edge, len(request.Edges))
@@ -112,16 +131,12 @@ func (s *Server) minimumCut(w http.ResponseWriter, r *http.Request) {
 		edges[i] = playground.Edge{From: edge.From, To: edge.To}
 	}
 	result, err := s.playground.MinimumCut(r.Context(), playground.MinCutRequest{Vertices: request.Vertices, Edges: edges, Trials: request.Trials})
-	if err != nil {
-		writeError(w, http.StatusBadRequest, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
+	writeResult(w, result, err)
 }
 
 func (s *Server) randomPuzzle(w http.ResponseWriter, r *http.Request) {
 	var request randomRequest
-	if !decode(w, r, &request) {
+	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
 	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Size: request.Size, Scramble: request.Scramble})
@@ -134,7 +149,7 @@ func (s *Server) randomPuzzle(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) solve(w http.ResponseWriter, r *http.Request) {
 	var request solveRequest
-	if !decode(w, r, &request) {
+	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
 	result, err := s.playground.Solve(r.Context(), playground.SolveRequest{
@@ -158,14 +173,16 @@ func (s *Server) solve(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) compare(w http.ResponseWriter, r *http.Request) {
 	var request compareRequest
-	if !decode(w, r, &request) {
+	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
 	result, err := s.playground.Compare(r.Context(), playground.CompareRequest{
 		BoardRequest: playground.BoardRequest{Size: request.Size, Tiles: request.Tiles}, Algorithms: request.Algorithms,
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "not solvable") {
+		if playground.IsSolverTimeout(err) {
+			writeSolverError(w, err)
+		} else if strings.Contains(err.Error(), "not solvable") {
 			writeError(w, http.StatusUnprocessableEntity, err)
 		} else {
 			writeError(w, http.StatusBadRequest, err)
@@ -177,25 +194,33 @@ func (s *Server) compare(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) experiment(w http.ResponseWriter, r *http.Request) {
 	var request experimentRequest
-	if !decode(w, r, &request) {
+	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
 	result, err := s.playground.Experiment(r.Context(), playground.ExperimentRequest{
 		Size: request.Size, Scramble: request.Scramble, Runs: request.Runs, Algorithms: request.Algorithms,
 	})
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err)
+		if playground.IsSolverTimeout(err) {
+			writeSolverError(w, err)
+		} else {
+			writeError(w, http.StatusBadRequest, err)
+		}
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
 }
 
 func decode(w http.ResponseWriter, r *http.Request, destination any) bool {
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Errorf("invalid JSON: %w", err))
+		return false
+	}
+	if decoder.Decode(&struct{}{}) != io.EOF {
+		writeError(w, http.StatusBadRequest, errors.New("invalid JSON: request body must contain exactly one JSON object"))
 		return false
 	}
 	return true

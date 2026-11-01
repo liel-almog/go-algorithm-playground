@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { LabHeader } from './algorithms.$algorithmId'
+import { ConceptExplainer } from '../components/ConceptExplainer'
 
 export const Route = createFileRoute('/problems/matrix-verification')({
   component: MatrixVerificationPage,
@@ -68,6 +69,17 @@ function MatrixVerificationPage() {
         title="Verify matrix multiplication"
         description="Check whether A × B = C without recomputing the full product. Random binary vectors expose a wrong answer quickly."
         badge="O(n²) per round"
+      />
+
+      <ConceptExplainer
+        problem="Given matrices A, B, and a claimed product C, the task is to decide whether A × B really equals C. Multiplying A and B again gives certainty, but the standard calculation takes cubic time for n × n matrices."
+        algorithmName="Freivalds’ algorithm"
+        algorithm="Freivalds’ algorithm compresses the matrices with a random binary vector r and compares A(Br) with Cr. A correct product always passes. A false product can occasionally pass one round by chance, but each independent round cuts that false-positive probability by at least half."
+        steps={[
+          'Generate a random vector containing only 0s and 1s.',
+          'Compute A(Br) and Cr using matrix-vector products.',
+          'Reject on any mismatch; repeat matches for more confidence.',
+        ]}
       />
 
       <div className="lab-layout section-wrap">

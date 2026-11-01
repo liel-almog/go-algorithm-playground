@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { LabHeader } from './algorithms.$algorithmId'
+import { ConceptExplainer } from '../components/ConceptExplainer'
 
 export const Route = createFileRoute('/problems/polynomial-identity')({
   component: PolynomialIdentityPage,
@@ -71,6 +72,17 @@ function PolynomialIdentityPage() {
         title="Verify polynomial identities"
         description="Test whether two coefficient forms describe the same polynomial. Evaluate both at random field points instead of expanding every term."
         badge={`Arithmetic mod ${prime}`}
+      />
+
+      <ConceptExplainer
+        problem="Two polynomials can look different yet represent the same function after their terms are expanded and simplified. Polynomial identity testing asks whether P(x) and Q(x) are equal for every input, without performing a potentially expensive symbolic expansion."
+        algorithmName="Schwartz–Zippel"
+        algorithm="The Schwartz–Zippel test evaluates both polynomials at a randomly chosen point in a finite field. Identical polynomials always match. If they differ, their difference has only a limited number of roots, so a random point is unlikely to hide the discrepancy; additional samples strengthen the evidence."
+        steps={[
+          'Choose a random value r from the finite field.',
+          'Evaluate P(r) and Q(r) with modular arithmetic.',
+          'Reject on a mismatch; repeat matches to lower the error chance.',
+        ]}
       />
 
       <div className="lab-layout section-wrap">

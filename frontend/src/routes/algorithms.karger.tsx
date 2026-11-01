@@ -4,6 +4,7 @@ import { LabHeader } from './algorithms.$algorithmId'
 import { api } from '../lib/api'
 import type { Edge, MinCutResult } from '../lib/api'
 import { solveMinCutLocally } from '../lib/clientAlgorithms'
+import { ConceptExplainer } from '../components/ConceptExplainer'
 
 export const Route = createFileRoute('/algorithms/karger')({
   component: KargerPage,
@@ -45,6 +46,17 @@ function KargerPage() {
         title="The minimum cut problem"
         description="Find the smallest set of edges whose removal separates a graph. Karger’s contractions make the hidden split visible."
         badge="Probabilistic result"
+      />
+
+      <ConceptExplainer
+        problem="A cut divides a connected graph into two non-empty groups. Its size is the number of edges that cross between them. The minimum-cut problem asks for the division with the fewest crossing edges—the graph’s weakest connection or bottleneck."
+        algorithmName="Karger’s algorithm"
+        algorithm="Karger’s algorithm repeatedly picks a random edge and merges its two endpoints, discarding self-loops along the way. When only two supernodes remain, the edges between them form a cut. Repeating the random experiment makes it increasingly likely that one trial preserves the true minimum cut."
+        steps={[
+          'Choose an edge uniformly at random.',
+          'Contract its endpoints and remove self-loops.',
+          'Keep the smallest two-supernode cut across all trials.',
+        ]}
       />
 
       <div className="lab-layout section-wrap">

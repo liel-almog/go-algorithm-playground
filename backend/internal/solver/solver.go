@@ -58,7 +58,7 @@ func NewRegistry(algorithms ...Algorithm) *Registry {
 }
 
 func DefaultRegistry() *Registry {
-	return NewRegistry(BFS{}, AStar{}, Greedy{}, IDDFS{})
+	return NewRegistry(BFS{}, IDDFS{}, AStar{})
 }
 
 func (r *Registry) Register(algorithm Algorithm) error {

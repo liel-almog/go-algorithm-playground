@@ -9,22 +9,13 @@ import (
 )
 
 type AStar struct{}
-type Greedy struct{}
 
 func (AStar) Metadata() Metadata {
 	return Metadata{ID: "astar", Name: "A* search", Description: "Balances distance travelled with Manhattan distance to find a shortest path efficiently.", Optimal: true, Category: "informed"}
 }
 
-func (Greedy) Metadata() Metadata {
-	return Metadata{ID: "greedy", Name: "Greedy best-first", Description: "Chases the state nearest to the goal. Fast, but its route may cost more moves.", Optimal: false, Category: "informed"}
-}
-
 func (algorithm AStar) Solve(ctx context.Context, initial puzzle.Board) (Result, error) {
-	return solveBestFirst(ctx, initial, algorithm.Metadata(), false)
-}
-
-func (algorithm Greedy) Solve(ctx context.Context, initial puzzle.Board) (Result, error) {
-	return solveBestFirst(ctx, initial, algorithm.Metadata(), true)
+	return solveAStar(ctx, initial, algorithm.Metadata())
 }
 
 type searchNode struct {
@@ -52,7 +43,7 @@ func (q *priorityQueue) Pop() any {
 	return item
 }
 
-func solveBestFirst(ctx context.Context, initial puzzle.Board, meta Metadata, greedy bool) (Result, error) {
+func solveAStar(ctx context.Context, initial puzzle.Board, meta Metadata) (Result, error) {
 	start := time.Now()
 	initialKey := initial.Key()
 	parents := map[string]parentStep{initialKey: {board: initial}}
@@ -82,10 +73,7 @@ func solveBestFirst(ctx context.Context, initial puzzle.Board, meta Metadata, gr
 			}
 			bestCost[nextKey] = nextCost
 			parents[nextKey] = parentStep{previous: key, board: neighbor.Board, move: neighbor.Move}
-			priority := neighbor.Board.Manhattan()
-			if !greedy {
-				priority += nextCost
-			}
+			priority := nextCost + neighbor.Board.Manhattan()
 			heap.Push(queue, searchNode{board: neighbor.Board, priority: priority, cost: nextCost, order: order})
 			order++
 			generated++

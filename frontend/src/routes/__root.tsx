@@ -1,9 +1,16 @@
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
+import {
+  Link,
+  Outlet,
+  createRootRouteWithContext,
+} from '@tanstack/react-router'
+import type { QueryClient } from '@tanstack/react-query'
 
 import '../styles.css'
 import { BrandMark } from '../components/BrandMark'
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+}>()({
   component: RootComponent,
 })
 

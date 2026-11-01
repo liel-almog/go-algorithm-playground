@@ -1,0 +1,1 @@
+export { EightPuzzlePage } from './EightPuzzlePage'

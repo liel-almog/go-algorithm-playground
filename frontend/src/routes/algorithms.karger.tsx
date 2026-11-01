@@ -1,10 +1,11 @@
+import { useMutation } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { LabHeader } from './algorithms.$algorithmId'
-import { api } from '../lib/api'
 import type { Edge, MinCutResult } from '../lib/api'
 import { solveMinCutLocally } from '../lib/clientAlgorithms'
 import { ConceptExplainer } from '../components/ConceptExplainer'
+import { minCutMutations } from '../features/min-cut/mutations'
 
 export const Route = createFileRoute('/algorithms/karger')({
   component: KargerPage,
@@ -12,30 +13,47 @@ export const Route = createFileRoute('/algorithms/karger')({
 
 type GraphProblem = { vertices: string[]; edges: Edge[] }
 
+function formatError(reason: unknown) {
+  if (!reason) return ''
+  return reason instanceof Error ? reason.message : 'The request failed.'
+}
+
 function KargerPage() {
   const [vertexCount, setVertexCount] = useState(7)
   const [trials, setTrials] = useState(90)
   const [graph, setGraph] = useState(() => generateGraph(7))
   const [result, setResult] = useState<MinCutResult | null>(null)
-  const [isSolving, setIsSolving] = useState(false)
-  const [error, setError] = useState('')
+  const [fallbackError, setFallbackError] = useState('')
+  const solveMutation = useMutation(minCutMutations.solve())
+  const isSolving = solveMutation.isPending
+  const error = fallbackError || formatError(solveMutation.error)
 
   const regenerate = () => {
     setGraph(generateGraph(vertexCount))
     setResult(null)
-    setError('')
+    setFallbackError('')
+    solveMutation.reset()
   }
 
   const solve = async () => {
-    setIsSolving(true)
-    setError('')
+    solveMutation.reset()
+    setFallbackError('')
     setResult(null)
     try {
-      setResult(await api.minimumCut(graph.vertices, graph.edges, trials))
+      setResult(
+        await solveMutation.mutateAsync({
+          vertices: graph.vertices,
+          edges: graph.edges,
+          trials,
+        }),
+      )
     } catch {
-      setResult(solveMinCutLocally(graph.vertices, graph.edges, trials))
-    } finally {
-      setIsSolving(false)
+      try {
+        setResult(solveMinCutLocally(graph.vertices, graph.edges, trials))
+        solveMutation.reset()
+      } catch (reason) {
+        setFallbackError(formatError(reason))
+      }
     }
   }
 

@@ -29,13 +29,15 @@ type problemDescription struct {
 }
 
 type puzzleSolveRequest struct {
-	Size      int    `json:"size" validate:"required,min=2,max=4"`
+	Rows      int    `json:"row" validate:"required,min=2,max=4"`
+	Columns   int    `json:"column" validate:"required,min=2,max=4"`
 	Tiles     []int  `json:"tiles" validate:"required,min=4,max=16,dive,gte=0,lte=15"`
 	Algorithm string `json:"algorithm" validate:"required,oneof=astar bfs dfs"`
 }
 
 type puzzleGenerateRequest struct {
-	Size     int `json:"size" validate:"required,min=2,max=4"`
+	Rows     int `json:"row" validate:"required,min=2,max=4"`
+	Columns  int `json:"column" validate:"required,min=2,max=4"`
 	Scramble int `json:"scramble" validate:"required,min=1,max=200"`
 }
 
@@ -108,7 +110,7 @@ func problemCatalog() []problemDescription {
 			Description:      "Rearrange numbered tiles into ascending order by sliding one tile at a time into the empty space.",
 			SolutionApproach: "The backend validates that the board is solvable, explores neighboring board states with the selected search strategy, and reconstructs the move-by-move path when it reaches the goal.",
 			GenerateEndpoint: problemRoutePrefix + "/eight-puzzle/generate", SolveEndpoint: problemRoutePrefix + "/eight-puzzle/solve",
-			Limits: []string{"board size: 2x2 to 4x4", "runtime: 5 seconds"},
+			Limits: []string{"rows and columns: 2 to 4", "runtime: 5 seconds"},
 		},
 		{
 			ID: "minimum-cut", Title: "Minimum cut", Algorithm: "Karger's randomized contraction",
@@ -139,7 +141,7 @@ func (s *Server) generatePuzzle(w http.ResponseWriter, r *http.Request) {
 	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
-	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Size: request.Size, Scramble: request.Scramble})
+	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Rows: request.Rows, Columns: request.Columns, Scramble: request.Scramble})
 	writeResult(w, result, err)
 }
 
@@ -149,7 +151,7 @@ func (s *Server) solvePuzzle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := s.playground.Solve(r.Context(), playground.SolveRequest{
-		BoardRequest: playground.BoardRequest{Size: request.Size, Tiles: request.Tiles},
+		BoardRequest: playground.BoardRequest{Rows: request.Rows, Columns: request.Columns, Tiles: request.Tiles},
 		Algorithm:    request.Algorithm,
 	})
 	if err != nil {

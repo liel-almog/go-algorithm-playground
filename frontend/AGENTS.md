@@ -1,4 +1,5 @@
 The server is ALWAYS open at http://localhost:3000 - DO NOT RUN it yourself
+MINIMIZE the amount of CSS classes you create, if you do use CSS MODULES, Use TAILWIND as much as you can
 
 <!-- intent-skills:start -->
 

@@ -13,10 +13,11 @@ const (
 
 var ErrInvalidBoard = errors.New("invalid puzzle board")
 
-// Board is an immutable square sliding-puzzle state. Zero is the blank tile.
+// Board is an immutable rectangular sliding-puzzle state. Zero is the blank tile.
 type Board struct {
-	Size  int
-	Tiles []int
+	Rows    int
+	Columns int
+	Tiles   []int
 }
 
 type Neighbor struct {
@@ -24,12 +25,12 @@ type Neighbor struct {
 	Move  string
 }
 
-func New(size int, tiles []int) (Board, error) {
-	if size < MinSize || size > MaxSize {
-		return Board{}, fmt.Errorf("%w: size must be between %d and %d", ErrInvalidBoard, MinSize, MaxSize)
+func New(rows, columns int, tiles []int) (Board, error) {
+	if err := validateDimensions(rows, columns); err != nil {
+		return Board{}, err
 	}
-	if len(tiles) != size*size {
-		return Board{}, fmt.Errorf("%w: expected %d tiles", ErrInvalidBoard, size*size)
+	if len(tiles) != rows*columns {
+		return Board{}, fmt.Errorf("%w: expected %d tiles", ErrInvalidBoard, rows*columns)
 	}
 	seen := make([]bool, len(tiles))
 	for _, tile := range tiles {
@@ -38,15 +39,15 @@ func New(size int, tiles []int) (Board, error) {
 		}
 		seen[tile] = true
 	}
-	return Board{Size: size, Tiles: append([]int(nil), tiles...)}, nil
+	return Board{Rows: rows, Columns: columns, Tiles: append([]int(nil), tiles...)}, nil
 }
 
-func Goal(size int) Board {
-	tiles := make([]int, size*size)
+func Goal(rows, columns int) Board {
+	tiles := make([]int, rows*columns)
 	for i := range len(tiles) - 1 {
 		tiles[i] = i + 1
 	}
-	return Board{Size: size, Tiles: tiles}
+	return Board{Rows: rows, Columns: columns, Tiles: tiles}
 }
 
 func (b Board) IsGoal() bool {
@@ -70,7 +71,7 @@ func (b Board) IsSolvable() bool {
 			}
 		}
 	}
-	if b.Size%2 == 1 {
+	if b.Columns%2 == 1 {
 		return inversions%2 == 0
 	}
 	blank := 0
@@ -80,7 +81,7 @@ func (b Board) IsSolvable() bool {
 			break
 		}
 	}
-	blankRowFromBottom := b.Size - blank/b.Size
+	blankRowFromBottom := b.Rows - blank/b.Columns
 	return (blankRowFromBottom%2 == 0) != (inversions%2 == 0)
 }
 
@@ -100,7 +101,7 @@ func (b Board) Neighbors() []Neighbor {
 			break
 		}
 	}
-	row, col := blank/b.Size, blank%b.Size
+	row, col := blank/b.Columns, blank%b.Columns
 	type direction struct {
 		dr, dc int
 		name   string
@@ -109,13 +110,13 @@ func (b Board) Neighbors() []Neighbor {
 	result := make([]Neighbor, 0, 4)
 	for _, d := range directions {
 		nr, nc := row+d.dr, col+d.dc
-		if nr < 0 || nr >= b.Size || nc < 0 || nc >= b.Size {
+		if nr < 0 || nr >= b.Rows || nc < 0 || nc >= b.Columns {
 			continue
 		}
 		next := append([]int(nil), b.Tiles...)
-		target := nr*b.Size + nc
+		target := nr*b.Columns + nc
 		next[blank], next[target] = next[target], next[blank]
-		result = append(result, Neighbor{Board: Board{Size: b.Size, Tiles: next}, Move: d.name})
+		result = append(result, Neighbor{Board: Board{Rows: b.Rows, Columns: b.Columns, Tiles: next}, Move: d.name})
 	}
 	return result
 }
@@ -127,21 +128,21 @@ func (b Board) Manhattan() int {
 			continue
 		}
 		goal := tile - 1
-		row, col := index/b.Size, index%b.Size
-		goalRow, goalCol := goal/b.Size, goal%b.Size
+		row, col := index/b.Columns, index%b.Columns
+		goalRow, goalCol := goal/b.Columns, goal%b.Columns
 		total += abs(row-goalRow) + abs(col-goalCol)
 	}
 	return total
 }
 
-func Random(size, scramble int) (Board, error) {
-	if size < MinSize || size > MaxSize {
-		return Board{}, fmt.Errorf("%w: size must be between %d and %d", ErrInvalidBoard, MinSize, MaxSize)
+func Random(rows, columns, scramble int) (Board, error) {
+	if err := validateDimensions(rows, columns); err != nil {
+		return Board{}, err
 	}
 	if scramble < 1 || scramble > 200 {
 		return Board{}, fmt.Errorf("%w: scramble must be between 1 and 200", ErrInvalidBoard)
 	}
-	board := Goal(size)
+	board := Goal(rows, columns)
 	previous := ""
 	for range scramble {
 		neighbors := board.Neighbors()
@@ -159,6 +160,13 @@ func Random(size, scramble int) (Board, error) {
 		board = board.Neighbors()[rand.IntN(len(board.Neighbors()))].Board
 	}
 	return board, nil
+}
+
+func validateDimensions(rows, columns int) error {
+	if rows < MinSize || rows > MaxSize || columns < MinSize || columns > MaxSize {
+		return fmt.Errorf("%w: rows and columns must each be between %d and %d", ErrInvalidBoard, MinSize, MaxSize)
+	}
+	return nil
 }
 
 func opposite(move string) string {

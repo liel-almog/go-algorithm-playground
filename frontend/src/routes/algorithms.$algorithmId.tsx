@@ -1,53 +1,86 @@
+import { noop, useMutation, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { api } from '../lib/api'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SolveResult } from '../lib/api'
-import { findPuzzleAlgorithm } from '../lib/algorithms'
+import {
+  findPuzzleAlgorithm,
+  fallbackAlgorithmCatalog,
+  isPuzzleAlgorithm,
+  puzzleAlgorithms as fallbackPuzzleAlgorithms,
+} from '../lib/algorithms'
 import { ConceptExplainer } from '../components/ConceptExplainer'
 import {
   generateLocalPuzzle,
   solvePuzzleLocally,
 } from '../lib/clientAlgorithms'
+import { puzzleMutations } from '../features/eight-puzzle/mutations'
+import { algorithmQueries } from '../features/algorithms/queries'
 
 export const Route = createFileRoute('/algorithms/$algorithmId')({
+  loader: ({ context }) => {
+    void context.queryClient
+      .prefetchQuery(algorithmQueries.catalog())
+      .catch(noop)
+  },
   component: PuzzleAlgorithmPage,
 })
 
 function PuzzleAlgorithmPage() {
   const { algorithmId } = Route.useParams()
-  const algorithm = findPuzzleAlgorithm(algorithmId)
+  const { data: serverAlgorithms } = useQuery({
+    ...algorithmQueries.catalog(),
+    placeholderData: fallbackAlgorithmCatalog,
+    select: (catalog) => catalog.algorithms.filter(isPuzzleAlgorithm),
+  })
+  const algorithms =
+    serverAlgorithms.length > 0 ? serverAlgorithms : fallbackPuzzleAlgorithms
+  const algorithm = findPuzzleAlgorithm(algorithmId, algorithms)
   const [tiles, setTiles] = useState<number[]>([])
   const [scramble, setScramble] = useState(18)
   const [result, setResult] = useState<SolveResult | null>(null)
   const [step, setStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isSolving, setIsSolving] = useState(false)
-  const [error, setError] = useState('')
+  const [fallbackError, setFallbackError] = useState('')
   const generatedFor = useRef('')
+  const {
+    mutateAsync: generatePuzzle,
+    reset: resetGeneration,
+    isPending: isGenerating,
+  } = useMutation(puzzleMutations.generate())
+  const {
+    mutateAsync: solvePuzzle,
+    reset: resetSolve,
+    isPending: isSolving,
+    error: solveError,
+  } = useMutation(puzzleMutations.solve())
+  const error = fallbackError || (solveError ? errorMessage(solveError) : '')
 
-  const generateProblem = async () => {
-    setIsGenerating(true)
-    setError('')
+  const generateProblem = useCallback(async () => {
+    resetGeneration()
+    resetSolve()
+    setFallbackError('')
     setResult(null)
     setStep(0)
     setIsPlaying(false)
     try {
-      const puzzle = await api.randomPuzzle(scramble)
+      const puzzle = await generatePuzzle({
+        rows: 3,
+        columns: 3,
+        scramble,
+      })
       setTiles(puzzle.tiles)
     } catch {
-      setTiles(generateLocalPuzzle(scramble))
-    } finally {
-      setIsGenerating(false)
+      setTiles(generateLocalPuzzle(3, 3, scramble))
+      resetGeneration()
     }
-  }
+  }, [generatePuzzle, resetGeneration, resetSolve, scramble])
 
   useEffect(() => {
     if (algorithm && generatedFor.current !== algorithmId) {
       generatedFor.current = algorithmId
       void generateProblem()
     }
-  }, [algorithmId, algorithm])
+  }, [algorithmId, algorithm, generateProblem])
 
   useEffect(() => {
     if (!isPlaying || !result) return
@@ -64,25 +97,27 @@ function PuzzleAlgorithmPage() {
 
   const runAlgorithm = async () => {
     if (!algorithm || tiles.length === 0) return
-    setIsSolving(true)
-    setError('')
+    resetSolve()
+    setFallbackError('')
     setResult(null)
     setStep(0)
     try {
-      const solution = await api.solvePuzzle(tiles, algorithm.id)
+      const solution = await solvePuzzle({
+        rows: 3,
+        columns: 3,
+        tiles,
+        algorithm: algorithm.id,
+      })
       setResult(solution)
-    } catch (reason) {
+    } catch {
       if (algorithm.id === 'astar') {
         try {
-          setResult(solvePuzzleLocally(tiles))
+          setResult(solvePuzzleLocally(tiles, 3, 3))
+          resetSolve()
         } catch (fallbackReason) {
-          setError(errorMessage(fallbackReason))
+          setFallbackError(errorMessage(fallbackReason))
         }
-      } else {
-        setError(errorMessage(reason))
       }
-    } finally {
-      setIsSolving(false)
     }
   }
 

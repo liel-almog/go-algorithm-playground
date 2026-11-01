@@ -1,20 +1,29 @@
 import type { Edge, MinCutResult, SolveResult } from './api'
 
-const puzzleGoal = '1,2,3,4,5,6,7,8,0'
+function puzzleGoal(rows: number, columns: number) {
+  return Array.from({ length: rows * columns }, (_, index) =>
+    index === rows * columns - 1 ? 0 : index + 1,
+  )
+}
 
-export function generateLocalPuzzle(scramble: number) {
-  const tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-  let empty = 8
+export function generateLocalPuzzle(
+  rows: number,
+  columns: number,
+  scramble: number,
+) {
+  const tiles = puzzleGoal(rows, columns)
+  const goalKey = tiles.join(',')
+  let empty = tiles.length - 1
   let previous = -1
 
   for (let move = 0; move < scramble; move += 1) {
-    const row = Math.floor(empty / 3)
-    const column = empty % 3
+    const row = Math.floor(empty / columns)
+    const column = empty % columns
     const options = [
-      row > 0 ? empty - 3 : -1,
-      row < 2 ? empty + 3 : -1,
+      row > 0 ? empty - columns : -1,
+      row < rows - 1 ? empty + columns : -1,
       column > 0 ? empty - 1 : -1,
-      column < 2 ? empty + 1 : -1,
+      column < columns - 1 ? empty + 1 : -1,
     ].filter((position) => position >= 0 && position !== previous)
     const next = options[Math.floor(Math.random() * options.length)]
     previous = empty
@@ -24,18 +33,23 @@ export function generateLocalPuzzle(scramble: number) {
 
   // A longer random walk can occasionally loop back to the goal. Keep every
   // generated exercise meaningful while preserving solvability.
-  if (tiles.join(',') === puzzleGoal) {
-    const next = empty === 8 ? 7 : empty + 1
+  if (tiles.join(',') === goalKey) {
+    const next = empty === tiles.length - 1 ? empty - 1 : empty + 1
     ;[tiles[empty], tiles[next]] = [tiles[next], tiles[empty]]
   }
 
   return tiles
 }
 
-export function solvePuzzleLocally(start: number[]): SolveResult {
+export function solvePuzzleLocally(
+  start: number[],
+  rows: number,
+  columns: number,
+): SolveResult {
   const started = performance.now()
   const startKey = start.join(',')
-  if (startKey === puzzleGoal) return puzzleResult([start], [], 0, 1, started)
+  const goalKey = puzzleGoal(rows, columns).join(',')
+  if (startKey === goalKey) return puzzleResult([start], [], 0, 1, started)
 
   type Node = {
     tiles: number[]
@@ -44,7 +58,7 @@ export function solvePuzzleLocally(start: number[]): SolveResult {
     score: number
   }
   const open: Node[] = [
-    { tiles: start, key: startKey, cost: 0, score: manhattan(start) },
+    { tiles: start, key: startKey, cost: 0, score: manhattan(start, columns) },
   ]
   const bestCost = new Map([[startKey, 0]])
   const parent = new Map<string, { key: string; move: string }>()
@@ -59,7 +73,7 @@ export function solvePuzzleLocally(start: number[]): SolveResult {
     if (current.cost !== bestCost.get(current.key)) continue
     expanded += 1
 
-    for (const neighbor of puzzleNeighbors(current.tiles)) {
+    for (const neighbor of puzzleNeighbors(current.tiles, rows, columns)) {
       const key = neighbor.tiles.join(',')
       const cost = current.cost + 1
       if (cost >= (bestCost.get(key) ?? Number.POSITIVE_INFINITY)) continue
@@ -67,7 +81,7 @@ export function solvePuzzleLocally(start: number[]): SolveResult {
       parent.set(key, { key: current.key, move: neighbor.move })
       states.set(key, neighbor.tiles)
       generated += 1
-      if (key === puzzleGoal) {
+      if (key === goalKey) {
         const path: number[][] = []
         const moves: string[] = []
         let cursor = key
@@ -93,7 +107,7 @@ export function solvePuzzleLocally(start: number[]): SolveResult {
         tiles: neighbor.tiles,
         key,
         cost,
-        score: cost + manhattan(neighbor.tiles),
+        score: cost + manhattan(neighbor.tiles, columns),
       })
     }
     frontierMax = Math.max(frontierMax, open.length)
@@ -102,13 +116,13 @@ export function solvePuzzleLocally(start: number[]): SolveResult {
   throw new Error('This puzzle could not be solved.')
 }
 
-function puzzleNeighbors(tiles: number[]) {
+function puzzleNeighbors(tiles: number[], rows: number, columns: number) {
   const empty = tiles.indexOf(0)
-  const row = Math.floor(empty / 3)
-  const column = empty % 3
+  const row = Math.floor(empty / columns)
+  const column = empty % columns
   const candidates = [
-    { position: row > 0 ? empty - 3 : -1, move: 'up' },
-    { position: row < 2 ? empty + 3 : -1, move: 'down' },
+    { position: row > 0 ? empty - columns : -1, move: 'up' },
+    { position: row < rows - 1 ? empty + columns : -1, move: 'down' },
     { position: column > 0 ? empty - 1 : -1, move: 'left' },
     { position: column < 2 ? empty + 1 : -1, move: 'right' },
   ]
@@ -121,14 +135,14 @@ function puzzleNeighbors(tiles: number[]) {
     })
 }
 
-function manhattan(tiles: number[]) {
+function manhattan(tiles: number[], columns: number) {
   return tiles.reduce((distance, tile, index) => {
     if (tile === 0) return distance
     const target = tile - 1
     return (
       distance +
-      Math.abs(Math.floor(index / 3) - Math.floor(target / 3)) +
-      Math.abs((index % 3) - (target % 3))
+      Math.abs(Math.floor(index / columns) - Math.floor(target / columns)) +
+      Math.abs((index % columns) - (target % columns))
     )
   }, 0)
 }

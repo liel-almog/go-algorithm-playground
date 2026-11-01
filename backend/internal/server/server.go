@@ -113,7 +113,7 @@ var runtimeVersion = runtime.Version
 func (s *Server) algorithms(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"algorithms": s.playground.Algorithms(),
-		"tools":      []map[string]any{{"id": "karger", "name": "Karger randomized minimum cut", "category": "graph", "endpoint": "/api/graphs/min-cut"}},
+		"tools":      []map[string]any{{"id": "karger", "name": "Karger randomized minimum cut", "category": "graph", "endpoint": problemRoutePrefix + "/minimum-cut/solve"}},
 	})
 }
 
@@ -139,7 +139,7 @@ func (s *Server) randomPuzzle(w http.ResponseWriter, r *http.Request) {
 	if !s.decodeAndValidate(w, r, &request) {
 		return
 	}
-	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Size: request.Size, Scramble: request.Scramble})
+	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Rows: request.Size, Columns: request.Size, Scramble: request.Scramble})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
@@ -153,7 +153,7 @@ func (s *Server) solve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := s.playground.Solve(r.Context(), playground.SolveRequest{
-		BoardRequest: playground.BoardRequest{Size: request.Size, Tiles: request.Tiles}, Algorithm: request.Algorithm,
+		BoardRequest: playground.BoardRequest{Rows: request.Size, Columns: request.Size, Tiles: request.Tiles}, Algorithm: request.Algorithm,
 	})
 	if err != nil {
 		switch {
@@ -177,7 +177,7 @@ func (s *Server) compare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := s.playground.Compare(r.Context(), playground.CompareRequest{
-		BoardRequest: playground.BoardRequest{Size: request.Size, Tiles: request.Tiles}, Algorithms: request.Algorithms,
+		BoardRequest: playground.BoardRequest{Rows: request.Size, Columns: request.Size, Tiles: request.Tiles}, Algorithms: request.Algorithms,
 	})
 	if err != nil {
 		if playground.IsSolverTimeout(err) {

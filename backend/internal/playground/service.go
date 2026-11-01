@@ -34,8 +34,9 @@ type Algorithm struct {
 }
 
 type BoardRequest struct {
-	Size  int
-	Tiles []int
+	Rows    int
+	Columns int
+	Tiles   []int
 }
 
 type SolveRequest struct {
@@ -44,7 +45,8 @@ type SolveRequest struct {
 }
 
 type RandomPuzzleRequest struct {
-	Size     int
+	Rows     int
+	Columns  int
 	Scramble int
 }
 
@@ -117,21 +119,24 @@ func (s *Service) MinimumCut(ctx context.Context, request MinCutRequest) (mincut
 }
 
 func (s *Service) RandomPuzzle(request RandomPuzzleRequest) (map[string]any, error) {
-	if request.Size == 0 {
-		request.Size = 3
+	if request.Rows == 0 {
+		request.Rows = 3
+	}
+	if request.Columns == 0 {
+		request.Columns = 3
 	}
 	if request.Scramble == 0 {
 		request.Scramble = 20
 	}
-	board, err := puzzle.Random(request.Size, request.Scramble)
+	board, err := puzzle.Random(request.Rows, request.Columns, request.Scramble)
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{"size": board.Size, "tiles": board.Tiles, "scramble": request.Scramble}, nil
+	return map[string]any{"row": board.Rows, "column": board.Columns, "tiles": board.Tiles, "scramble": request.Scramble}, nil
 }
 
 func (s *Service) Solve(ctx context.Context, request SolveRequest) (solver.Result, error) {
-	board, err := puzzle.New(request.Size, request.Tiles)
+	board, err := puzzle.New(request.Rows, request.Columns, request.Tiles)
 	if err != nil {
 		return solver.Result{}, err
 	}
@@ -146,7 +151,7 @@ func (s *Service) Solve(ctx context.Context, request SolveRequest) (solver.Resul
 }
 
 func (s *Service) Compare(ctx context.Context, request CompareRequest) (Comparison, error) {
-	board, err := puzzle.New(request.Size, request.Tiles)
+	board, err := puzzle.New(request.Rows, request.Columns, request.Tiles)
 	if err != nil {
 		return Comparison{}, err
 	}
@@ -189,7 +194,7 @@ func (s *Service) Experiment(ctx context.Context, request ExperimentRequest) (ma
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		board, err := puzzle.Random(request.Size, request.Scramble)
+		board, err := puzzle.Random(request.Size, request.Size, request.Scramble)
 		if err != nil {
 			return nil, err
 		}

@@ -1,4 +1,4 @@
-import type { Algorithm } from './api'
+import type { Algorithm, AlgorithmCatalog } from './api'
 
 export const puzzleAlgorithms: Algorithm[] = [
   {
@@ -36,6 +36,27 @@ export const kargerAlgorithm: Algorithm = {
   category: 'randomized graph',
 }
 
-export function findPuzzleAlgorithm(id: string) {
-  return puzzleAlgorithms.find((algorithm) => algorithm.id === id)
+export const fallbackAlgorithmCatalog = {
+  algorithms: puzzleAlgorithms,
+  tools: [
+    {
+      id: 'karger',
+      name: 'Karger randomized minimum cut',
+      category: 'graph',
+      endpoint: '/api/problems/minimum-cut/solve',
+    },
+  ],
+} satisfies AlgorithmCatalog
+
+const puzzleAlgorithmIds = new Set(puzzleAlgorithms.map(({ id }) => id))
+
+export function isPuzzleAlgorithm(algorithm: Algorithm) {
+  return puzzleAlgorithmIds.has(algorithm.id)
+}
+
+export function findPuzzleAlgorithm(
+  id: string,
+  algorithms: Algorithm[] = puzzleAlgorithms,
+) {
+  return algorithms.find((algorithm) => algorithm.id === id)
 }

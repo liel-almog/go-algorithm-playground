@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
-
+import { cloudflare } from '@cloudflare/vite-plugin'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
@@ -18,6 +18,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     viteReact(),
+    cloudflare(),
   ],
 })
 

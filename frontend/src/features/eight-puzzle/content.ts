@@ -1,9 +1,11 @@
+import type { PuzzleAlgorithmId } from '../../lib/algorithms'
+
 type PuzzleExplanation = {
   algorithm: string
   steps: [string, string, string]
 }
 
-export const puzzleExplanations: Record<string, PuzzleExplanation> = {
+export const puzzleExplanations: Record<PuzzleAlgorithmId, PuzzleExplanation> = {
   astar: {
     algorithm:
       'A* ranks every candidate board by moves already made plus a Manhattan-distance estimate of the moves still needed. It expands the most promising total score first while preserving the shortest-path guarantee.',

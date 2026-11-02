@@ -77,17 +77,17 @@ Zero represents the blank tile. A solved 3×3 board is `[1,2,3,4,5,6,7,8,0]`.
 
 ## Add an algorithm
 
-Implement the small interface in `internal/solver`:
+Implement the small interface in `internal/problems/eightpuzzle/solver`:
 
 ```go
 type Algorithm interface {
     Metadata() Metadata
-    Solve(context.Context, puzzle.Board) (Result, error)
+    Solve(context.Context, board.Board) (Result, error)
 }
 ```
 
-Then register it in `DefaultRegistry`. The catalogue endpoint and frontend algorithm list pick it up automatically; no new HTTP route is needed. Tests in `internal/solver/solver_test.go` exercise every default algorithm against the same known board.
+Then register it in `DefaultRegistry`. The catalogue endpoint and frontend algorithm list pick it up automatically; no new HTTP route is needed.
 
 The comparison rule is explicit: fewest moves first, then fewest expanded states, then shortest runtime. Random experiments rank by successful runs, average move cost, and average states expanded.
 
-Graph algorithm families live in their own focused package. `internal/mincut` validates a connected undirected graph, performs repeated random contractions, and returns both partitions plus every crossing edge. Add another family beside it and expose one thin handler from `internal/server`; shared discovery metadata is returned by `GET /api/algorithms`.
+Problem implementations live below `internal/problems`. Each problem owns its domain and algorithm subpackages, while `internal/server` keeps one route file per problem. For example, `internal/problems/minimumcut/karger` validates a connected undirected graph, performs repeated random contractions, and returns both partitions plus every crossing edge.

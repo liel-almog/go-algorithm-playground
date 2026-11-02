@@ -1,7 +1,9 @@
 import type { Algorithm } from '../../../lib/api'
+import { PanelHeading } from '../../../components/PanelHeading'
+import { RangeControl } from '../../../components/RangeControl'
 import styles from '../eightPuzzle.module.css'
 
-type PuzzleControlsProps = {
+interface PuzzleControlsProps {
   algorithm: Algorithm
   algorithms: Algorithm[]
   algorithmId: string
@@ -44,13 +46,11 @@ export function PuzzleControls({
 }: PuzzleControlsProps) {
   return (
     <aside className="control-panel">
-      <div className="panel-heading">
-        <span>01</span>
-        <div>
-          <strong>Generate a problem</strong>
-          <p>Every generated board is solvable.</p>
-        </div>
-      </div>
+      <PanelHeading
+        step="01"
+        title="Generate a problem"
+        description="Every generated board is solvable."
+      />
 
       <div className={styles.dimensionControls}>
         <label className={styles.selectControl}>
@@ -83,22 +83,17 @@ export function PuzzleControls({
         </label>
       </div>
 
-      <label className="range-control">
-        <span>
-          Scramble depth <strong>{scramble}</strong>
-        </span>
-        <input
-          type="range"
-          min="4"
-          max="36"
-          value={scramble}
-          onChange={(event) => onScrambleChange(Number(event.target.value))}
-        />
-        <small>
-          <span>Gentle</span>
-          <span>Deeper</span>
-        </small>
-      </label>
+      <RangeControl
+        label="Scramble depth"
+        value={scramble}
+        inputValue={scramble}
+        min={4}
+        max={36}
+        disabled={isGenerating || isSolving}
+        startLabel="Gentle"
+        endLabel="Deeper"
+        onChange={onScrambleChange}
+      />
 
       <button
         className="button button-secondary button-full"
@@ -111,13 +106,11 @@ export function PuzzleControls({
 
       <div className="panel-divider" />
 
-      <div className="panel-heading">
-        <span>02</span>
-        <div>
-          <strong>Choose a solver</strong>
-          <p>Run one backend algorithm on the current board.</p>
-        </div>
-      </div>
+      <PanelHeading
+        step="02"
+        title="Choose a solver"
+        description="Run one backend algorithm on the current board."
+      />
 
       <label className={styles.selectControl}>
         <span>Algorithm</span>

@@ -1,12 +1,13 @@
 import type { SolveResult } from '../../../lib/api'
+import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import styles from '../eightPuzzle.module.css'
 import { PuzzleBoard } from './PuzzleBoard'
 
-type PuzzleVisualizerProps = {
+interface PuzzleVisualizerProps {
   tiles: number[]
   rows: number
   columns: number
-  currentMove?: string
+  currentMove?: string | undefined
   playerMoves: number
   playerSolved: boolean
   result: SolveResult | null
@@ -41,23 +42,22 @@ export function PuzzleVisualizer({
 }: PuzzleVisualizerProps) {
   return (
     <section className="visualizer-panel">
-      <div className="visualizer-topbar">
-        <div>
-          <span className="live-dot" />
-          {playerSolved
+      <VisualizerTopbar
+        status={
+          playerSolved
             ? `Solved by you in ${playerMoves} moves`
             : result
               ? 'Solution ready'
               : isGenerating
                 ? 'Building puzzle'
-                : 'Your turn — click a neighboring tile'}
-        </div>
-        <span>
-          {result
+                : 'Your turn — click a neighboring tile'
+        }
+        detail={
+          result
             ? `Step ${step} of ${result.path.length - 1}`
-            : `${playerMoves} player ${playerMoves === 1 ? 'move' : 'moves'}`}
-        </span>
-      </div>
+            : `${playerMoves} player ${playerMoves === 1 ? 'move' : 'moves'}`
+        }
+      />
 
       <div className={`puzzle-stage${playerSolved ? ` ${styles.solved}` : ''}`}>
         {tiles.length > 0 ? (

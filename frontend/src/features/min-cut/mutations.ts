@@ -4,6 +4,12 @@ import type { Edge } from '../../lib/api'
 import { problemMutationKeys } from '../problems/mutationKeys'
 
 export const minCutMutations = {
+  generate: () =>
+    mutationOptions({
+      mutationKey: problemMutationKeys.generate('minimum-cut'),
+      mutationFn: (variables: { vertices: number }) =>
+        api.randomGraph(variables.vertices),
+    }),
   solve: () =>
     mutationOptions({
       mutationKey: problemMutationKeys.solve('minimum-cut'),

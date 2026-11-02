@@ -2,7 +2,7 @@ import { noop } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { algorithmQueries } from '../features/algorithms/queries'
 import { EightPuzzlePage } from '../features/eight-puzzle'
-import { LabHeader } from './algorithms.$algorithmId'
+import { LabHeader } from '../components/LabHeader'
 
 export const Route = createFileRoute('/problems/eight-puzzle')({
   loader: ({ context }) => {

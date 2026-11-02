@@ -14,6 +14,7 @@ import { Route as AlgorithmsAlgorithmIdRouteImport } from './routes/algorithms.$
 import { Route as AlgorithmsKargerRouteImport } from './routes/algorithms.karger'
 import { Route as ProblemsEightPuzzleRouteImport } from './routes/problems.eight-puzzle'
 import { Route as ProblemsMatrixVerificationRouteImport } from './routes/problems.matrix-verification'
+import { Route as ProblemsMinimumCutRouteImport } from './routes/problems.minimum-cut'
 import { Route as ProblemsPolynomialIdentityRouteImport } from './routes/problems.polynomial-identity'
 
 const IndexRoute = IndexRouteImport.update({
@@ -42,6 +43,11 @@ const ProblemsMatrixVerificationRoute =
     path: '/problems/matrix-verification',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ProblemsMinimumCutRoute = ProblemsMinimumCutRouteImport.update({
+  id: '/problems/minimum-cut',
+  path: '/problems/minimum-cut',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProblemsPolynomialIdentityRoute =
   ProblemsPolynomialIdentityRouteImport.update({
     id: '/problems/polynomial-identity',
@@ -55,6 +61,7 @@ export interface FileRoutesByFullPath {
   '/algorithms/karger': typeof AlgorithmsKargerRoute
   '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/minimum-cut': typeof ProblemsMinimumCutRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRoutesByTo {
@@ -63,6 +70,7 @@ export interface FileRoutesByTo {
   '/algorithms/karger': typeof AlgorithmsKargerRoute
   '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/minimum-cut': typeof ProblemsMinimumCutRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRoutesById {
@@ -72,6 +80,7 @@ export interface FileRoutesById {
   '/algorithms/karger': typeof AlgorithmsKargerRoute
   '/problems/eight-puzzle': typeof ProblemsEightPuzzleRoute
   '/problems/matrix-verification': typeof ProblemsMatrixVerificationRoute
+  '/problems/minimum-cut': typeof ProblemsMinimumCutRoute
   '/problems/polynomial-identity': typeof ProblemsPolynomialIdentityRoute
 }
 export interface FileRouteTypes {
@@ -82,6 +91,7 @@ export interface FileRouteTypes {
     | '/algorithms/karger'
     | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
+    | '/problems/minimum-cut'
     | '/problems/polynomial-identity'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -90,6 +100,7 @@ export interface FileRouteTypes {
     | '/algorithms/karger'
     | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
+    | '/problems/minimum-cut'
     | '/problems/polynomial-identity'
   id:
     | '__root__'
@@ -98,6 +109,7 @@ export interface FileRouteTypes {
     | '/algorithms/karger'
     | '/problems/eight-puzzle'
     | '/problems/matrix-verification'
+    | '/problems/minimum-cut'
     | '/problems/polynomial-identity'
   fileRoutesById: FileRoutesById
 }
@@ -107,6 +119,7 @@ export interface RootRouteChildren {
   AlgorithmsKargerRoute: typeof AlgorithmsKargerRoute
   ProblemsEightPuzzleRoute: typeof ProblemsEightPuzzleRoute
   ProblemsMatrixVerificationRoute: typeof ProblemsMatrixVerificationRoute
+  ProblemsMinimumCutRoute: typeof ProblemsMinimumCutRoute
   ProblemsPolynomialIdentityRoute: typeof ProblemsPolynomialIdentityRoute
 }
 
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsMatrixVerificationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/minimum-cut': {
+      id: '/problems/minimum-cut'
+      path: '/problems/minimum-cut'
+      fullPath: '/problems/minimum-cut'
+      preLoaderRoute: typeof ProblemsMinimumCutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/polynomial-identity': {
       id: '/problems/polynomial-identity'
       path: '/problems/polynomial-identity'
@@ -163,6 +183,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlgorithmsKargerRoute: AlgorithmsKargerRoute,
   ProblemsEightPuzzleRoute: ProblemsEightPuzzleRoute,
   ProblemsMatrixVerificationRoute: ProblemsMatrixVerificationRoute,
+  ProblemsMinimumCutRoute: ProblemsMinimumCutRoute,
   ProblemsPolynomialIdentityRoute: ProblemsPolynomialIdentityRoute,
 }
 export const routeTree = rootRouteImport

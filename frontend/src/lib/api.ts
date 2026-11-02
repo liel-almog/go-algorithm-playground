@@ -28,6 +28,53 @@ const edgeSchema = z.strictObject({
   to: z.string().min(1),
 })
 
+const graphSchema = z.strictObject({
+  vertices: z.array(z.string().min(1)).min(2),
+  edges: z.array(edgeSchema).min(1),
+})
+
+const matrixSchema = z.array(z.array(z.number().int()))
+
+const matrixClaimSchema = z.strictObject({
+  a: matrixSchema,
+  b: matrixSchema,
+  product: matrixSchema,
+})
+
+const matrixTrialSchema = z.strictObject({
+  vector: z.array(z.number().int()),
+  left: z.array(z.number().int()),
+  right: z.array(z.number().int()),
+  passed: z.boolean(),
+})
+
+const matrixResultSchema = z.strictObject({
+  algorithm: z.literal('freivalds'),
+  accepted: z.boolean(),
+  trials: z.array(matrixTrialSchema),
+  falsePositiveBound: z.number().min(0).max(1),
+})
+
+const polynomialIdentitySchema = z.strictObject({
+  left: z.array(nonNegativeInteger),
+  right: z.array(nonNegativeInteger),
+})
+
+const polynomialCheckSchema = z.strictObject({
+  point: positiveInteger,
+  left: nonNegativeInteger,
+  right: nonNegativeInteger,
+  passed: z.boolean(),
+})
+
+const polynomialResultSchema = z.strictObject({
+  algorithm: z.literal('schwartz-zippel'),
+  accepted: z.boolean(),
+  checks: z.array(polynomialCheckSchema),
+  prime: z.literal(101),
+  falsePositiveBound: z.number().min(0).max(1),
+})
+
 const minCutResultSchema = z.strictObject({
   algorithm: z.string().min(1),
   cutSize: nonNegativeInteger,
@@ -148,11 +195,12 @@ function sameTiles(left: number[] | undefined, right: number[]) {
 }
 
 function isLegalStep(
-  current: number[],
-  next: number[],
+  current: number[] | undefined,
+  next: number[] | undefined,
   move: 'up' | 'right' | 'down' | 'left',
   columns: number,
 ) {
+  if (!current || !next) return false
   const currentBlank = current.indexOf(0)
   const nextBlank = next.indexOf(0)
   const delta = nextBlank - currentBlank
@@ -193,7 +241,14 @@ export type Algorithm = z.infer<typeof algorithmSchema>
 export type AlgorithmCatalog = z.infer<typeof algorithmsResponseSchema>
 export type AlgorithmTool = AlgorithmCatalog['tools'][number]
 export type Edge = z.infer<typeof edgeSchema>
+export type Graph = z.infer<typeof graphSchema>
+export type MatrixClaim = z.infer<typeof matrixClaimSchema>
+export type MatrixTrial = z.infer<typeof matrixTrialSchema>
+export type MatrixResult = z.infer<typeof matrixResultSchema>
 export type MinCutResult = z.infer<typeof minCutResultSchema>
+export type PolynomialIdentity = z.infer<typeof polynomialIdentitySchema>
+export type PolynomialCheck = z.infer<typeof polynomialCheckSchema>
+export type PolynomialResult = z.infer<typeof polynomialResultSchema>
 export type SolveResult = z.infer<ReturnType<typeof puzzleSolveResultSchema>>
 
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? ''
@@ -227,7 +282,11 @@ const jsonHeaders = { 'Content-Type': 'application/json' }
 
 export const api = {
   algorithms: (signal?: AbortSignal) =>
-    request('/api/algorithms', algorithmsResponseSchema, { signal }),
+    request(
+      '/api/algorithms',
+      algorithmsResponseSchema,
+      signal ? { signal } : undefined,
+    ),
 
   randomPuzzle: (rows: number, columns: number, scramble: number) =>
     request(
@@ -261,5 +320,44 @@ export const api = {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({ vertices, edges, trials }),
+    }),
+
+  randomGraph: (vertices: number) =>
+    request('/api/problems/minimum-cut/generate', graphSchema, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ vertices }),
+    }),
+
+  randomMatrices: (size: number) =>
+    request('/api/problems/matrix-verification/generate', matrixClaimSchema, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ size }),
+    }),
+
+  verifyMatrices: (claim: MatrixClaim, rounds: number) =>
+    request('/api/problems/matrix-verification/solve', matrixResultSchema, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ ...claim, rounds }),
+    }),
+
+  randomPolynomial: (degree: number) =>
+    request(
+      '/api/problems/polynomial-identity/generate',
+      polynomialIdentitySchema,
+      {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ degree }),
+      },
+    ),
+
+  verifyPolynomial: (identity: PolynomialIdentity, rounds: number) =>
+    request('/api/problems/polynomial-identity/solve', polynomialResultSchema, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ ...identity, rounds }),
     }),
 }

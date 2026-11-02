@@ -15,69 +15,37 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/liel-almog/go-algorithm-playground/internal/playground"
+	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
 )
 
 type Server struct {
-	playground     *playground.Service
+	eightPuzzle    *eightpuzzle.Service
 	allowedOrigins []string
+	apiRoutes      map[string]map[string]struct{}
 	handler        http.Handler
 	validator      *validator.Validate
 	algorithmSlots chan struct{}
 }
 
-type boardRequest struct {
-	Size  int   `json:"size" validate:"required,min=2,max=4"`
-	Tiles []int `json:"tiles" validate:"required,min=4,max=16,dive,gte=0,lte=15"`
-}
-type solveRequest struct {
-	boardRequest
-	Algorithm string `json:"algorithm" validate:"required"`
-}
-type randomRequest struct {
-	Size     int `json:"size" validate:"omitempty,min=2,max=4"`
-	Scramble int `json:"scramble" validate:"omitempty,min=1,max=200"`
-}
-type compareRequest struct {
-	boardRequest
-	Algorithms []string `json:"algorithms" validate:"omitempty,max=4,dive,required"`
-}
-type experimentRequest struct {
-	Size       int      `json:"size" validate:"omitempty,min=2,max=3"`
-	Scramble   int      `json:"scramble" validate:"omitempty,min=1,max=100"`
-	Runs       int      `json:"runs" validate:"omitempty,min=1,max=5"`
-	Algorithms []string `json:"algorithms" validate:"omitempty,max=4,dive,required"`
-}
-type minCutRequest struct {
-	Vertices []string `json:"vertices" validate:"required,min=2,max=50,dive,required,max=100"`
-	Edges    []struct {
-		From string `json:"from" validate:"required,max=100"`
-		To   string `json:"to" validate:"required,max=100"`
-	} `json:"edges" validate:"required,min=1,max=1000,dive"`
-	Trials int `json:"trials" validate:"required,min=1,max=500"`
-}
-
-func New(service *playground.Service, allowedOrigins []string) *Server {
+func New(service *eightpuzzle.Service, allowedOrigins []string) *Server {
 	if service == nil {
-		service = playground.New(nil)
+		service = eightpuzzle.New(nil)
 	}
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
 	}
 	server := &Server{
-		playground: service, allowedOrigins: allowedOrigins,
+		eightPuzzle: service, allowedOrigins: allowedOrigins,
+		apiRoutes: make(map[string]map[string]struct{}),
 		validator: newValidator(), algorithmSlots: algorithmSlots(),
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", server.index)
-	mux.HandleFunc("GET /api/health", server.health)
-	mux.HandleFunc("GET /api/algorithms", server.algorithms)
-	mux.HandleFunc("POST /api/puzzles/random", server.randomPuzzle)
-	mux.HandleFunc("POST /api/solve", server.limitAlgorithm(server.solve))
-	mux.HandleFunc("POST /api/compare", server.limitAlgorithm(server.compare))
-	mux.HandleFunc("POST /api/experiments/random", server.limitAlgorithm(server.experiment))
-	mux.HandleFunc("POST /api/graphs/min-cut", server.limitAlgorithm(server.minimumCut))
+	server.registerAPI(mux, http.MethodGet, "/api/health", server.health)
+	server.registerAPI(mux, http.MethodGet, "/api/algorithms", server.algorithms)
 	server.registerProblemRoutes(mux)
+	mux.HandleFunc("/api", apiNotFound)
+	mux.HandleFunc("/api/", apiNotFound)
 	server.handler = server.recoverPanic(server.cors(server.logRequests(mux)))
 	return server
 }
@@ -105,110 +73,38 @@ func AllowedOriginsFromEnv() []string {
 }
 
 func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "goVersion": strings.TrimPrefix(runtimeVersion(), "go"), "algorithms": s.playground.AlgorithmCount()})
+	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "goVersion": strings.TrimPrefix(runtimeVersion(), "go"), "algorithms": s.eightPuzzle.AlgorithmCount()})
 }
 
 var runtimeVersion = runtime.Version
 
 func (s *Server) algorithms(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"algorithms": s.playground.Algorithms(),
+		"algorithms": s.eightPuzzle.Algorithms(),
 		"tools":      []map[string]any{{"id": "karger", "name": "Karger randomized minimum cut", "category": "graph", "endpoint": problemRoutePrefix + "/minimum-cut/solve"}},
 	})
 }
 
-func (s *Server) minimumCut(w http.ResponseWriter, r *http.Request) {
-	var request minCutRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+func (s *Server) registerAPI(mux *http.ServeMux, method, path string, handler http.HandlerFunc) {
+	pattern := path
+	if strings.HasSuffix(pattern, "/") {
+		pattern += "{$}"
 	}
-	if len(request.Edges)*request.Trials > maxMinCutWork {
-		writeError(w, http.StatusBadRequest, errors.New("edges multiplied by trials must not exceed 250000"))
-		return
-	}
-	edges := make([]playground.Edge, len(request.Edges))
-	for i, edge := range request.Edges {
-		edges[i] = playground.Edge{From: edge.From, To: edge.To}
-	}
-	result, err := s.playground.MinimumCut(r.Context(), playground.MinCutRequest{Vertices: request.Vertices, Edges: edges, Trials: request.Trials})
-	writeResult(w, result, err)
-}
-
-func (s *Server) randomPuzzle(w http.ResponseWriter, r *http.Request) {
-	var request randomRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
-	}
-	result, err := s.playground.RandomPuzzle(playground.RandomPuzzleRequest{Rows: request.Size, Columns: request.Size, Scramble: request.Scramble})
-	if err != nil {
-		writeError(w, http.StatusBadRequest, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
-}
-
-func (s *Server) solve(w http.ResponseWriter, r *http.Request) {
-	var request solveRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
-	}
-	result, err := s.playground.Solve(r.Context(), playground.SolveRequest{
-		BoardRequest: playground.BoardRequest{Rows: request.Size, Columns: request.Size, Tiles: request.Tiles}, Algorithm: request.Algorithm,
+	mux.HandleFunc(method+" "+pattern, handler)
+	mux.HandleFunc(pattern, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Allow", method)
+		writeError(w, http.StatusMethodNotAllowed, errors.New("method not allowed"))
 	})
-	if err != nil {
-		switch {
-		case playground.IsSolverTimeout(err):
-			writeSolverError(w, err)
-		case errors.Is(err, playground.ErrUnsolvable):
-			writeError(w, http.StatusUnprocessableEntity, err)
-		case errors.Is(err, playground.ErrAlgorithmNotFound):
-			writeError(w, http.StatusNotFound, err)
-		default:
-			writeError(w, http.StatusUnprocessableEntity, err)
-		}
-		return
+	methods := s.apiRoutes[path]
+	if methods == nil {
+		methods = make(map[string]struct{})
+		s.apiRoutes[path] = methods
 	}
-	writeJSON(w, http.StatusOK, result)
+	methods[method] = struct{}{}
 }
 
-func (s *Server) compare(w http.ResponseWriter, r *http.Request) {
-	var request compareRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
-	}
-	result, err := s.playground.Compare(r.Context(), playground.CompareRequest{
-		BoardRequest: playground.BoardRequest{Rows: request.Size, Columns: request.Size, Tiles: request.Tiles}, Algorithms: request.Algorithms,
-	})
-	if err != nil {
-		if playground.IsSolverTimeout(err) {
-			writeSolverError(w, err)
-		} else if strings.Contains(err.Error(), "not solvable") {
-			writeError(w, http.StatusUnprocessableEntity, err)
-		} else {
-			writeError(w, http.StatusBadRequest, err)
-		}
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
-}
-
-func (s *Server) experiment(w http.ResponseWriter, r *http.Request) {
-	var request experimentRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
-	}
-	result, err := s.playground.Experiment(r.Context(), playground.ExperimentRequest{
-		Size: request.Size, Scramble: request.Scramble, Runs: request.Runs, Algorithms: request.Algorithms,
-	})
-	if err != nil {
-		if playground.IsSolverTimeout(err) {
-			writeSolverError(w, err)
-		} else {
-			writeError(w, http.StatusBadRequest, err)
-		}
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
+func apiNotFound(w http.ResponseWriter, _ *http.Request) {
+	writeError(w, http.StatusNotFound, errors.New("API route not found"))
 }
 
 func decode(w http.ResponseWriter, r *http.Request, destination any) bool {
@@ -228,7 +124,7 @@ func decode(w http.ResponseWriter, r *http.Request, destination any) bool {
 
 func writeSolverError(w http.ResponseWriter, err error) {
 	status := http.StatusUnprocessableEntity
-	if playground.IsSolverTimeout(err) {
+	if eightpuzzle.IsSolverTimeout(err) {
 		status = http.StatusRequestTimeout
 	}
 	writeError(w, status, err)
@@ -239,6 +135,9 @@ func writeError(w http.ResponseWriter, status int, err error) {
 func publicError(err error) string {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return "the algorithm exceeded its 5 second time limit"
+	}
+	if eightpuzzle.IsSolverLimit(err) {
+		return "the algorithm reached its state exploration limit"
 	}
 	return err.Error()
 }
@@ -251,7 +150,8 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 func (s *Server) cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin != "" && s.originAllowed(origin) {
+		allowedOrigin := origin == "" || s.originAllowed(origin)
+		if origin != "" && allowedOrigin {
 			if len(s.allowedOrigins) == 1 && s.allowedOrigins[0] == "*" {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			} else {
@@ -263,6 +163,20 @@ func (s *Server) cors(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Max-Age", "86400")
 		}
 		if r.Method == http.MethodOptions {
+			if !allowedOrigin {
+				writeError(w, http.StatusForbidden, errors.New("origin is not allowed"))
+				return
+			}
+			requestedMethod := r.Header.Get("Access-Control-Request-Method")
+			methods, pathExists := s.apiRoutes[r.URL.Path]
+			if !pathExists {
+				apiNotFound(w, r)
+				return
+			}
+			if _, methodExists := methods[requestedMethod]; requestedMethod == "" || !methodExists {
+				writeError(w, http.StatusMethodNotAllowed, errors.New("requested method is not allowed"))
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

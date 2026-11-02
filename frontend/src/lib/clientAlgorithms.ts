@@ -1,5 +1,7 @@
 import type { Edge, MinCutResult, SolveResult } from './api'
 
+type PuzzleMove = SolveResult['moves'][number]
+
 function puzzleGoal(rows: number, columns: number) {
   return Array.from({ length: rows * columns }, (_, index) =>
     index === rows * columns - 1 ? 0 : index + 1,
@@ -11,6 +13,18 @@ export function generateLocalPuzzle(
   columns: number,
   scramble: number,
 ) {
+  if (
+    !Number.isInteger(rows) ||
+    !Number.isInteger(columns) ||
+    rows < 2 ||
+    columns < 2
+  ) {
+    throw new Error('Puzzle dimensions must be integers of at least 2.')
+  }
+  if (!Number.isInteger(scramble) || scramble < 0) {
+    throw new Error('Scramble must be a non-negative integer.')
+  }
+
   const tiles = puzzleGoal(rows, columns)
   const goalKey = tiles.join(',')
   let empty = tiles.length - 1
@@ -26,8 +40,11 @@ export function generateLocalPuzzle(
       column < columns - 1 ? empty + 1 : -1,
     ].filter((position) => position >= 0 && position !== previous)
     const next = options[Math.floor(Math.random() * options.length)]
+    if (next === undefined) {
+      throw new Error('Could not find a legal puzzle move.')
+    }
     previous = empty
-    ;[tiles[empty], tiles[next]] = [tiles[next], tiles[empty]]
+    swapTiles(tiles, empty, next)
     empty = next
   }
 
@@ -35,7 +52,7 @@ export function generateLocalPuzzle(
   // generated exercise meaningful while preserving solvability.
   if (tiles.join(',') === goalKey) {
     const next = empty === tiles.length - 1 ? empty - 1 : empty + 1
-    ;[tiles[empty], tiles[next]] = [tiles[next], tiles[empty]]
+    swapTiles(tiles, empty, next)
   }
 
   return tiles
@@ -61,7 +78,7 @@ export function solvePuzzleLocally(
     { tiles: start, key: startKey, cost: 0, score: manhattan(start, columns) },
   ]
   const bestCost = new Map([[startKey, 0]])
-  const parent = new Map<string, { key: string; move: string }>()
+  const parent = new Map<string, { key: string; move: PuzzleMove }>()
   const states = new Map([[startKey, start]])
   let expanded = 0
   let generated = 1
@@ -83,11 +100,15 @@ export function solvePuzzleLocally(
       generated += 1
       if (key === goalKey) {
         const path: number[][] = []
-        const moves: string[] = []
+        const moves: PuzzleMove[] = []
         let cursor = key
         while (cursor !== startKey) {
-          path.push(states.get(cursor)!)
-          const link = parent.get(cursor)!
+          const state = states.get(cursor)
+          const link = parent.get(cursor)
+          if (!state || !link) {
+            throw new Error('Could not reconstruct the puzzle solution.')
+          }
+          path.push(state)
           moves.push(link.move)
           cursor = link.key
         }
@@ -120,19 +141,29 @@ function puzzleNeighbors(tiles: number[], rows: number, columns: number) {
   const empty = tiles.indexOf(0)
   const row = Math.floor(empty / columns)
   const column = empty % columns
-  const candidates = [
+  const candidates: { position: number; move: PuzzleMove }[] = [
     { position: row > 0 ? empty - columns : -1, move: 'up' },
     { position: row < rows - 1 ? empty + columns : -1, move: 'down' },
     { position: column > 0 ? empty - 1 : -1, move: 'left' },
-    { position: column < 2 ? empty + 1 : -1, move: 'right' },
+    { position: column < columns - 1 ? empty + 1 : -1, move: 'right' },
   ]
   return candidates
     .filter(({ position }) => position >= 0)
     .map(({ position, move }) => {
       const next = [...tiles]
-      ;[next[empty], next[position]] = [next[position], next[empty]]
+      swapTiles(next, empty, position)
       return { tiles: next, move }
     })
+}
+
+function swapTiles(tiles: number[], first: number, second: number) {
+  const firstTile = tiles[first]
+  const secondTile = tiles[second]
+  if (firstTile === undefined || secondTile === undefined) {
+    throw new Error('Cannot move a tile outside the puzzle board.')
+  }
+  tiles[first] = secondTile
+  tiles[second] = firstTile
 }
 
 function manhattan(tiles: number[], columns: number) {
@@ -149,7 +180,7 @@ function manhattan(tiles: number[], columns: number) {
 
 function puzzleResult(
   path: number[][],
-  moves: string[],
+  moves: PuzzleMove[],
   expanded: number,
   frontierMax: number,
   started: number,
@@ -173,16 +204,33 @@ export function solveMinCutLocally(
   edges: Edge[],
   trials: number,
 ): MinCutResult {
+  if (vertices.length < 2) {
+    throw new Error('Minimum cut requires at least two vertices.')
+  }
+  if (edges.length === 0) {
+    throw new Error('Minimum cut requires at least one edge.')
+  }
+  if (!Number.isInteger(trials) || trials < 1) {
+    throw new Error('Minimum cut requires at least one trial.')
+  }
+
   const started = performance.now()
   let bestCut = Number.POSITIVE_INFINITY
-  let bestPartition: [string[], string[]] = [[vertices[0]], vertices.slice(1)]
+  const firstVertex = vertices[0]
+  if (firstVertex === undefined) {
+    throw new Error('Minimum cut requires at least two vertices.')
+  }
+  let bestPartition: [string[], string[]] = [[firstVertex], vertices.slice(1)]
 
   for (let trial = 0; trial < trials; trial += 1) {
     const parent = new Map(vertices.map((vertex) => [vertex, vertex]))
     let groups = vertices.length
 
     const find = (vertex: string): string => {
-      const next = parent.get(vertex)!
+      const next = parent.get(vertex)
+      if (next === undefined) {
+        throw new Error(`Unknown graph vertex: ${vertex}`)
+      }
       if (next === vertex) return vertex
       const root = find(next)
       parent.set(vertex, root)
@@ -195,13 +243,14 @@ export function solveMinCutLocally(
       )
       if (candidates.length === 0) break
       const edge = candidates[Math.floor(Math.random() * candidates.length)]
+      if (!edge) break
       const fromRoot = find(edge.from)
       const toRoot = find(edge.to)
       parent.set(toRoot, fromRoot)
       groups -= 1
     }
 
-    const firstRoot = find(vertices[0])
+    const firstRoot = find(firstVertex)
     const partition: [string[], string[]] = [
       vertices.filter((vertex) => find(vertex) === firstRoot),
       vertices.filter((vertex) => find(vertex) !== firstRoot),

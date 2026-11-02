@@ -4,6 +4,7 @@ import {
   findPuzzleAlgorithm,
   fallbackAlgorithmCatalog,
   isPuzzleAlgorithm,
+  defaultPuzzleAlgorithm,
   puzzleAlgorithms as fallbackPuzzleAlgorithms,
 } from '../../../lib/algorithms'
 import type { SolveResult } from '../../../lib/api'
@@ -23,9 +24,11 @@ export function useEightPuzzle() {
     select: (catalog) => catalog.algorithms.filter(isPuzzleAlgorithm),
   })
   const algorithms =
-    serverAlgorithms.length > 0 ? serverAlgorithms : fallbackPuzzleAlgorithms
+    serverAlgorithms && serverAlgorithms.length > 0
+      ? serverAlgorithms
+      : fallbackPuzzleAlgorithms
   const algorithm =
-    findPuzzleAlgorithm(algorithmId, algorithms) ?? algorithms[0]
+    findPuzzleAlgorithm(algorithmId, algorithms) ?? defaultPuzzleAlgorithm
   const [tiles, setTiles] = useState<number[]>([])
   const [initialTiles, setInitialTiles] = useState<number[]>([])
   const [rows, setRows] = useState(3)
@@ -69,32 +72,40 @@ export function useEightPuzzle() {
     [clearSolution],
   )
 
-  const generateProblem = useCallback(async () => {
-    resetGeneration()
-    resetSolve()
-    setFallbackError('')
-    try {
-      const puzzle = await generatePuzzle({
-        rows,
-        columns,
-        scramble,
-      })
-      setNewPuzzle(puzzle.tiles)
-      setGenerationSource('backend')
-    } catch {
-      setNewPuzzle(generateLocalPuzzle(rows, columns, scramble))
-      setGenerationSource('local')
+  const generateProblem = useCallback(
+    async (dimensions?: { rows: number; columns: number }) => {
+      const requestedRows = dimensions?.rows ?? rows
+      const requestedColumns = dimensions?.columns ?? columns
+
       resetGeneration()
-    }
-  }, [
-    columns,
-    generatePuzzle,
-    resetGeneration,
-    resetSolve,
-    rows,
-    scramble,
-    setNewPuzzle,
-  ])
+      resetSolve()
+      setFallbackError('')
+      try {
+        const puzzle = await generatePuzzle({
+          rows: requestedRows,
+          columns: requestedColumns,
+          scramble,
+        })
+        setNewPuzzle(puzzle.tiles)
+        setGenerationSource('backend')
+      } catch {
+        setNewPuzzle(
+          generateLocalPuzzle(requestedRows, requestedColumns, scramble),
+        )
+        setGenerationSource('local')
+        resetGeneration()
+      }
+    },
+    [
+      columns,
+      generatePuzzle,
+      resetGeneration,
+      resetSolve,
+      rows,
+      scramble,
+      setNewPuzzle,
+    ],
+  )
 
   useEffect(() => {
     if (didGenerate.current) return
@@ -155,7 +166,11 @@ export function useEightPuzzle() {
       const empty = tiles.indexOf(0)
       if (!areAdjacent(index, empty, columns)) return
       const next = [...tiles]
-      ;[next[index], next[empty]] = [next[empty], next[index]]
+      const selectedTile = next[index]
+      const emptyTile = next[empty]
+      if (selectedTile === undefined || emptyTile === undefined) return
+      next[index] = emptyTile
+      next[empty] = selectedTile
       setTiles(next)
       setPlayerMoves((current) => current + 1)
       resetSolve()
@@ -193,8 +208,9 @@ export function useEightPuzzle() {
       resetGeneration()
       resetSolve()
       setFallbackError('')
+      void generateProblem({ rows: nextRows, columns })
     },
-    [clearSolution, resetGeneration, resetSolve],
+    [clearSolution, columns, generateProblem, resetGeneration, resetSolve],
   )
 
   const changeColumns = useCallback(
@@ -208,8 +224,9 @@ export function useEightPuzzle() {
       resetGeneration()
       resetSolve()
       setFallbackError('')
+      void generateProblem({ rows, columns: nextColumns })
     },
-    [clearSolution, resetGeneration, resetSolve],
+    [clearSolution, generateProblem, resetGeneration, resetSolve, rows],
   )
 
   const previousStep = useCallback(() => {

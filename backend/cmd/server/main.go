@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
-	"github.com/liel-almog/go-algorithm-playground/internal/playground"
+	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
+	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle/solver"
 	appserver "github.com/liel-almog/go-algorithm-playground/internal/server"
-	"github.com/liel-almog/go-algorithm-playground/internal/solver"
 )
 
 func main() {
 	registry := solver.DefaultRegistry()
-	service := playground.New(registry)
+	service := eightpuzzle.New(registry)
 	server := appserver.New(service, appserver.AllowedOriginsFromEnv())
 	port := appserver.ParsePort()
 	e := echo.New()

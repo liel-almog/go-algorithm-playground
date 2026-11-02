@@ -1,11 +1,11 @@
 import styles from '../eightPuzzle.module.css'
 import { areAdjacent } from '../puzzle'
 
-type PuzzleBoardProps = {
+interface PuzzleBoardProps {
   tiles: number[]
   rows: number
   columns: number
-  move?: string
+  move?: string | undefined
   playable: boolean
   onTileClick: (index: number) => void
 }

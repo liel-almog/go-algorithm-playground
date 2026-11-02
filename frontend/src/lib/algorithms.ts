@@ -1,14 +1,19 @@
 import type { Algorithm, AlgorithmCatalog } from './api'
 
-export const puzzleAlgorithms: Algorithm[] = [
-  {
+export type PuzzleAlgorithmId = 'astar' | 'bfs' | 'dfs'
+export type PuzzleAlgorithm = Algorithm & { id: PuzzleAlgorithmId }
+
+export const defaultPuzzleAlgorithm: PuzzleAlgorithm = {
     id: 'astar',
     name: 'A* Search',
     description:
       'Balances the path already travelled with a Manhattan-distance estimate of what remains.',
     optimal: true,
     category: 'informed',
-  },
+}
+
+export const puzzleAlgorithms: PuzzleAlgorithm[] = [
+  defaultPuzzleAlgorithm,
   {
     id: 'bfs',
     name: 'Breadth-first search',
@@ -48,15 +53,19 @@ export const fallbackAlgorithmCatalog = {
   ],
 } satisfies AlgorithmCatalog
 
-const puzzleAlgorithmIds = new Set(puzzleAlgorithms.map(({ id }) => id))
+const puzzleAlgorithmIds: ReadonlySet<string> = new Set(
+  puzzleAlgorithms.map(({ id }) => id),
+)
 
-export function isPuzzleAlgorithm(algorithm: Algorithm) {
+export function isPuzzleAlgorithm(
+  algorithm: Algorithm,
+): algorithm is PuzzleAlgorithm {
   return puzzleAlgorithmIds.has(algorithm.id)
 }
 
 export function findPuzzleAlgorithm(
   id: string,
-  algorithms: Algorithm[] = puzzleAlgorithms,
+  algorithms: readonly PuzzleAlgorithm[] = puzzleAlgorithms,
 ) {
   return algorithms.find((algorithm) => algorithm.id === id)
 }

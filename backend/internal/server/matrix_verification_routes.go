@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/labstack/echo/v5"
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/matrixverification/freivalds"
 )
 
@@ -17,25 +18,25 @@ type matrixGenerateRequest struct {
 	Size int `json:"size" validate:"required,min=2,max=10"`
 }
 
-func (s *Server) registerMatrixVerificationRoutes(mux *http.ServeMux) {
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/matrix-verification/generate", s.generateMatrices)
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/matrix-verification/solve", s.limitAlgorithm(s.solveMatrixVerification))
+func (s *Server) registerMatrixVerificationRoutes(e *echo.Echo) {
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/matrix-verification/generate", s.generateMatrices)
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/matrix-verification/solve", s.solveMatrixVerification, s.limitAlgorithm)
 }
 
-func (s *Server) generateMatrices(w http.ResponseWriter, r *http.Request) {
+func (s *Server) generateMatrices(c *echo.Context) error {
 	var request matrixGenerateRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
 	result, err := freivalds.Generate(request.Size)
-	writeResult(w, result, err)
+	return writeResult(c, result, err)
 }
 
-func (s *Server) solveMatrixVerification(w http.ResponseWriter, r *http.Request) {
+func (s *Server) solveMatrixVerification(c *echo.Context) error {
 	var request matrixSolveRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
-	result, err := freivalds.Solve(r.Context(), request.A, request.B, request.Product, request.Rounds)
-	writeResult(w, result, err)
+	result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, request.Product, request.Rounds)
+	return writeResult(c, result, err)
 }

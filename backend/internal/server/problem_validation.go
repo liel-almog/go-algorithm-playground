@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v5"
 )
 
 func newValidator() *validator.Validate {
@@ -23,15 +24,14 @@ func newValidator() *validator.Validate {
 	return validate
 }
 
-func (s *Server) decodeAndValidate(w http.ResponseWriter, r *http.Request, destination any) bool {
-	if !decode(w, r, destination) {
-		return false
+func (s *Server) decodeAndValidate(c *echo.Context, destination any) error {
+	if err := decode(c, destination); err != nil {
+		return err
 	}
 	if err := s.validator.Struct(destination); err != nil {
-		writeError(w, http.StatusBadRequest, validationError(err))
-		return false
+		return validationError(err)
 	}
-	return true
+	return nil
 }
 
 func validationError(err error) error {
@@ -43,14 +43,12 @@ func validationError(err error) error {
 	return fmt.Errorf("field %q failed validation rule %q", field.Field(), field.Tag())
 }
 
-func writeResult(w http.ResponseWriter, value any, err error) {
+func writeResult(c *echo.Context, value any, err error) error {
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			writeError(w, http.StatusRequestTimeout, err)
-		} else {
-			writeError(w, http.StatusBadRequest, err)
+			return writeError(c, http.StatusRequestTimeout, err)
 		}
-		return
+		return writeError(c, http.StatusBadRequest, err)
 	}
-	writeJSON(w, http.StatusOK, value)
+	return c.JSON(http.StatusOK, value)
 }

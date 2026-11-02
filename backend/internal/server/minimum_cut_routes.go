@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/labstack/echo/v5"
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/minimumcut/karger"
 )
 
@@ -20,33 +21,32 @@ type minimumCutGenerateRequest struct {
 	Vertices int `json:"vertices" validate:"required,min=3,max=50"`
 }
 
-func (s *Server) registerMinimumCutRoutes(mux *http.ServeMux) {
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/minimum-cut/generate", s.generateMinimumCut)
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/minimum-cut/solve", s.limitAlgorithm(s.solveMinimumCut))
+func (s *Server) registerMinimumCutRoutes(e *echo.Echo) {
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/minimum-cut/generate", s.generateMinimumCut)
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/minimum-cut/solve", s.solveMinimumCut, s.limitAlgorithm)
 }
 
-func (s *Server) generateMinimumCut(w http.ResponseWriter, r *http.Request) {
+func (s *Server) generateMinimumCut(c *echo.Context) error {
 	var request minimumCutGenerateRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
 	result, err := karger.Generate(request.Vertices)
-	writeResult(w, result, err)
+	return writeResult(c, result, err)
 }
 
-func (s *Server) solveMinimumCut(w http.ResponseWriter, r *http.Request) {
+func (s *Server) solveMinimumCut(c *echo.Context) error {
 	var request minimumCutSolveRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
 	if len(request.Edges)*request.Trials > maxMinCutWork {
-		writeError(w, http.StatusBadRequest, errors.New("edges multiplied by trials must not exceed 250000"))
-		return
+		return writeError(c, http.StatusBadRequest, errors.New("edges multiplied by trials must not exceed 250000"))
 	}
 	edges := make([]karger.Edge, len(request.Edges))
 	for i, edge := range request.Edges {
 		edges[i] = karger.Edge{From: edge.From, To: edge.To}
 	}
-	result, err := karger.Solve(r.Context(), karger.Graph{Vertices: request.Vertices, Edges: edges}, request.Trials)
-	writeResult(w, result, err)
+	result, err := karger.Solve(c.Request().Context(), karger.Graph{Vertices: request.Vertices, Edges: edges}, request.Trials)
+	return writeResult(c, result, err)
 }

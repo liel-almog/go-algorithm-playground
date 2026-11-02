@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/labstack/echo/v5"
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/polynomialidentity/schwartzippel"
 )
 
@@ -16,25 +17,25 @@ type polynomialGenerateRequest struct {
 	Degree int `json:"degree" validate:"required,min=1,max=20"`
 }
 
-func (s *Server) registerPolynomialIdentityRoutes(mux *http.ServeMux) {
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/polynomial-identity/generate", s.generatePolynomial)
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/polynomial-identity/solve", s.limitAlgorithm(s.solvePolynomialIdentity))
+func (s *Server) registerPolynomialIdentityRoutes(e *echo.Echo) {
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/polynomial-identity/generate", s.generatePolynomial)
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/polynomial-identity/solve", s.solvePolynomialIdentity, s.limitAlgorithm)
 }
 
-func (s *Server) generatePolynomial(w http.ResponseWriter, r *http.Request) {
+func (s *Server) generatePolynomial(c *echo.Context) error {
 	var request polynomialGenerateRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
 	result, err := schwartzippel.Generate(request.Degree)
-	writeResult(w, result, err)
+	return writeResult(c, result, err)
 }
 
-func (s *Server) solvePolynomialIdentity(w http.ResponseWriter, r *http.Request) {
+func (s *Server) solvePolynomialIdentity(c *echo.Context) error {
 	var request polynomialSolveRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
-	result, err := schwartzippel.Solve(r.Context(), request.Left, request.Right, request.Rounds)
-	writeResult(w, result, err)
+	result, err := schwartzippel.Solve(c.Request().Context(), request.Left, request.Right, request.Rounds)
+	return writeResult(c, result, err)
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,32 +21,29 @@ func main() {
 	service := eightpuzzle.New(registry)
 	server := appserver.New(service, appserver.AllowedOriginsFromEnv())
 	port := appserver.ParsePort()
-	e := echo.New()
-	e.Any("/", echo.WrapHandler(server.Handler()))
-	e.Any("/*", echo.WrapHandler(server.Handler()))
-	httpServer := &http.Server{
-		Addr:              ":" + port,
-		Handler:           e,
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      10 * time.Second,
-		IdleTimeout:       60 * time.Second,
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	config := echo.StartConfig{
+		Address:         ":" + port,
+		HideBanner:      true,
+		HidePort:        true,
+		GracefulTimeout: 10 * time.Second,
+		OnShutdownError: func(err error) {
+			slog.Error("graceful shutdown failed", "error", err)
+		},
+		BeforeServeFunc: func(httpServer *http.Server) error {
+			httpServer.ReadHeaderTimeout = 5 * time.Second
+			httpServer.ReadTimeout = 15 * time.Second
+			httpServer.WriteTimeout = 10 * time.Second
+			httpServer.IdleTimeout = 60 * time.Second
+			slog.Info("algorithm playground ready", "url", "http://localhost:"+port, "go", runtime.Version(), "algorithms", len(registry.List()))
+			return nil
+		},
 	}
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		slog.Info("algorithm playground ready", "url", "http://localhost:"+port, "go", runtime.Version(), "algorithms", len(registry.List()))
-		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("server stopped", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-stop
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := httpServer.Shutdown(ctx); err != nil {
-		slog.Error("graceful shutdown failed", "error", err)
+	if err := config.Start(ctx, server.Handler()); err != nil {
+		slog.Error("server stopped", "error", err)
+		os.Exit(1)
 	}
 }

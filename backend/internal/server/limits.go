@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -23,8 +25,9 @@ func algorithmSlots() chan struct{} {
 // limitAlgorithm bounds both the wall-clock time and the number of concurrent
 // CPU-heavy requests. Algorithms must observe the request context for the
 // deadline to stop their work promptly.
-func (s *Server) limitAlgorithm(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (s *Server) limitAlgorithm(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		r := c.Request()
 		ctx, cancel := context.WithTimeout(r.Context(), algorithmTimeout)
 		defer cancel()
 
@@ -32,10 +35,10 @@ func (s *Server) limitAlgorithm(next http.HandlerFunc) http.HandlerFunc {
 		case s.algorithmSlots <- struct{}{}:
 			defer func() { <-s.algorithmSlots }()
 		case <-ctx.Done():
-			writeError(w, http.StatusServiceUnavailable, errors.New("the server is busy; try again shortly"))
-			return
+			return writeError(c, http.StatusServiceUnavailable, errors.New("the server is busy; try again shortly"))
 		}
 
-		next(w, r.WithContext(ctx))
+		c.SetRequest(r.WithContext(ctx))
+		return next(c)
 	}
 }

@@ -1,6 +1,10 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v5"
+)
 
 type problemDescription struct {
 	ID               string   `json:"id"`
@@ -13,8 +17,8 @@ type problemDescription struct {
 	Limits           []string `json:"limits"`
 }
 
-func (s *Server) problems(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]any{"problems": problemCatalog()})
+func (s *Server) problems(c *echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]any{"problems": problemCatalog()})
 }
 
 func problemCatalog() []problemDescription {

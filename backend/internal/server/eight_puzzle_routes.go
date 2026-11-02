@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/labstack/echo/v5"
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
 )
 
@@ -20,39 +21,38 @@ type puzzleGenerateRequest struct {
 	Scramble int `json:"scramble" validate:"required,min=1,max=200"`
 }
 
-func (s *Server) registerEightPuzzleRoutes(mux *http.ServeMux) {
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/eight-puzzle/generate", s.generatePuzzle)
-	s.registerAPI(mux, http.MethodPost, problemRoutePrefix+"/eight-puzzle/solve", s.limitAlgorithm(s.solvePuzzle))
+func (s *Server) registerEightPuzzleRoutes(e *echo.Echo) {
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/eight-puzzle/generate", s.generatePuzzle)
+	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/eight-puzzle/solve", s.solvePuzzle, s.limitAlgorithm)
 }
 
-func (s *Server) generatePuzzle(w http.ResponseWriter, r *http.Request) {
+func (s *Server) generatePuzzle(c *echo.Context) error {
 	var request puzzleGenerateRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
 	result, err := s.eightPuzzle.RandomPuzzle(eightpuzzle.RandomPuzzleRequest{Rows: request.Rows, Columns: request.Columns, Scramble: request.Scramble})
-	writeResult(w, result, err)
+	return writeResult(c, result, err)
 }
 
-func (s *Server) solvePuzzle(w http.ResponseWriter, r *http.Request) {
+func (s *Server) solvePuzzle(c *echo.Context) error {
 	var request puzzleSolveRequest
-	if !s.decodeAndValidate(w, r, &request) {
-		return
+	if err := s.decodeAndValidate(c, &request); err != nil {
+		return writeError(c, http.StatusBadRequest, err)
 	}
-	result, err := s.eightPuzzle.Solve(r.Context(), eightpuzzle.SolveRequest{
+	result, err := s.eightPuzzle.Solve(c.Request().Context(), eightpuzzle.SolveRequest{
 		BoardRequest: eightpuzzle.BoardRequest{Rows: request.Rows, Columns: request.Columns, Tiles: request.Tiles},
 		Algorithm:    request.Algorithm,
 	})
 	if err != nil {
 		switch {
 		case eightpuzzle.IsSolverTimeout(err):
-			writeSolverError(w, err)
+			return writeSolverError(c, err)
 		case eightpuzzle.IsSolverLimit(err), errors.Is(err, eightpuzzle.ErrUnsolvable):
-			writeError(w, http.StatusUnprocessableEntity, err)
+			return writeError(c, http.StatusUnprocessableEntity, err)
 		default:
-			writeError(w, http.StatusBadRequest, err)
+			return writeError(c, http.StatusBadRequest, err)
 		}
-		return
 	}
-	writeJSON(w, http.StatusOK, result)
+	return c.JSON(http.StatusOK, result)
 }

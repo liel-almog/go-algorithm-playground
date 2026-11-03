@@ -13,7 +13,8 @@
     "lint": "eslint",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "npx wrangler deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

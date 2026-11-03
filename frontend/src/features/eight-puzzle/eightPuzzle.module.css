@@ -18,18 +18,3 @@
   outline: 3px solid #f3a263;
   outline-offset: 2px;
 }
-
-.solved::before {
-  content: 'Solved!';
-  position: absolute;
-  z-index: 2;
-  top: 18px;
-  left: 50%;
-  translate: -50% 0;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #e5f0e8;
-  color: #2f7756;
-  font-size: 0.65rem;
-  font-weight: 700;
-}

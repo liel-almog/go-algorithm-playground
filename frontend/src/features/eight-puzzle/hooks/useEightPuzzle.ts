@@ -55,6 +55,7 @@ export function useEightPuzzle() {
     error: solveError,
   } = useMutation(puzzleMutations.solve())
   const error = fallbackError || (solveError ? errorMessage(solveError) : '')
+  const playerSolved = isSolved(tiles, rows, columns)
 
   const clearSolution = useCallback(() => {
     setResult(null)
@@ -162,7 +163,7 @@ export function useEightPuzzle() {
 
   const moveTile = useCallback(
     (index: number) => {
-      if (isGenerating || isSolving || result) return
+      if (isGenerating || isSolving || result || playerSolved) return
       const empty = tiles.indexOf(0)
       if (!areAdjacent(index, empty, columns)) return
       const next = [...tiles]
@@ -176,7 +177,7 @@ export function useEightPuzzle() {
       resetSolve()
       setFallbackError('')
     },
-    [columns, isGenerating, isSolving, resetSolve, result, tiles],
+    [columns, isGenerating, isSolving, playerSolved, resetSolve, result, tiles],
   )
 
   const resetBoard = useCallback(() => {
@@ -265,8 +266,8 @@ export function useEightPuzzle() {
     error,
     visibleTiles: result?.path[step] ?? tiles,
     currentMove: step > 0 ? result?.moves[step - 1] : undefined,
-    playerSolved: isSolved(tiles, rows, columns),
-    isInteractive: !result && !isGenerating && !isSolving,
+    playerSolved,
+    isInteractive: !playerSolved && !result && !isGenerating && !isSolving,
     setScramble,
     changeRows,
     changeColumns,

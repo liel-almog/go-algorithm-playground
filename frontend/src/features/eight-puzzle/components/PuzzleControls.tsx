@@ -153,12 +153,12 @@ export function PuzzleControls({
       </Button>
 
       <Button
-        variant="link"
-        className="mt-[10px] w-full text-[0.62rem] text-[#667168] underline"
+        variant="secondary"
+        className="mt-3 min-h-12 w-full text-sm"
         onClick={onReset}
         disabled={!canReset || isGenerating || isSolving}
       >
-        Reset playable board
+        Reset board and moves
       </Button>
 
       {error && (

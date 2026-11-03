@@ -5,6 +5,7 @@
   "name": "go-algorithm-playground",
   "assets": {
     "not_found_handling": "single-page-application",
+    "directory": "./dist",
   },
   "observability": {
     "logs": {
@@ -21,16 +22,3 @@
   },
   // ...
 }
-
-// {
-
-//   "name": "my-astro-project",
-//   "main": "@astrojs/cloudflare/entrypoints/server",
-//   "assets": {
-//     "directory": "./dist",
-//     "binding": "ASSETS",
-//   },
-//   "observability": {
-//     "enabled": true,
-//   },
-// }

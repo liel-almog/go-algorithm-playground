@@ -3,7 +3,7 @@ import puzzleStyles from '../../../components/puzzle.module.css'
 import { PlaybackButton } from '../../../components/PlaybackButton'
 import type { SolveResult } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
-import styles from '../eightPuzzle.module.css'
+import { Button } from '../../../components/ui/button'
 import { PuzzleBoard } from './PuzzleBoard'
 
 interface PuzzleVisualizerProps {
@@ -20,6 +20,7 @@ interface PuzzleVisualizerProps {
   isInteractive: boolean
   generationSource: 'backend' | 'local' | null
   onTileClick: (index: number) => void
+  onReset: () => void
   onPrevious: () => void
   onTogglePlayback: () => void
   onNext: () => void
@@ -39,6 +40,7 @@ export function PuzzleVisualizer({
   isInteractive,
   generationSource,
   onTileClick,
+  onReset,
   onPrevious,
   onTogglePlayback,
   onNext,
@@ -48,7 +50,7 @@ export function PuzzleVisualizer({
       <VisualizerTopbar
         status={
           playerSolved
-            ? `Solved by you in ${playerMoves} moves`
+            ? 'Puzzle complete'
             : result
               ? 'Solution ready'
               : isGenerating
@@ -62,9 +64,37 @@ export function PuzzleVisualizer({
         }
       />
 
-      <div
-        className={`${puzzleStyles['puzzle-stage']}${playerSolved ? ` ${styles.solved}` : ''}`}
-      >
+      {playerSolved && (
+        <div
+          role="status"
+          className="flex flex-col gap-3 border-b border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+        >
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-700 text-lg font-bold text-white"
+            >
+              ✓
+            </span>
+            <div>
+              <p className="text-base font-semibold">Puzzle solved!</p>
+              <p className="text-sm text-emerald-800">
+                You finished in {playerMoves}{' '}
+                {playerMoves === 1 ? 'move' : 'moves'}.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            className="min-h-10 w-full sm:w-auto"
+            onClick={onReset}
+          >
+            Play again
+          </Button>
+        </div>
+      )}
+
+      <div className={puzzleStyles['puzzle-stage']}>
         {tiles.length > 0 ? (
           <PuzzleBoard
             tiles={tiles}

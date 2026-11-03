@@ -57,6 +57,7 @@ export function EightPuzzlePage() {
           isInteractive={puzzle.isInteractive}
           generationSource={puzzle.generationSource}
           onTileClick={puzzle.moveTile}
+          onReset={puzzle.resetBoard}
           onPrevious={puzzle.previousStep}
           onTogglePlayback={puzzle.togglePlayback}
           onNext={puzzle.nextStep}

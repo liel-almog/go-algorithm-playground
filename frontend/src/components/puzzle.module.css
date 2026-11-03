@@ -61,7 +61,7 @@
   }
 }
 .board-skeleton {
-  width: 310px;
+  width: min(310px, 76vw);
   aspect-ratio: 1;
   border-radius: 12px;
   background: linear-gradient(100deg, #e4e7e1 20%, #f2f3ef 38%, #e4e7e1 55%);
@@ -141,6 +141,22 @@
 }
 @media (max-width: 620px) {
   .puzzle-stage {
-    min-height: 360px;
+    min-height: 350px;
+    padding: 18px 12px 38px;
+  }
+  .goal-key {
+    right: 12px;
+    bottom: 10px;
+    left: 12px;
+    justify-content: center;
+    text-align: center;
+  }
+  .playback-bar {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .progress-track {
+    min-width: 85px;
+    margin-inline: 4px;
   }
 }

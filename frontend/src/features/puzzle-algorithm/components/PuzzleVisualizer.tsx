@@ -26,6 +26,7 @@ export function PuzzleVisualizer({
 }: PuzzleVisualizerProps) {
   const visibleTiles = result?.path[step] ?? tiles
   const currentMove = step > 0 ? result?.moves[step - 1] : undefined
+  const nextMove = result?.moves[step]
   const finalStep = result ? result.path.length - 1 : 0
 
   return (
@@ -95,7 +96,7 @@ export function PuzzleVisualizer({
           />
         </div>
         <span className={puzzleStyles['move-label']}>
-          {currentMove ? `move ${currentMove}` : result ? 'start' : 'waiting'}
+          {nextMove ? `next: ${nextMove}` : result ? 'complete' : 'waiting'}
         </span>
       </div>
     </section>

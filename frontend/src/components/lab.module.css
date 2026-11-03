@@ -10,6 +10,7 @@
   padding: 24px;
   position: sticky;
   top: 16px;
+  min-width: 0;
 }
 .panel-divider {
   height: 1px;
@@ -68,22 +69,25 @@
 }
 .visualizer-panel {
   min-height: 510px;
+  min-width: 0;
   overflow: hidden;
   box-shadow: 0 15px 45px rgba(40, 53, 44, 0.05);
 }
 .metrics-panel {
   grid-column: 2;
   display: grid;
-  grid-template-columns: 190px 1fr;
+  grid-template-columns: 190px minmax(0, 1fr);
   min-height: 112px;
+  min-width: 0;
   overflow: hidden;
 }
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .metrics-grid > div {
-  padding: 22px;
+  min-width: 0;
+  padding: clamp(12px, 1.5vw, 22px);
   border-left: 1px solid #e6e8e2;
   display: flex;
   flex-direction: column;
@@ -104,6 +108,7 @@
     500 1.15rem 'DM Mono',
     monospace;
   color: var(--secondary-foreground);
+  overflow-wrap: anywhere;
 }
 .metrics-grid small {
   color: #a0a7a1;
@@ -118,12 +123,26 @@
     grid-column: 1;
   }
 }
+@media (min-width: 901px) and (max-width: 1120px) {
+  .metrics-panel {
+    grid-template-columns: 1fr;
+  }
+  .metrics-grid > div {
+    border-top: 1px solid var(--border);
+  }
+}
 @media (max-width: 620px) {
+  .control-panel {
+    padding: 18px;
+  }
+  .panel-divider {
+    margin-inline: -18px;
+  }
   .metrics-panel {
     grid-template-columns: 1fr;
   }
   .metrics-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .metrics-grid > div:nth-child(3) {
     border-left: 0;

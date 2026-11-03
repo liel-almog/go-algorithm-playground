@@ -17,7 +17,7 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-x-clip">
       <header
         className={`${shellStyles['site-header']} flex h-20 items-center justify-between border-b border-border max-[620px]:h-[68px]`}
       >
@@ -30,7 +30,7 @@ function RootComponent() {
           <span>Algo Studio</span>
         </Link>
         <nav
-          className="flex gap-[30px] text-[0.86rem] font-semibold text-[#657069]"
+          className="flex gap-[30px] text-[0.86rem] font-semibold text-[#657069] max-[400px]:gap-4"
           aria-label="Main navigation"
         >
           <Link to="/" activeOptions={{ exact: true }}>

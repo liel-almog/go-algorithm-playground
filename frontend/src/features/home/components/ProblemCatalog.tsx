@@ -34,7 +34,7 @@ export function ProblemCatalog() {
 
   return (
     <section
-      className={`${shellStyles['section-wrap']} pt-[35px] pb-[120px]`}
+      className={`${shellStyles['section-wrap']} pt-[35px] pb-[120px] max-[680px]:pb-20`}
       id="problems"
     >
       <div className="flex items-start justify-between border-t border-border pt-7 pb-8 max-[680px]:flex-col max-[680px]:gap-[15px]">
@@ -49,7 +49,7 @@ export function ProblemCatalog() {
           entirely new inputs, visualizations, and solving methods.
         </p>
       </div>
-      <div className="mb-6 grid grid-cols-[minmax(280px,1fr)_auto_auto] items-center gap-[18px] max-[900px]:grid-cols-[1fr_auto] max-[680px]:grid-cols-1">
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-[18px] max-[900px]:grid-cols-[minmax(0,1fr)_auto] max-[680px]:grid-cols-1">
         <div className="flex min-h-[52px] items-center gap-3 rounded-[9px] border border-[#d4d9d2] bg-card px-4 shadow-[0_9px_26px_#1f2a230d] focus-within:border-[#7ba08c] focus-within:ring-3 focus-within:ring-ring/20 max-[900px]:col-span-full max-[680px]:col-span-1">
           <i
             aria-hidden="true"
@@ -77,14 +77,14 @@ export function ProblemCatalog() {
           ) : null}
         </div>
         <div
-          className="flex gap-[5px] overflow-x-auto rounded-[9px] border border-border bg-[#eeefe9] p-1"
+          className="flex max-w-full gap-[5px] overflow-x-auto rounded-[9px] border border-border bg-[#eeefe9] p-1 max-[680px]:w-full"
           aria-label="Filter by problem type"
         >
           {families.map((option) => (
             <Button
               variant="ghost"
               key={option}
-              className="min-h-[34px] rounded-md px-3 text-[0.65rem] font-bold text-[#727b74] aria-pressed:bg-card aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_12px_#273d3020]"
+              className="min-h-[40px] rounded-md px-3 text-[0.65rem] font-bold text-[#727b74] aria-pressed:bg-card aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_12px_#273d3020] max-[680px]:min-h-11"
               onClick={() => setFamily(option)}
               aria-pressed={family === option}
             >

@@ -119,13 +119,13 @@ export function PuzzleVisualizer({
           />
         </div>
         <span className={puzzleStyles['move-label']}>
-          {currentMove
-            ? `move ${currentMove}`
-            : result
-              ? 'start'
-              : generationSource === 'local'
-                ? 'local board'
-                : 'playable'}
+          {result
+            ? result.moves[step]
+              ? `next: ${result.moves[step]}`
+              : 'complete'
+            : generationSource === 'local'
+              ? 'local board'
+              : 'playable'}
         </span>
       </div>
     </section>

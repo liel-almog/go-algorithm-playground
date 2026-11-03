@@ -1,0 +1,124 @@
+.graph-panel {
+  min-height: 505px;
+}
+.graph-stage {
+  min-height: 405px;
+  position: relative;
+  background: radial-gradient(circle at center, #f9faf6 0, #f3f4ef 70%);
+}
+.graph-stage svg {
+  width: 100%;
+  height: 405px;
+  display: block;
+}
+.graph-stage line {
+  stroke: #aeb8b0;
+  stroke-width: 2;
+}
+.graph-stage line.cut-edge {
+  stroke: var(--orange);
+  stroke-width: 5;
+  stroke-dasharray: 8 5;
+  animation: dash 1s linear infinite;
+}
+@keyframes dash {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
+.graph-stage circle {
+  fill: #fff;
+  stroke: #6f7e73;
+  stroke-width: 2;
+  filter: drop-shadow(0 5px 5px #34463a20);
+  transition:
+    fill 0.3s ease,
+    stroke 0.3s ease;
+}
+.graph-stage text {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font:
+    500 12px 'DM Mono',
+    monospace;
+  fill: #4b584e;
+}
+.graph-stage .partition-a circle {
+  fill: #d9ecdf;
+  stroke: var(--primary);
+}
+.graph-stage .partition-b circle {
+  fill: #dcebf0;
+  stroke: #568393;
+}
+.graph-hint,
+.cut-label {
+  position: absolute;
+  left: 50%;
+  bottom: 13px;
+  transform: translateX(-50%);
+  padding: 7px 11px;
+  border-radius: 5px;
+  background: #ffffffdd;
+  border: 1px solid var(--border);
+  color: #879087;
+  font-size: 0.56rem;
+}
+.cut-label {
+  color: #8b4d34;
+  border-color: #e6cbbf;
+}
+.graph-legend {
+  height: 49px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  border-top: 1px solid var(--border);
+  color: #7f8881;
+  font-size: 0.56rem;
+}
+.graph-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.graph-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.legend-a {
+  background: #77aa87;
+}
+.legend-b {
+  background: #78a8b8;
+}
+.legend-cut {
+  background: var(--orange);
+}
+.next-lab {
+  margin-top: 25px;
+  padding: 25px 0;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+}
+.next-lab a {
+  color: var(--primary);
+  font-weight: 700;
+}
+@media (max-width: 620px) {
+  .graph-stage svg {
+    height: 330px;
+  }
+  .graph-stage {
+    min-height: 330px;
+  }
+  .graph-legend {
+    justify-content: center;
+  }
+}

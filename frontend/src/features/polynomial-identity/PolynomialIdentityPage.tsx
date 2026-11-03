@@ -1,3 +1,4 @@
+import shellStyles from '../../styles/shell.module.css'
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
@@ -57,8 +58,7 @@ export function PolynomialIdentityPage() {
       const index = Math.floor(Math.random() * next.length)
       const coefficient = next[index]
       if (coefficient === undefined) return current
-      next[index] =
-        (coefficient + 1 + Math.floor(Math.random() * 9)) % prime
+      next[index] = (coefficient + 1 + Math.floor(Math.random() * 9)) % prime
       return next
     })
     setChecks([])
@@ -99,7 +99,7 @@ export function PolynomialIdentityPage() {
   const disabled = generation.isPending || verification.isPending
 
   return (
-    <div className="lab-page verifier-lab polynomial-lab">
+    <div className={shellStyles['lab-page']}>
       <LabHeader
         eyebrow="randomized verification · Schwartz–Zippel"
         title="Verify polynomial identities"
@@ -116,7 +116,9 @@ export function PolynomialIdentityPage() {
           'Reject on a mismatch; repeat matches to lower the error chance.',
         ]}
       />
-      <div className="lab-layout section-wrap">
+      <div
+        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
+      >
         <PolynomialControls
           degree={degree}
           rounds={rounds}

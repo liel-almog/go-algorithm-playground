@@ -1,3 +1,4 @@
+import shellStyles from '../../styles/shell.module.css'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
 import { AlgorithmNotFound } from './components/AlgorithmNotFound'
@@ -17,7 +18,7 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
 
   const explanation = puzzleExplanations[lab.algorithm.id]
   return (
-    <div className="lab-page">
+    <div className={shellStyles['lab-page']}>
       <LabHeader
         eyebrow="state-space search · classic 8-puzzle"
         title="The 8-puzzle problem"
@@ -41,7 +42,9 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
           ]
         }
       />
-      <div className="lab-layout section-wrap">
+      <div
+        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
+      >
         <PuzzleControls
           algorithm={lab.algorithm}
           scramble={lab.scramble}

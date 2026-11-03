@@ -1,3 +1,5 @@
+import labStyles from './lab.module.css'
+import verifierStyles from './verifier.module.css'
 import { ResultHeading } from './ResultHeading'
 
 interface VerificationVerdictProps {
@@ -35,11 +37,14 @@ export function VerificationVerdict({
       : rejectedDescription
 
   return (
-    <section className="metrics-panel verifier-result" aria-label={ariaLabel}>
+    <section
+      className={`${labStyles['metrics-panel']} ${verifierStyles['verifier-result']}`}
+      aria-label={ariaLabel}
+    >
       <ResultHeading title="Read the verdict" complete={hasResult} />
-      <div className="verdict-copy">
+      <div className={verifierStyles['verdict-copy']}>
         <span
-          className={`verdict-icon ${hasResult ? (accepted ? 'accepted' : 'rejected') : ''}`}
+          className={`${verifierStyles['verdict-icon']} ${hasResult ? (accepted ? verifierStyles.accepted : verifierStyles.rejected) : ''}`}
         >
           {!hasResult ? '?' : accepted ? '✓' : '×'}
         </span>

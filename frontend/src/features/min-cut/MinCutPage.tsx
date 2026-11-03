@@ -1,3 +1,5 @@
+import shellStyles from '../../styles/shell.module.css'
+import graphStyles from './minCut.module.css'
 import { useMutation } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -72,7 +74,7 @@ export function MinCutPage() {
   }
 
   return (
-    <div className="lab-page graph-lab">
+    <div className={shellStyles['lab-page']}>
       <LabHeader
         eyebrow="randomized graph · minimum cut"
         title="The minimum cut problem"
@@ -89,7 +91,9 @@ export function MinCutPage() {
           'Keep the smallest two-supernode cut across all trials.',
         ]}
       />
-      <div className="lab-layout section-wrap">
+      <div
+        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
+      >
         <MinCutControls
           vertexCount={vertexCount}
           trials={trials}
@@ -104,7 +108,9 @@ export function MinCutPage() {
         <MinCutWorkspace graph={graph} result={result} />
         <MinCutMetrics result={result} />
       </div>
-      <div className="next-lab section-wrap">
+      <div
+        className={`${graphStyles['next-lab']} ${shellStyles['section-wrap']}`}
+      >
         <span>Try another family</span>
         <Link to="/problems/eight-puzzle">Explore informed search →</Link>
       </div>

@@ -1,0 +1,146 @@
+.puzzle-stage {
+  min-height: 400px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background-image: radial-gradient(#c9cec7 0.7px, transparent 0.7px);
+  background-size: 22px 22px;
+}
+.puzzle-board {
+  width: min(310px, 76vw);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #284838;
+  box-shadow:
+    0 20px 38px #1a382a2c,
+    inset 0 0 0 1px #ffffff1b;
+}
+.tile {
+  width: auto;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: linear-gradient(145deg, #fff, #edf0e9);
+  color: var(--secondary-foreground);
+  font:
+    600 1.55rem 'DM Mono',
+    monospace;
+  box-shadow:
+    inset 0 0 0 1px #fff,
+    0 3px 6px #132a202a;
+  animation: tile-in 0.25s ease both;
+}
+.tile:disabled {
+  opacity: 1;
+}
+.tile small {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  color: #afb7af;
+  font:
+    0.45rem 'Manrope',
+    sans-serif;
+}
+.tile-empty {
+  background: #1d3a2c;
+  box-shadow: inset 0 0 18px #10281d;
+}
+@keyframes tile-in {
+  from {
+    transform: scale(0.94);
+    opacity: 0.65;
+  }
+}
+.board-skeleton {
+  width: 310px;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #e4e7e1 20%, #f2f3ef 38%, #e4e7e1 55%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+.goal-key {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #899189;
+  font-size: 0.57rem;
+}
+.goal-key span {
+  width: 9px;
+  height: 9px;
+  background: #1d3a2c;
+  border-radius: 2px;
+}
+.playback-bar {
+  min-height: 58px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  background: #fdfdfb;
+}
+.progress-track {
+  flex: 1;
+  height: 3px;
+  margin-inline: 10px;
+  background: #e2e5df;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--orange);
+  transition: width 0.25s ease;
+}
+.move-label {
+  min-width: 67px;
+  color: #7f8880;
+  font:
+    0.56rem 'DM Mono',
+    monospace;
+  text-align: right;
+}
+.empty-state {
+  padding: 120px 0;
+  text-align: center;
+}
+.empty-state > span {
+  color: var(--orange);
+  font:
+    1rem 'DM Mono',
+    monospace;
+}
+.empty-state h1 {
+  font-size: 3rem;
+  margin: 16px 0 8px;
+  letter-spacing: -0.05em;
+}
+.empty-state p {
+  color: var(--muted-foreground);
+  margin-bottom: 30px;
+}
+@media (max-width: 620px) {
+  .puzzle-stage {
+    min-height: 360px;
+  }
+}

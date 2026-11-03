@@ -1,3 +1,4 @@
+import shellStyles from '../styles/shell.module.css'
 import { noop } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { algorithmQueries } from '../features/algorithms/queries'
@@ -15,7 +16,7 @@ export const Route = createFileRoute('/problems/eight-puzzle')({
 
 function EightPuzzleRoute() {
   return (
-    <div className="lab-page">
+    <div className={shellStyles['lab-page']}>
       <LabHeader
         eyebrow="state-space search · classic 8-puzzle"
         title="The 8-puzzle problem"

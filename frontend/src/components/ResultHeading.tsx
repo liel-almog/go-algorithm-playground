@@ -5,12 +5,18 @@ interface ResultHeadingProps {
 
 export function ResultHeading({ title, complete }: ResultHeadingProps) {
   return (
-    <div className="metrics-heading">
-      <div>
-        <span>03</span>
-        <strong>{title}</strong>
+    <div className="flex flex-col justify-between border-r border-border p-[22px] max-[620px]:flex-row max-[620px]:border-r-0 max-[620px]:border-b">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#e4ece3] font-['DM_Mono'] text-[0.6rem] text-primary">
+          03
+        </span>
+        <strong className="text-[0.76rem]">{title}</strong>
       </div>
-      {complete ? <i>complete</i> : null}
+      {complete ? (
+        <i className="self-start rounded bg-[#e5f0e8] px-[7px] py-[3px] text-[0.55rem] not-italic text-[#2f7756]">
+          complete
+        </i>
+      ) : null}
     </div>
   )
 }

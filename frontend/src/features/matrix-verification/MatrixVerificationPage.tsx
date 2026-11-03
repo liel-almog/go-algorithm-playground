@@ -1,3 +1,4 @@
+import shellStyles from '../../styles/shell.module.css'
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
@@ -81,7 +82,7 @@ export function MatrixVerificationPage() {
   )
 
   return (
-    <div className="lab-page verifier-lab">
+    <div className={shellStyles['lab-page']}>
       <LabHeader
         eyebrow="randomized verification · Freivalds’ algorithm"
         title="Verify matrix multiplication"
@@ -98,7 +99,9 @@ export function MatrixVerificationPage() {
           'Reject on any mismatch; repeat matches for more confidence.',
         ]}
       />
-      <div className="lab-layout section-wrap">
+      <div
+        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
+      >
         <MatrixControls
           size={size}
           rounds={rounds}

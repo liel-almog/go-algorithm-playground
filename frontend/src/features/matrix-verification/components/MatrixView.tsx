@@ -1,3 +1,5 @@
+import verifierStyles from '../../../components/verifier.module.css'
+
 interface MatrixViewProps {
   label: string
   matrix: number[][]
@@ -10,10 +12,10 @@ export function MatrixView({
   highlight = false,
 }: MatrixViewProps) {
   return (
-    <div className="matrix-block">
+    <div className={verifierStyles['matrix-block']}>
       <span>{label}</span>
       <div
-        className="matrix-grid"
+        className={verifierStyles['matrix-grid']}
         style={{ gridTemplateColumns: `repeat(${matrix.length}, 1fr)` }}
       >
         {matrix.flatMap((row, rowIndex) =>
@@ -22,7 +24,7 @@ export function MatrixView({
               key={`${rowIndex}-${columnIndex}`}
               className={
                 highlight && rowIndex === 0 && columnIndex === 0
-                  ? 'changed-cell'
+                  ? verifierStyles['changed-cell']
                   : ''
               }
             >

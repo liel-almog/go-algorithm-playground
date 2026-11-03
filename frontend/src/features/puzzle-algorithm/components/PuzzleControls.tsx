@@ -1,5 +1,7 @@
+import labStyles from '../../../components/lab.module.css'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
+import { Button } from '../../../components/ui/button'
 import type { Algorithm } from '../../../lib/api'
 
 interface PuzzleControlsProps {
@@ -26,7 +28,7 @@ export function PuzzleControls({
   onSolve,
 }: PuzzleControlsProps) {
   return (
-    <aside className="control-panel">
+    <aside className={labStyles['control-panel']}>
       <PanelHeading
         step="01"
         title="Generate a problem"
@@ -42,39 +44,40 @@ export function PuzzleControls({
         endLabel="Deeper"
         onChange={onScrambleChange}
       />
-      <button
-        className="button button-secondary button-full"
+      <Button
+        variant="secondary"
+        className="min-h-[43px] w-full text-[0.72rem]"
         onClick={onGenerate}
         disabled={isGenerating || isSolving}
       >
         <span aria-hidden="true">↻</span>
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
-      </button>
-      <div className="panel-divider" />
+      </Button>
+      <div className={labStyles['panel-divider']} />
       <PanelHeading
         step="02"
         title="Ask the backend"
         description={<>Run {algorithm.name} against this exact board.</>}
       />
-      <button
-        className="button button-primary button-full"
+      <Button
+        className="min-h-[43px] w-full text-[0.72rem]"
         onClick={onSolve}
         disabled={!canSolve || isSolving || isGenerating}
       >
         {isSolving ? (
-          <span className="spinner" />
+          <span className={labStyles['spinner']} />
         ) : (
           <span aria-hidden="true">▶</span>
         )}
         {isSolving ? 'Searching…' : `Run ${algorithm.name}`}
-      </button>
+      </Button>
       {error && (
-        <div className="error-message" role="alert">
+        <div className={labStyles['error-message']} role="alert">
           <strong>Couldn’t reach a solution</strong>
           <span>{error}</span>
         </div>
       )}
-      <div className="request-preview">
+      <div className={labStyles['request-preview']}>
         <span>Request</span>
         <code>
           POST /api/problems/eight-puzzle/solve · local fallback

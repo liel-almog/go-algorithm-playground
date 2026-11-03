@@ -1,7 +1,9 @@
+import labStyles from '../../../components/lab.module.css'
 import type { Algorithm } from '../../../lib/api'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
-import styles from '../eightPuzzle.module.css'
+import { Button } from '../../../components/ui/button'
+import { NativeSelect } from '../../../components/ui/native-select'
 
 interface PuzzleControlsProps {
   algorithm: Algorithm
@@ -45,17 +47,19 @@ export function PuzzleControls({
   onReset,
 }: PuzzleControlsProps) {
   return (
-    <aside className="control-panel">
+    <aside className={labStyles['control-panel']}>
       <PanelHeading
         step="01"
         title="Generate a problem"
         description="Every generated board is solvable."
       />
 
-      <div className={styles.dimensionControls}>
-        <label className={styles.selectControl}>
-          <span>Rows</span>
-          <select
+      <div className="grid grid-cols-2 gap-2.5">
+        <label className="mb-3.5 block">
+          <span className="mb-2 block text-[0.67rem] text-muted-foreground">
+            Rows
+          </span>
+          <NativeSelect
             value={rows}
             onChange={(event) => onRowsChange(Number(event.target.value))}
             disabled={isGenerating || isSolving}
@@ -65,11 +69,13 @@ export function PuzzleControls({
                 {value}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
-        <label className={styles.selectControl}>
-          <span>Columns</span>
-          <select
+        <label className="mb-3.5 block">
+          <span className="mb-2 block text-[0.67rem] text-muted-foreground">
+            Columns
+          </span>
+          <NativeSelect
             value={columns}
             onChange={(event) => onColumnsChange(Number(event.target.value))}
             disabled={isGenerating || isSolving}
@@ -79,7 +85,7 @@ export function PuzzleControls({
                 {value}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       </div>
 
@@ -95,16 +101,17 @@ export function PuzzleControls({
         onChange={onScrambleChange}
       />
 
-      <button
-        className="button button-secondary button-full"
+      <Button
+        variant="secondary"
+        className="min-h-[43px] w-full text-[0.72rem]"
         onClick={() => void onGenerate()}
         disabled={isGenerating || isSolving}
       >
         <span aria-hidden="true">↻</span>
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
-      </button>
+      </Button>
 
-      <div className="panel-divider" />
+      <div className={labStyles['panel-divider']} />
 
       <PanelHeading
         step="02"
@@ -112,9 +119,11 @@ export function PuzzleControls({
         description="Run one backend algorithm on the current board."
       />
 
-      <label className={styles.selectControl}>
-        <span>Algorithm</span>
-        <select
+      <label className="mt-5 mb-3.5 block">
+        <span className="mb-2 block text-[0.67rem] text-muted-foreground">
+          Algorithm
+        </span>
+        <NativeSelect
           value={algorithmId}
           onChange={(event) => onAlgorithmChange(event.target.value)}
           disabled={isSolving}
@@ -125,40 +134,41 @@ export function PuzzleControls({
               {option.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
 
-      <button
-        className="button button-primary button-full"
+      <Button
+        className="min-h-[43px] w-full text-[0.72rem]"
         onClick={() => void onSolve()}
         disabled={!hasPuzzle || isSolving || isGenerating}
       >
         {isSolving ? (
-          <span className="spinner" />
+          <span className={labStyles['spinner']} />
         ) : (
           <span aria-hidden="true">▶</span>
         )}
         {isSolving
           ? 'Searching…'
           : `Run ${algorithm.id === 'astar' ? 'A*' : algorithm.id.toUpperCase()}`}
-      </button>
+      </Button>
 
-      <button
-        className={styles.boardReset}
+      <Button
+        variant="link"
+        className="mt-[10px] w-full text-[0.62rem] text-[#667168] underline"
         onClick={onReset}
         disabled={!canReset || isGenerating || isSolving}
       >
         Reset playable board
-      </button>
+      </Button>
 
       {error && (
-        <div className="error-message" role="alert">
+        <div className={labStyles['error-message']} role="alert">
           <strong>Couldn’t reach a solution</strong>
           <span>{error}</span>
         </div>
       )}
 
-      <div className="request-preview">
+      <div className={labStyles['request-preview']}>
         <span>Requests</span>
         <code>
           POST /api/problems/eight-puzzle/generate

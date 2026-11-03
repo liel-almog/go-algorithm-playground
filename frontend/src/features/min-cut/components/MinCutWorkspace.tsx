@@ -1,3 +1,5 @@
+import labStyles from '../../../components/lab.module.css'
+import graphStyles from '../minCut.module.css'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import type { MinCutResult } from '../../../lib/api'
 import type { GraphProblem } from '../minCut'
@@ -10,21 +12,23 @@ interface MinCutWorkspaceProps {
 
 export function MinCutWorkspace({ graph, result }: MinCutWorkspaceProps) {
   return (
-    <section className="visualizer-panel graph-panel">
+    <section
+      className={`${labStyles['visualizer-panel']} ${graphStyles['graph-panel']}`}
+    >
       <VisualizerTopbar
         status={result ? 'Minimum cut found' : 'Graph ready'}
         detail={`${graph.vertices.length} vertices · ${graph.edges.length} edges`}
       />
       <GraphVisualizer graph={graph} result={result} />
-      <div className="graph-legend">
+      <div className={graphStyles['graph-legend']}>
         <span>
-          <i className="legend-a" /> Partition A
+          <i className={graphStyles['legend-a']} /> Partition A
         </span>
         <span>
-          <i className="legend-b" /> Partition B
+          <i className={graphStyles['legend-b']} /> Partition B
         </span>
         <span>
-          <i className="legend-cut" /> Cut edge
+          <i className={graphStyles['legend-cut']} /> Cut edge
         </span>
       </div>
     </section>

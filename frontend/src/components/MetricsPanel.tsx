@@ -1,3 +1,4 @@
+import labStyles from './lab.module.css'
 import type { ReactNode } from 'react'
 import { ResultHeading } from './ResultHeading'
 
@@ -12,7 +13,6 @@ interface MetricsPanelProps {
   ariaLabel: string
   complete: boolean
   metrics: Metric[]
-  gridClassName?: string
 }
 
 export function MetricsPanel({
@@ -20,12 +20,11 @@ export function MetricsPanel({
   ariaLabel,
   complete,
   metrics,
-  gridClassName = '',
 }: MetricsPanelProps) {
   return (
-    <section className="metrics-panel" aria-label={ariaLabel}>
+    <section className={labStyles['metrics-panel']} aria-label={ariaLabel}>
       <ResultHeading title={title} complete={complete} />
-      <div className={`metrics-grid ${gridClassName}`.trim()}>
+      <div className={labStyles['metrics-grid']}>
         {metrics.map((metric) => (
           <div key={metric.label}>
             <span>{metric.label}</span>

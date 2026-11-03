@@ -1,6 +1,8 @@
+import homeStyles from '../problemArt.module.css'
+
 export function PolynomialArt() {
   return (
-    <div className="mini-polynomial">
+    <div className={homeStyles['mini-polynomial']}>
       <span>P(x)</span>
       <b>≟</b>
       <span>Q(x)</span>

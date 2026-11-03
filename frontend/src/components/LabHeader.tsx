@@ -1,3 +1,4 @@
+import shellStyles from '../styles/shell.module.css'
 import { Link } from '@tanstack/react-router'
 
 interface LabHeaderProps {
@@ -14,17 +15,28 @@ export function LabHeader({
   badge,
 }: LabHeaderProps) {
   return (
-    <section className="lab-header section-wrap">
-      <Link to="/" className="back-link">
+    <section
+      className={`${shellStyles['section-wrap']} pt-[38px] pb-[34px] max-[620px]:pt-[25px]`}
+    >
+      <Link
+        to="/"
+        className="text-[0.72rem] font-semibold text-muted-foreground hover:text-primary"
+      >
         ← All problems
       </Link>
-      <div className="lab-title-row">
+      <div className="flex items-end justify-between gap-10 pt-[34px] max-[620px]:flex-col max-[620px]:items-start max-[620px]:gap-[18px]">
         <div>
-          <span className="kicker">{eyebrow}</span>
-          <h1>{title}</h1>
-          <p>{description}</p>
+          <span className={shellStyles['kicker']}>{eyebrow}</span>
+          <h1 className="mt-[7px] mb-[9px] text-[clamp(2.4rem,5vw,4.3rem)] leading-none font-semibold tracking-[-0.06em] max-[620px]:text-[2.8rem]">
+            {title}
+          </h1>
+          <p className="max-w-[650px] text-[0.84rem] leading-[1.65] text-muted-foreground">
+            {description}
+          </p>
         </div>
-        <span className="lab-badge">◇ {badge}</span>
+        <span className="whitespace-nowrap rounded-[5px] bg-[#e8eee8] px-[11px] py-2 text-[0.65rem] font-bold text-primary">
+          ◇ {badge}
+        </span>
       </div>
     </section>
   )

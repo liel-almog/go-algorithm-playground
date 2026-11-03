@@ -1,3 +1,5 @@
+import labStyles from '../../../components/lab.module.css'
+import verifierStyles from '../../../components/verifier.module.css'
 import type { PolynomialCheck } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { CoefficientEditor } from './CoefficientEditor'
@@ -22,19 +24,21 @@ export function PolynomialWorkspace({
   onCoefficientChange,
 }: PolynomialWorkspaceProps) {
   return (
-    <section className="visualizer-panel verifier-panel polynomial-panel">
+    <section
+      className={`${labStyles['visualizer-panel']} ${labStyles['verifier-panel']}`}
+    >
       <VisualizerTopbar
         status="Identity claim"
         detail="Editable coefficients"
       />
-      <div className="polynomial-workspace">
+      <div className={verifierStyles['polynomial-workspace']}>
         <CoefficientEditor
           name="P(x)"
           coefficients={left}
           disabled={disabled}
           onChange={(index, value) => onCoefficientChange('left', index, value)}
         />
-        <div className="identity-mark">≟</div>
+        <div className={verifierStyles['identity-mark']}>≟</div>
         <CoefficientEditor
           name="Q(x)"
           coefficients={right}
@@ -44,8 +48,8 @@ export function PolynomialWorkspace({
           }
         />
       </div>
-      <div className="evaluation-table">
-        <div className="evaluation-head">
+      <div className={verifierStyles['evaluation-table']}>
+        <div className={verifierStyles['evaluation-head']}>
           <span>Random point</span>
           <span>P(r)</span>
           <span>Q(r)</span>
@@ -57,7 +61,11 @@ export function PolynomialWorkspace({
           checks.map((check, index) => (
             <div
               key={index}
-              className={check.passed ? 'trial-pass' : 'trial-fail'}
+              className={
+                check.passed
+                  ? verifierStyles['trial-pass']
+                  : verifierStyles['trial-fail']
+              }
             >
               <span>r = {check.point}</span>
               <span>{check.left}</span>

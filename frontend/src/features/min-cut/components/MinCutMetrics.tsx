@@ -12,7 +12,6 @@ export function MinCutMetrics({ result }: MinCutMetricsProps) {
       title="Inspect the result"
       ariaLabel="Minimum cut metrics"
       complete={Boolean(result)}
-      gridClassName="graph-metrics"
       metrics={[
         {
           label: 'Minimum cut',

@@ -3,6 +3,9 @@
   "compatibility_date": "2026-11-02",
   "compatibility_flags": ["global_fetch_strictly_public"],
   "name": "go-algorithm-playground",
+  "assets": {
+    "not_found_handling": "single-page-application",
+  },
   "observability": {
     "logs": {
       "enabled": true,

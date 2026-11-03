@@ -1,3 +1,4 @@
+import puzzleStyles from '../../../components/puzzle.module.css'
 import styles from '../eightPuzzle.module.css'
 import { areAdjacent } from '../puzzle'
 
@@ -22,7 +23,7 @@ export function PuzzleBoard({
 
   return (
     <div
-      className={`puzzle-board${playable ? ` ${styles.playable}` : ''}`}
+      className={`${puzzleStyles['puzzle-board']}${playable ? ` ${styles.playable}` : ''}`}
       style={{
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
         aspectRatio: `${columns} / ${rows}`,
@@ -38,10 +39,10 @@ export function PuzzleBoard({
             type="button"
             className={
               tile === 0
-                ? 'tile tile-empty'
+                ? `${puzzleStyles.tile} ${puzzleStyles['tile-empty']}`
                 : movable
-                  ? `tile ${styles.movable}`
-                  : 'tile'
+                  ? `${puzzleStyles.tile} ${styles.movable}`
+                  : puzzleStyles.tile
             }
             onClick={() => onTileClick(index)}
             disabled={!movable}

@@ -1,3 +1,6 @@
+import labStyles from '../../../components/lab.module.css'
+import puzzleStyles from '../../../components/puzzle.module.css'
+import { PlaybackButton } from '../../../components/PlaybackButton'
 import type { SolveResult } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import styles from '../eightPuzzle.module.css'
@@ -41,7 +44,7 @@ export function PuzzleVisualizer({
   onNext,
 }: PuzzleVisualizerProps) {
   return (
-    <section className="visualizer-panel">
+    <section className={labStyles['visualizer-panel']}>
       <VisualizerTopbar
         status={
           playerSolved
@@ -59,7 +62,9 @@ export function PuzzleVisualizer({
         }
       />
 
-      <div className={`puzzle-stage${playerSolved ? ` ${styles.solved}` : ''}`}>
+      <div
+        className={`${puzzleStyles['puzzle-stage']}${playerSolved ? ` ${styles.solved}` : ''}`}
+      >
         {tiles.length > 0 ? (
           <PuzzleBoard
             tiles={tiles}
@@ -70,38 +75,41 @@ export function PuzzleVisualizer({
             playable={isInteractive}
           />
         ) : (
-          <div className="board-skeleton" aria-label="Loading puzzle" />
+          <div
+            className={puzzleStyles['board-skeleton']}
+            aria-label="Loading puzzle"
+          />
         )}
-        <div className="goal-key">
+        <div className={puzzleStyles['goal-key']}>
           <span /> Goal: arrange 1–{rows * columns - 1} with the empty space
           last
         </div>
       </div>
 
-      <div className="playback-bar">
-        <button
+      <div className={puzzleStyles['playback-bar']}>
+        <PlaybackButton
           aria-label="Previous solution step"
           onClick={onPrevious}
           disabled={!result || step === 0}
         >
           ←
-        </button>
-        <button
-          className="play-button"
+        </PlaybackButton>
+        <PlaybackButton
+          primary
           aria-label={isPlaying ? 'Pause solution' : 'Play solution'}
           onClick={onTogglePlayback}
           disabled={!result}
         >
           {isPlaying ? 'Ⅱ' : '▶'}
-        </button>
-        <button
+        </PlaybackButton>
+        <PlaybackButton
           aria-label="Next solution step"
           onClick={onNext}
           disabled={!result || step === result.path.length - 1}
         >
           →
-        </button>
-        <div className="progress-track">
+        </PlaybackButton>
+        <div className={puzzleStyles['progress-track']}>
           <span
             style={{
               width: result
@@ -110,7 +118,7 @@ export function PuzzleVisualizer({
             }}
           />
         </div>
-        <span className="move-label">
+        <span className={puzzleStyles['move-label']}>
           {currentMove
             ? `move ${currentMove}`
             : result

@@ -1,3 +1,4 @@
+import graphStyles from '../minCut.module.css'
 import { useMemo } from 'react'
 import type { Graph, MinCutResult } from '../../../lib/api'
 
@@ -35,7 +36,7 @@ export function GraphVisualizer({ graph, result }: GraphVisualizerProps) {
   )
 
   return (
-    <div className="graph-stage">
+    <div className={graphStyles['graph-stage']}>
       <svg
         viewBox="0 0 720 450"
         role="img"
@@ -52,16 +53,16 @@ export function GraphVisualizer({ graph, result }: GraphVisualizerProps) {
               y1={from.y}
               x2={to.x}
               y2={to.y}
-              className={isCut ? 'cut-edge' : ''}
+              className={isCut ? graphStyles['cut-edge'] : ''}
             />
           )
         })}
         {graph.vertices.map((vertex) => {
           const position = positions.get(vertex)!
           const group = partitionA.has(vertex)
-            ? 'partition-a'
+            ? graphStyles['partition-a']
             : partitionB.has(vertex)
-              ? 'partition-b'
+              ? graphStyles['partition-b']
               : ''
           return (
             <g key={vertex} className={group}>
@@ -74,10 +75,12 @@ export function GraphVisualizer({ graph, result }: GraphVisualizerProps) {
         })}
       </svg>
       {!result && (
-        <div className="graph-hint">Run the algorithm to reveal the cut</div>
+        <div className={graphStyles['graph-hint']}>
+          Run the algorithm to reveal the cut
+        </div>
       )}
       {result && (
-        <div className="cut-label">
+        <div className={graphStyles['cut-label']}>
           {result.cutSize} crossing {result.cutSize === 1 ? 'edge' : 'edges'}
         </div>
       )}

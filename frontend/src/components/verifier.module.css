@@ -1,0 +1,179 @@
+.matrix-equation {
+  min-height: 350px;
+  padding: 38px 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background-image: radial-gradient(#c9cec7 0.7px, transparent 0.7px);
+  background-size: 22px 22px;
+  overflow-x: auto;
+}
+.matrix-block > span {
+  display: block;
+  margin-bottom: 9px;
+  color: #6e776f;
+  text-align: center;
+  font:
+    0.65rem 'DM Mono',
+    monospace;
+}
+.matrix-grid {
+  display: grid;
+  min-width: 108px;
+  padding: 10px;
+  border-left: 2px solid var(--primary);
+  border-right: 2px solid var(--primary);
+  background: #ffffffca;
+}
+.matrix-grid i {
+  min-width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font:
+    normal 0.68rem 'DM Mono',
+    monospace;
+}
+.matrix-grid .changed-cell {
+  background: #f5d9cd;
+  color: #944e35;
+  border-radius: 3px;
+}
+.equation-mark {
+  color: var(--orange);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.trial-strip {
+  min-height: 110px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 20px;
+  align-content: center;
+}
+.trial-strip > p,
+.evaluation-table > p {
+  margin: 0;
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.67rem;
+}
+.trial-strip > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font:
+    0.56rem 'DM Mono',
+    monospace;
+}
+.trial-pass {
+  color: #397155;
+  background: #e9f2eb;
+}
+.trial-fail {
+  color: #974f36;
+  background: #f9e8e1;
+}
+.verifier-result .verdict-copy {
+  min-height: 112px;
+  padding: 18px 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.verdict-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eceee9;
+  color: #9aa09a;
+  font:
+    1.1rem 'DM Mono',
+    monospace;
+}
+.verdict-icon.accepted {
+  background: #dff0e4;
+  color: var(--primary);
+}
+.verdict-icon.rejected {
+  background: #f6ddd3;
+  color: #a24f33;
+}
+.verdict-copy strong {
+  font-size: 0.82rem;
+}
+.verdict-copy p {
+  margin: 5px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+.polynomial-workspace {
+  min-height: 325px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  background-image: radial-gradient(#c9cec7 0.7px, transparent 0.7px);
+  background-size: 22px 22px;
+}
+.identity-mark {
+  color: var(--orange);
+  font-size: 1.6rem;
+}
+.evaluation-table {
+  min-height: 135px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+.evaluation-table > div {
+  display: grid;
+  grid-template-columns: 1.3fr 0.8fr 0.8fr 1fr;
+  gap: 8px;
+  padding: 7px 10px;
+  font:
+    0.57rem 'DM Mono',
+    monospace;
+}
+.evaluation-table .evaluation-head {
+  color: #919991;
+  text-transform: uppercase;
+  background: transparent;
+}
+@media (max-width: 900px) {
+  .matrix-equation {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 680px) {
+  .matrix-equation {
+    padding-inline: 18px;
+    gap: 9px;
+  }
+  .matrix-grid {
+    min-width: 90px;
+    padding: 6px;
+  }
+  .matrix-grid i {
+    min-width: 26px;
+    height: 28px;
+  }
+  .polynomial-workspace {
+    grid-template-columns: 1fr;
+  }
+  .identity-mark {
+    text-align: center;
+  }
+  .trial-strip {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,7 +1,6 @@
 services:
   backend:
-    build:
-      context: .
+    image: ghcr.io/liel-almog/go-algorithm-playground-backend:feat-eight-puzzle-sovler
     restart: unless-stopped
     environment:
       PORT: "8080"

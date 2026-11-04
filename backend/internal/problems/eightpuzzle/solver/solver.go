@@ -14,7 +14,7 @@ var (
 	ErrSearchLimit = errors.New("search limit reached")
 )
 
-const maxStoredStates = 250_000
+const maxStoredStates = 500_000
 
 type Metadata struct {
 	ID          string `json:"id"`

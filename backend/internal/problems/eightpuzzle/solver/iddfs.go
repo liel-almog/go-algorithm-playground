@@ -24,8 +24,8 @@ func (IDDFS) Metadata() Metadata {
 func (algorithm IDDFS) Solve(ctx context.Context, initial board.Board) (Result, error) {
 	start := time.Now()
 	meta := algorithm.Metadata()
-	search := depthFirstSearch{generated: 1, frontierMax: 1, maxExpanded: 2_000_000}
-	const maxDepth = 80
+	search := depthFirstSearch{generated: 1, frontierMax: 1, maxExpanded: 4_000_000}
+	const maxDepth = 160
 	for limit := 0; limit <= maxDepth; limit++ {
 		search.path = stack.NewSliceStack[board.Board]()
 		if err := search.path.Push(initial); err != nil {

@@ -111,9 +111,9 @@ export const matrixClaimSchema = z
   )
 
 export const matrixTrialSchema = z.strictObject({
-  vector: z.array(z.number().int()),
-  left: z.array(z.number().int()),
-  right: z.array(z.number().int()),
+  vector: z.array(z.number().int().min(0).max(1)),
+  left: z.array(z.number().nonnegative()),
+  right: z.array(z.number().nonnegative()),
   passed: z.boolean(),
 })
 

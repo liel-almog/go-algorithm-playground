@@ -136,7 +136,8 @@ Send `a`, `b`, and `c` to `POST /api/problems/matrix-verification/solve`:
 
 The API independently samples each entry of `vector` uniformly from `{0,1}`.
 It returns `left = A(B vector)`, `right = C vector`, and `equal`, which indicates
-whether those vectors match. Arithmetic uses ordinary integer sums and products.
+whether those vectors match. Matrices and random vectors contain only `0` and
+`1`; calculations use `float64` values.
 For example, one possible response is:
 
 ```json

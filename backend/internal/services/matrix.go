@@ -18,10 +18,10 @@ func CheckMatrix(ctx context.Context, a, b, c freivalds.Matrix) (any, error) {
 }
 
 type matrixCheckResponse struct {
-	Vector []int64 `json:"vector"`
-	Left   []int64 `json:"left"`
-	Right  []int64 `json:"right"`
-	Equal  bool    `json:"equal"`
+	Vector []float64 `json:"vector"`
+	Left   []float64 `json:"left"`
+	Right  []float64 `json:"right"`
+	Equal  bool      `json:"equal"`
 }
 
 func SolveMatrix(ctx context.Context, a, b, product freivalds.Matrix, rounds int) (any, error) {

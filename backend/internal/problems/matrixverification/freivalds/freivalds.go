@@ -6,31 +6,37 @@ import (
 	"encoding/json"
 	"errors"
 	"math/rand/v2"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 const (
-	maxSize   = 100
-	maxRounds = 15
+	maxSize    = 100
+	maxRounds  = 15
+	binaryZero = float64(0)
+	binaryOne  = float64(1)
 )
 
-type Matrix [][]int64
+type Matrix [][]float64
 
 // UnmarshalJSON preserves the distinction between a binary value and JSON null.
 func (m *Matrix) UnmarshalJSON(data []byte) error {
-	var rows [][]*int64
+	var rows [][]*float64
 	if err := json.Unmarshal(data, &rows); err != nil {
 		return err
 	}
+
 	matrix := make(Matrix, len(rows))
 	for i, row := range rows {
-		matrix[i] = make([]int64, len(row))
+		matrix[i] = make([]float64, len(row))
 		for j, value := range row {
-			if value == nil || (*value != 0 && *value != 1) {
+			if value == nil || (*value != binaryZero && *value != binaryOne) {
 				return errors.New("matrix values must be 0 or 1")
 			}
 			matrix[i][j] = *value
 		}
 	}
+
 	*m = matrix
 	return nil
 }
@@ -42,10 +48,10 @@ type Claim struct {
 }
 
 type Trial struct {
-	Vector []int64 `json:"vector"`
-	Left   []int64 `json:"left"`
-	Right  []int64 `json:"right"`
-	Passed bool    `json:"passed"`
+	Vector []float64 `json:"vector"`
+	Left   []float64 `json:"left"`
+	Right  []float64 `json:"right"`
+	Passed bool      `json:"passed"`
 }
 
 type Result struct {
@@ -59,13 +65,21 @@ func Generate(size int) (Claim, error) {
 	if size < 1 || size > maxSize {
 		return Claim{}, errors.New("matrix size must be between 1 and 100")
 	}
+
 	a := randomMatrix(size)
 	b := make(Matrix, size)
+
 	for row, column := range rand.Perm(size) {
-		b[row] = make([]int64, size)
-		b[row][column] = 1
+		b[row] = make([]float64, size)
+		b[row][column] = binaryOne
 	}
-	return Claim{A: a, B: b, Product: multiply(a, b)}, nil
+	var product mat.Dense
+	product.Mul(denseMatrix(a), denseMatrix(b))
+	productRows := make(Matrix, size)
+	for row := range productRows {
+		productRows[row] = mat.Row(nil, row, &product)
+	}
+	return Claim{A: a, B: b, Product: productRows}, nil
 }
 
 func Solve(ctx context.Context, a, b, product Matrix, rounds int) (Result, error) {
@@ -83,18 +97,30 @@ func Solve(ctx context.Context, a, b, product Matrix, rounds int) (Result, error
 		Trials:             make([]Trial, 0, rounds),
 		FalsePositiveBound: 1 / float64(uint64(1)<<rounds),
 	}
+	denseA, denseB, denseProduct := denseMatrix(a), denseMatrix(b), denseMatrix(product)
 	for range rounds {
 		if err := ctx.Err(); err != nil {
 			return Result{}, err
 		}
-		vector := make([]int64, size)
+
+		vector := make([]float64, size)
 		for i := range vector {
-			vector[i] = int64(rand.IntN(2))
+			vector[i] = randomBinaryValue()
 		}
-		left := multiplyVector(a, multiplyVector(b, vector))
-		right := multiplyVector(product, vector)
-		passed := equal(left, right)
-		result.Trials = append(result.Trials, Trial{Vector: vector, Left: left, Right: right, Passed: passed})
+
+		randomVector := mat.NewVecDense(size, vector)
+		var intermediate, left, right mat.VecDense
+		intermediate.MulVec(denseB, randomVector)
+		left.MulVec(denseA, &intermediate)
+		right.MulVec(denseProduct, randomVector)
+
+		passed := mat.Equal(&left, &right)
+		result.Trials = append(result.Trials, Trial{
+			Vector: vector,
+			Left:   left.RawVector().Data,
+			Right:  right.RawVector().Data,
+			Passed: passed,
+		})
 		if !passed {
 			result.Accepted = false
 		}
@@ -117,7 +143,7 @@ func ValidateMatrices(a, b, c Matrix) (int, error) {
 				return 0, errors.New("all matrices must be square")
 			}
 			for _, value := range row {
-				if value != 0 && value != 1 {
+				if value != binaryZero && value != binaryOne {
 					return 0, errors.New("matrix values must be 0 or 1")
 				}
 			}
@@ -129,42 +155,23 @@ func ValidateMatrices(a, b, c Matrix) (int, error) {
 func randomMatrix(size int) Matrix {
 	matrix := make(Matrix, size)
 	for row := range matrix {
-		matrix[row] = make([]int64, size)
+		matrix[row] = make([]float64, size)
 		for column := range matrix[row] {
-			matrix[row][column] = int64(rand.IntN(2))
+			matrix[row][column] = randomBinaryValue()
 		}
 	}
 	return matrix
 }
 
-func multiply(a, b Matrix) Matrix {
-	result := make(Matrix, len(a))
-	for row := range result {
-		result[row] = make([]int64, len(a))
-		for column := range result[row] {
-			for i := range a[row] {
-				result[row][column] += a[row][i] * b[i][column]
-			}
-		}
-	}
-	return result
+func randomBinaryValue() float64 {
+	return float64(rand.IntN(2))
 }
 
-func multiplyVector(matrix Matrix, vector []int64) []int64 {
-	result := make([]int64, len(matrix))
-	for row := range matrix {
-		for column, value := range matrix[row] {
-			result[row] += value * vector[column]
-		}
+func denseMatrix(matrix Matrix) *mat.Dense {
+	size := len(matrix)
+	data := make([]float64, 0, size*size)
+	for _, row := range matrix {
+		data = append(data, row...)
 	}
-	return result
-}
-
-func equal(a, b []int64) bool {
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+	return mat.NewDense(size, size, data)
 }

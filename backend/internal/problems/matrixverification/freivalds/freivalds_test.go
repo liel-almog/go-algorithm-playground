@@ -37,9 +37,9 @@ func TestSolveRejectsIncorrectMatrixProduct(t *testing.T) {
 	b := make(Matrix, size)
 	product := make(Matrix, size)
 	for i := range a {
-		a[i] = make([]int64, size)
-		b[i] = make([]int64, size)
-		product[i] = make([]int64, size)
+		a[i] = make([]float64, size)
+		b[i] = make([]float64, size)
+		product[i] = make([]float64, size)
 		product[i][i] = 1
 	}
 

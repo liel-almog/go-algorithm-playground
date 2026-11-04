@@ -29,7 +29,7 @@ func (s *Server) registerMinimumCutRoutes(e *echo.Echo) {
 func (s *Server) generateMinimumCut(c *echo.Context) error {
 	var request minimumCutGenerateRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := karger.Generate(request.Vertices)
 	return writeResult(c, result, err)
@@ -38,7 +38,7 @@ func (s *Server) generateMinimumCut(c *echo.Context) error {
 func (s *Server) solveMinimumCut(c *echo.Context) error {
 	var request minimumCutSolveRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	if len(request.Edges)*request.Trials > maxMinCutWork {
 		return writeError(c, http.StatusBadRequest, errors.New("edges multiplied by trials must not exceed 250000"))

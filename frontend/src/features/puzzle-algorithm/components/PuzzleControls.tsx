@@ -1,3 +1,4 @@
+import { Play, Shuffle } from 'lucide-react'
 import labStyles from '../../../components/lab.module.css'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
@@ -46,11 +47,11 @@ export function PuzzleControls({
       />
       <Button
         variant="secondary"
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onGenerate}
         disabled={isGenerating || isSolving}
       >
-        <span aria-hidden="true">↻</span>
+        <Shuffle aria-hidden="true" className="size-4" />
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
       </Button>
       <div className={labStyles['panel-divider']} />
@@ -60,14 +61,14 @@ export function PuzzleControls({
         description={<>Run {algorithm.name} against this exact board.</>}
       />
       <Button
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onSolve}
         disabled={!canSolve || isSolving || isGenerating}
       >
         {isSolving ? (
           <span className={labStyles['spinner']} />
         ) : (
-          <span aria-hidden="true">▶</span>
+          <Play aria-hidden="true" className="size-4 fill-current" />
         )}
         {isSolving ? 'Searching…' : `Run ${algorithm.name}`}
       </Button>
@@ -80,7 +81,7 @@ export function PuzzleControls({
       <div className={labStyles['request-preview']}>
         <span>Request</span>
         <code>
-          POST /api/problems/eight-puzzle/solve · local fallback
+          POST /api/problems/eight-puzzle/solve
           <br />
           algorithm: “{algorithm.id}”
         </code>

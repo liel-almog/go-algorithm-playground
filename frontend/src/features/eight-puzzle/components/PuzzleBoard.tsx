@@ -46,6 +46,7 @@ export function PuzzleBoard({
             }
             onClick={() => onTileClick(index)}
             disabled={!movable}
+            data-tile={tile === 0 ? undefined : tile}
             aria-label={
               tile === 0
                 ? 'Empty space'

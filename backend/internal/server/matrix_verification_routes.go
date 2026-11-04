@@ -26,7 +26,7 @@ func (s *Server) registerMatrixVerificationRoutes(e *echo.Echo) {
 func (s *Server) generateMatrices(c *echo.Context) error {
 	var request matrixGenerateRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := freivalds.Generate(request.Size)
 	return writeResult(c, result, err)
@@ -35,7 +35,7 @@ func (s *Server) generateMatrices(c *echo.Context) error {
 func (s *Server) solveMatrixVerification(c *echo.Context) error {
 	var request matrixSolveRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, request.Product, request.Rounds)
 	return writeResult(c, result, err)

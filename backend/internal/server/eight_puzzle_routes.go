@@ -29,7 +29,7 @@ func (s *Server) registerEightPuzzleRoutes(e *echo.Echo) {
 func (s *Server) generatePuzzle(c *echo.Context) error {
 	var request puzzleGenerateRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := s.eightPuzzle.RandomPuzzle(eightpuzzle.RandomPuzzleRequest{Rows: request.Rows, Columns: request.Columns, Scramble: request.Scramble})
 	return writeResult(c, result, err)
@@ -38,7 +38,7 @@ func (s *Server) generatePuzzle(c *echo.Context) error {
 func (s *Server) solvePuzzle(c *echo.Context) error {
 	var request puzzleSolveRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := s.eightPuzzle.Solve(c.Request().Context(), eightpuzzle.SolveRequest{
 		BoardRequest: eightpuzzle.BoardRequest{Rows: request.Rows, Columns: request.Columns, Tiles: request.Tiles},

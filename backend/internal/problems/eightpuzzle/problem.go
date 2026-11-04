@@ -88,8 +88,6 @@ func New(registry *solver.Registry) *Service {
 	return &Service{registry: registry}
 }
 
-func (s *Service) AlgorithmCount() int { return len(s.registry.List()) + 1 }
-
 func (s *Service) Algorithms() []Algorithm {
 	metadata := s.registry.List()
 	algorithms := make([]Algorithm, 0, len(metadata))

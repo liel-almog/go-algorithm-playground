@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import labStyles from '../../../components/lab.module.css'
 import puzzleStyles from '../../../components/puzzle.module.css'
 import { PlaybackButton } from '../../../components/PlaybackButton'
@@ -63,7 +64,7 @@ export function PuzzleVisualizer({
           }}
           disabled={!result || step === 0}
         >
-          ←
+          <ChevronLeft aria-hidden="true" className="size-5" />
         </PlaybackButton>
         <PlaybackButton
           primary
@@ -74,7 +75,11 @@ export function PuzzleVisualizer({
           }}
           disabled={!result}
         >
-          {isPlaying ? 'Ⅱ' : '▶'}
+          {isPlaying ? (
+            <Pause aria-hidden="true" className="size-4 fill-current" />
+          ) : (
+            <Play aria-hidden="true" className="size-4 fill-current" />
+          )}
         </PlaybackButton>
         <PlaybackButton
           aria-label="Next step"
@@ -84,7 +89,7 @@ export function PuzzleVisualizer({
           }}
           disabled={!result || step === finalStep}
         >
-          →
+          <ChevronRight aria-hidden="true" className="size-5" />
         </PlaybackButton>
         <div className={puzzleStyles['progress-track']}>
           <span

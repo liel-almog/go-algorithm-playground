@@ -1,3 +1,4 @@
+import { Play, RotateCcw, Shuffle } from 'lucide-react'
 import labStyles from '../../../components/lab.module.css'
 import type { Algorithm } from '../../../lib/api'
 import { PanelHeading } from '../../../components/PanelHeading'
@@ -103,11 +104,11 @@ export function PuzzleControls({
 
       <Button
         variant="secondary"
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={() => void onGenerate()}
         disabled={isGenerating || isSolving}
       >
-        <span aria-hidden="true">↻</span>
+        <Shuffle aria-hidden="true" className="size-4" />
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
       </Button>
 
@@ -138,14 +139,14 @@ export function PuzzleControls({
       </label>
 
       <Button
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={() => void onSolve()}
         disabled={!hasPuzzle || isSolving || isGenerating}
       >
         {isSolving ? (
           <span className={labStyles['spinner']} />
         ) : (
-          <span aria-hidden="true">▶</span>
+          <Play aria-hidden="true" className="size-4 fill-current" />
         )}
         {isSolving
           ? 'Searching…'
@@ -153,11 +154,12 @@ export function PuzzleControls({
       </Button>
 
       <Button
-        variant="secondary"
-        className="mt-3 min-h-12 w-full text-sm"
+        variant="outline"
+        className="mt-3 min-h-11 w-full gap-2 rounded-xl border-[#d5ded3] bg-white/70 px-4 text-sm text-secondary-foreground hover:border-[#adc7b4] hover:bg-[#f1f6f0]"
         onClick={onReset}
         disabled={!canReset || isGenerating || isSolving}
       >
+        <RotateCcw aria-hidden="true" className="size-4" />
         Reset board and moves
       </Button>
 

@@ -13,8 +13,8 @@ export function PlaybackButton({
       size="icon"
       className={
         primary
-          ? 'size-[38px] rounded-full border-primary bg-primary p-0 text-[0.7rem] text-primary-foreground shadow-none hover:shadow-none disabled:opacity-35 max-[620px]:size-11'
-          : 'size-[38px] rounded-full border border-[#dce0da] bg-[#f6f7f3] text-[0.7rem] disabled:opacity-35 max-[620px]:size-11'
+          ? 'size-11 rounded-full border-primary bg-primary p-0 text-primary-foreground shadow-[0_3px_0_#174a37,0_6px_12px_#2c684e20] hover:shadow-[0_4px_0_#123d2e,0_8px_16px_#2c684e30] active:shadow-none disabled:opacity-35 max-[620px]:size-11'
+          : 'size-11 rounded-full border border-[#cfdbd0] bg-white text-secondary-foreground shadow-[0_2px_0_#d4ded3] hover:border-[#adc7b4] hover:bg-[#e8f1e7] active:shadow-none disabled:opacity-35 max-[620px]:size-11'
       }
       {...props}
     />

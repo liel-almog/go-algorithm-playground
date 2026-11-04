@@ -25,7 +25,7 @@ func (s *Server) registerPolynomialIdentityRoutes(e *echo.Echo) {
 func (s *Server) generatePolynomial(c *echo.Context) error {
 	var request polynomialGenerateRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := schwartzippel.Generate(request.Degree)
 	return writeResult(c, result, err)
@@ -34,7 +34,7 @@ func (s *Server) generatePolynomial(c *echo.Context) error {
 func (s *Server) solvePolynomialIdentity(c *echo.Context) error {
 	var request polynomialSolveRequest
 	if err := s.decodeAndValidate(c, &request); err != nil {
-		return writeError(c, http.StatusBadRequest, err)
+		return writeRequestError(c, err)
 	}
 	result, err := schwartzippel.Solve(c.Request().Context(), request.Left, request.Right, request.Rounds)
 	return writeResult(c, result, err)

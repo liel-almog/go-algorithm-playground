@@ -8,10 +8,7 @@ import {
   puzzleAlgorithms as fallbackPuzzleAlgorithms,
 } from '../../../lib/algorithms'
 import type { SolveResult } from '../../../lib/api'
-import {
-  generateLocalPuzzle,
-  solvePuzzleLocally,
-} from '../../../lib/clientAlgorithms'
+import { generateLocalPuzzle } from '../../../lib/clientAlgorithms'
 import { areAdjacent, errorMessage, isSolved } from '../puzzle'
 import { puzzleMutations } from '../mutations'
 import { algorithmQueries } from '../../algorithms/queries'
@@ -41,7 +38,6 @@ export function useEightPuzzle() {
   const [generationSource, setGenerationSource] = useState<
     'backend' | 'local' | null
   >(null)
-  const [fallbackError, setFallbackError] = useState('')
   const didGenerate = useRef(false)
   const {
     mutateAsync: generatePuzzle,
@@ -54,7 +50,7 @@ export function useEightPuzzle() {
     isPending: isSolving,
     error: solveError,
   } = useMutation(puzzleMutations.solve())
-  const error = fallbackError || (solveError ? errorMessage(solveError) : '')
+  const error = solveError ? errorMessage(solveError) : ''
   const playerSolved = isSolved(tiles, rows, columns)
 
   const clearSolution = useCallback(() => {
@@ -80,7 +76,6 @@ export function useEightPuzzle() {
 
       resetGeneration()
       resetSolve()
-      setFallbackError('')
       try {
         const puzzle = await generatePuzzle({
           rows: requestedRows,
@@ -130,7 +125,6 @@ export function useEightPuzzle() {
   const runAlgorithm = useCallback(async () => {
     if (tiles.length === 0) return
     resetSolve()
-    setFallbackError('')
     clearSolution()
     try {
       setResult(
@@ -142,14 +136,7 @@ export function useEightPuzzle() {
         }),
       )
     } catch {
-      if (algorithm.id === 'astar') {
-        try {
-          setResult(solvePuzzleLocally(tiles, rows, columns))
-          resetSolve()
-        } catch (fallbackReason) {
-          setFallbackError(errorMessage(fallbackReason))
-        }
-      }
+      // The mutation keeps the backend error for the controls to display.
     }
   }, [
     algorithm.id,
@@ -175,7 +162,6 @@ export function useEightPuzzle() {
       setTiles(next)
       setPlayerMoves((current) => current + 1)
       resetSolve()
-      setFallbackError('')
     },
     [columns, isGenerating, isSolving, playerSolved, resetSolve, result, tiles],
   )
@@ -185,7 +171,6 @@ export function useEightPuzzle() {
     setPlayerMoves(0)
     clearSolution()
     resetSolve()
-    setFallbackError('')
   }, [clearSolution, initialTiles, resetSolve])
 
   const selectAlgorithm = useCallback(
@@ -193,7 +178,6 @@ export function useEightPuzzle() {
       setAlgorithmId(nextAlgorithmId)
       clearSolution()
       resetSolve()
-      setFallbackError('')
     },
     [clearSolution, resetSolve],
   )
@@ -208,7 +192,6 @@ export function useEightPuzzle() {
       clearSolution()
       resetGeneration()
       resetSolve()
-      setFallbackError('')
       void generateProblem({ rows: nextRows, columns })
     },
     [clearSolution, columns, generateProblem, resetGeneration, resetSolve],
@@ -224,7 +207,6 @@ export function useEightPuzzle() {
       clearSolution()
       resetGeneration()
       resetSolve()
-      setFallbackError('')
       void generateProblem({ rows, columns: nextColumns })
     },
     [clearSolution, generateProblem, resetGeneration, resetSolve, rows],

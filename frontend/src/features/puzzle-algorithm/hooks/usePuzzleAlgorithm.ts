@@ -7,10 +7,7 @@ import {
   puzzleAlgorithms as fallbackPuzzleAlgorithms,
 } from '../../../lib/algorithms'
 import type { SolveResult } from '../../../lib/api'
-import {
-  generateLocalPuzzle,
-  solvePuzzleLocally,
-} from '../../../lib/clientAlgorithms'
+import { generateLocalPuzzle } from '../../../lib/clientAlgorithms'
 import { algorithmQueries } from '../../algorithms/queries'
 import { puzzleMutations } from '../../eight-puzzle/mutations'
 import { errorMessage } from '../puzzleAlgorithm'
@@ -30,17 +27,14 @@ export function usePuzzleAlgorithm(algorithmId: string) {
   const [result, setResult] = useState<SolveResult | null>(null)
   const [step, setStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [fallbackError, setFallbackError] = useState('')
   const generatedFor = useRef('')
   const generation = useMutation(puzzleMutations.generate())
   const solver = useMutation(puzzleMutations.solve())
-  const error =
-    fallbackError || (solver.error ? errorMessage(solver.error) : '')
+  const error = solver.error ? errorMessage(solver.error) : ''
 
   const generateProblem = useCallback(async () => {
     generation.reset()
     solver.reset()
-    setFallbackError('')
     setResult(null)
     setStep(0)
     setIsPlaying(false)
@@ -80,7 +74,6 @@ export function usePuzzleAlgorithm(algorithmId: string) {
   const runAlgorithm = async () => {
     if (!algorithm || tiles.length === 0) return
     solver.reset()
-    setFallbackError('')
     setResult(null)
     setStep(0)
     try {
@@ -93,14 +86,7 @@ export function usePuzzleAlgorithm(algorithmId: string) {
         }),
       )
     } catch {
-      if (algorithm.id === 'astar') {
-        try {
-          setResult(solvePuzzleLocally(tiles, 3, 3))
-          solver.reset()
-        } catch (reason) {
-          setFallbackError(errorMessage(reason))
-        }
-      }
+      // The mutation keeps the backend error for the controls to display.
     }
   }
 

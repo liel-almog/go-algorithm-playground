@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
 	"os"
 	"runtime"
@@ -79,15 +80,30 @@ func AllowedOriginsFromEnv() []string {
 }
 
 func (s *Server) health(c *echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]any{"status": "ok", "goVersion": strings.TrimPrefix(runtimeVersion(), "go"), "algorithms": s.eightPuzzle.AlgorithmCount()})
+	return c.JSON(http.StatusOK, map[string]any{"status": "ok", "goVersion": strings.TrimPrefix(runtimeVersion(), "go"), "algorithms": len(s.eightPuzzle.Algorithms()) + len(algorithmTools())})
 }
 
 var runtimeVersion = runtime.Version
 
+type algorithmTool struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Endpoint string `json:"endpoint"`
+}
+
+func algorithmTools() []algorithmTool {
+	return []algorithmTool{
+		{ID: "karger", Name: "Karger randomized minimum cut", Category: "graph", Endpoint: problemRoutePrefix + "/minimum-cut/solve"},
+		{ID: "freivalds", Name: "Freivalds matrix verification", Category: "matrix", Endpoint: problemRoutePrefix + "/matrix-verification/solve"},
+		{ID: "schwartz-zippel", Name: "Schwartz-Zippel polynomial identity test", Category: "polynomial", Endpoint: problemRoutePrefix + "/polynomial-identity/solve"},
+	}
+}
+
 func (s *Server) algorithms(c *echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]any{
 		"algorithms": s.eightPuzzle.Algorithms(),
-		"tools":      []map[string]any{{"id": "karger", "name": "Karger randomized minimum cut", "category": "graph", "endpoint": problemRoutePrefix + "/minimum-cut/solve"}},
+		"tools":      algorithmTools(),
 	})
 }
 
@@ -107,29 +123,54 @@ func apiNotFound(c *echo.Context) error {
 
 func (s *Server) apiFallback(c *echo.Context) error {
 	if methods, exists := s.apiRoutes[c.Request().URL.Path]; exists {
-		allowed := make([]string, 0, len(methods))
-		for method := range methods {
-			allowed = append(allowed, method)
-		}
-		slices.Sort(allowed)
-		c.Response().Header().Set("Allow", strings.Join(allowed, ", "))
+		c.Response().Header().Set("Allow", strings.Join(allowedMethods(methods), ", "))
 		return writeError(c, http.StatusMethodNotAllowed, errors.New("method not allowed"))
 	}
 	return apiNotFound(c)
 }
 
+func allowedMethods(methods map[string]struct{}) []string {
+	allowed := make([]string, 0, len(methods))
+	for method := range methods {
+		allowed = append(allowed, method)
+	}
+	slices.Sort(allowed)
+	return allowed
+}
+
 func decode(c *echo.Context, destination any) error {
 	r := c.Request()
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil || mediaType != "application/json" {
+		return errUnsupportedMediaType
+	}
 	r.Body = http.MaxBytesReader(c.Response(), r.Body, maxRequestBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
-	if decoder.Decode(&struct{}{}) != io.EOF {
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		if err != nil {
+			return fmt.Errorf("invalid JSON: %w", err)
+		}
 		return errors.New("invalid JSON: request body must contain exactly one JSON object")
 	}
 	return nil
+}
+
+var errUnsupportedMediaType = errors.New("Content-Type must be application/json")
+
+func writeRequestError(c *echo.Context, err error) error {
+	var tooLarge *http.MaxBytesError
+	switch {
+	case errors.Is(err, errUnsupportedMediaType):
+		return writeError(c, http.StatusUnsupportedMediaType, err)
+	case errors.As(err, &tooLarge):
+		return writeError(c, http.StatusRequestEntityTooLarge, errors.New("request body exceeds 256 KiB"))
+	default:
+		return writeError(c, http.StatusBadRequest, err)
+	}
 }
 
 func writeSolverError(c *echo.Context, err error) error {
@@ -158,27 +199,34 @@ func (s *Server) cors(next echo.HandlerFunc) echo.HandlerFunc {
 		w := c.Response()
 		origin := r.Header.Get("Origin")
 		allowedOrigin := origin == "" || s.originAllowed(origin)
+		wildcardOrigin := len(s.allowedOrigins) == 1 && s.allowedOrigins[0] == "*"
+		if !wildcardOrigin {
+			w.Header().Add("Vary", "Origin")
+		}
+		methods, pathExists := s.apiRoutes[r.URL.Path]
 		if origin != "" && allowedOrigin {
-			if len(s.allowedOrigins) == 1 && s.allowedOrigins[0] == "*" {
+			if wildcardOrigin {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			} else {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
-				w.Header().Add("Vary", "Origin")
 			}
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			if pathExists {
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowedMethods(methods), ", "))
+			}
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			w.Header().Set("Access-Control-Max-Age", "86400")
 		}
 		if r.Method == http.MethodOptions {
+			w.Header().Add("Vary", "Access-Control-Request-Method")
 			if !allowedOrigin {
 				return writeError(c, http.StatusForbidden, errors.New("origin is not allowed"))
 			}
 			requestedMethod := r.Header.Get("Access-Control-Request-Method")
-			methods, pathExists := s.apiRoutes[r.URL.Path]
 			if !pathExists {
 				return apiNotFound(c)
 			}
 			if _, methodExists := methods[requestedMethod]; requestedMethod == "" || !methodExists {
+				w.Header().Set("Allow", strings.Join(allowedMethods(methods), ", "))
 				return writeError(c, http.StatusMethodNotAllowed, errors.New("requested method is not allowed"))
 			}
 			return c.NoContent(http.StatusNoContent)

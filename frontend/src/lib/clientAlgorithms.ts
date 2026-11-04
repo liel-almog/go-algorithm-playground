@@ -1,6 +1,4 @@
-import type { Edge, MinCutResult, SolveResult } from './api'
-
-type PuzzleMove = SolveResult['moves'][number]
+import type { Edge, MinCutResult } from './api'
 
 function puzzleGoal(rows: number, columns: number) {
   return Array.from({ length: rows * columns }, (_, index) =>
@@ -58,104 +56,6 @@ export function generateLocalPuzzle(
   return tiles
 }
 
-export function solvePuzzleLocally(
-  start: number[],
-  rows: number,
-  columns: number,
-): SolveResult {
-  const started = performance.now()
-  const startKey = start.join(',')
-  const goalKey = puzzleGoal(rows, columns).join(',')
-  if (startKey === goalKey) return puzzleResult([start], [], 0, 1, started)
-
-  type Node = {
-    tiles: number[]
-    key: string
-    cost: number
-    score: number
-  }
-  const open: Node[] = [
-    { tiles: start, key: startKey, cost: 0, score: manhattan(start, columns) },
-  ]
-  const bestCost = new Map([[startKey, 0]])
-  const parent = new Map<string, { key: string; move: PuzzleMove }>()
-  const states = new Map([[startKey, start]])
-  let expanded = 0
-  let generated = 1
-  let frontierMax = 1
-
-  while (open.length > 0) {
-    open.sort((a, b) => a.score - b.score)
-    const current = open.shift()!
-    if (current.cost !== bestCost.get(current.key)) continue
-    expanded += 1
-
-    for (const neighbor of puzzleNeighbors(current.tiles, rows, columns)) {
-      const key = neighbor.tiles.join(',')
-      const cost = current.cost + 1
-      if (cost >= (bestCost.get(key) ?? Number.POSITIVE_INFINITY)) continue
-      bestCost.set(key, cost)
-      parent.set(key, { key: current.key, move: neighbor.move })
-      states.set(key, neighbor.tiles)
-      generated += 1
-      if (key === goalKey) {
-        const path: number[][] = []
-        const moves: PuzzleMove[] = []
-        let cursor = key
-        while (cursor !== startKey) {
-          const state = states.get(cursor)
-          const link = parent.get(cursor)
-          if (!state || !link) {
-            throw new Error('Could not reconstruct the puzzle solution.')
-          }
-          path.push(state)
-          moves.push(link.move)
-          cursor = link.key
-        }
-        path.push(start)
-        path.reverse()
-        moves.reverse()
-        return puzzleResult(
-          path,
-          moves,
-          expanded,
-          frontierMax,
-          started,
-          generated,
-        )
-      }
-      open.push({
-        tiles: neighbor.tiles,
-        key,
-        cost,
-        score: cost + manhattan(neighbor.tiles, columns),
-      })
-    }
-    frontierMax = Math.max(frontierMax, open.length)
-  }
-
-  throw new Error('This puzzle could not be solved.')
-}
-
-function puzzleNeighbors(tiles: number[], rows: number, columns: number) {
-  const empty = tiles.indexOf(0)
-  const row = Math.floor(empty / columns)
-  const column = empty % columns
-  const candidates: { position: number; move: PuzzleMove }[] = [
-    { position: row > 0 ? empty - columns : -1, move: 'up' },
-    { position: row < rows - 1 ? empty + columns : -1, move: 'down' },
-    { position: column > 0 ? empty - 1 : -1, move: 'left' },
-    { position: column < columns - 1 ? empty + 1 : -1, move: 'right' },
-  ]
-  return candidates
-    .filter(({ position }) => position >= 0)
-    .map(({ position, move }) => {
-      const next = [...tiles]
-      swapTiles(next, empty, position)
-      return { tiles: next, move }
-    })
-}
-
 function swapTiles(tiles: number[], first: number, second: number) {
   const firstTile = tiles[first]
   const secondTile = tiles[second]
@@ -164,39 +64,6 @@ function swapTiles(tiles: number[], first: number, second: number) {
   }
   tiles[first] = secondTile
   tiles[second] = firstTile
-}
-
-function manhattan(tiles: number[], columns: number) {
-  return tiles.reduce((distance, tile, index) => {
-    if (tile === 0) return distance
-    const target = tile - 1
-    return (
-      distance +
-      Math.abs(Math.floor(index / columns) - Math.floor(target / columns)) +
-      Math.abs((index % columns) - (target % columns))
-    )
-  }, 0)
-}
-
-function puzzleResult(
-  path: number[][],
-  moves: PuzzleMove[],
-  expanded: number,
-  frontierMax: number,
-  started: number,
-  generated = 1,
-): SolveResult {
-  return {
-    algorithm: 'astar',
-    path,
-    moves,
-    moveCount: moves.length,
-    expanded,
-    generated,
-    frontierMax,
-    durationUs: Math.round((performance.now() - started) * 1000),
-    optimal: true,
-  }
 }
 
 export function solveMinCutLocally(

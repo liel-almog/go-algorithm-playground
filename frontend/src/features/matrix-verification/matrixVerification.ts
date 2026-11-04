@@ -3,23 +3,22 @@ import type { MatrixClaim } from '../../lib/api'
 type Matrix = number[][]
 
 export function generateLocalProblem(size: number): MatrixClaim {
-  const randomMatrix = () =>
-    Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => Math.floor(Math.random() * 2)),
-    )
-  const a = randomMatrix()
-  const b = Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => 0),
+  const a = Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => Math.floor(Math.random() * 2)),
   )
-  for (const [row, column] of shuffledColumns(size).entries()) {
-    const values = b[row]
-    if (values) values[column] = 1
-  }
+
+  // A permutation matrix rearranges A's columns, keeping the product binary.
+  const b = shuffledColumns(size).map((selectedColumn) =>
+    Array.from({ length: size }, (_, column) =>
+      column === selectedColumn ? 1 : 0,
+    ),
+  )
   return { a, b, product: multiplyMatrices(a, b) }
 }
 
 function shuffledColumns(size: number) {
   const columns = Array.from({ length: size }, (_, index) => index)
+  // Fisher–Yates: swap each remaining column with a randomly selected one.
   for (let index = size - 1; index > 0; index--) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
     const current = columns[index]

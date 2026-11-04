@@ -1,5 +1,5 @@
 import { PuzzleBoardFrame, PuzzleTile } from '../../../components/PuzzleBoard'
-import { areAdjacent } from '../puzzle'
+import { areAdjacent } from '../../../lib/puzzle'
 
 interface PuzzleBoardProps {
   tiles: number[]

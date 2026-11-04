@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isValidPuzzle, puzzleGoal } from './puzzle'
 
 export const nonNegativeInteger = z.number().int().nonnegative()
 const positiveInteger = z.number().int().positive()
@@ -45,36 +46,49 @@ export const graphSchema = z
     edges: z.array(edgeSchema).min(1).max(1000),
   })
   .superRefine(({ vertices, edges }, context) => {
-    const names = new Set(vertices)
-    if (names.size !== vertices.length)
+    const vertexNames = new Set(vertices)
+    if (vertexNames.size !== vertices.length) {
       context.addIssue({
         code: 'custom',
         message: 'Vertex names must be unique.',
       })
-    if (
-      edges.some(
-        ({ from, to }) => !names.has(from) || !names.has(to) || from === to,
-      )
-    ) {
+    }
+    const hasInvalidEdge = edges.some(
+      ({ from, to }) =>
+        !vertexNames.has(from) || !vertexNames.has(to) || from === to,
+    )
+    if (hasInvalidEdge) {
       context.addIssue({
         code: 'custom',
         message: 'Edges must join two different vertices in the graph.',
       })
       return
     }
-    const visited = new Set(vertices.slice(0, 1))
-    for (const vertex of visited) {
-      for (const { from, to } of edges) {
-        if (from === vertex) visited.add(to)
-        if (to === vertex) visited.add(from)
-      }
-    }
-    if (visited.size !== names.size)
+    if (!isConnectedGraph(vertices, edges)) {
       context.addIssue({
         code: 'custom',
         message: 'The graph must be connected.',
       })
+    }
   })
+
+function isConnectedGraph(vertices: string[], edges: Edge[]) {
+  const pending = vertices.slice(0, 1)
+  const visited = new Set(pending)
+
+  while (pending.length > 0) {
+    const vertex = pending.pop()
+    for (const { from, to } of edges) {
+      if (from !== vertex && to !== vertex) continue
+      const neighbor = from === vertex ? to : from
+      if (visited.has(neighbor)) continue
+      visited.add(neighbor)
+      pending.push(neighbor)
+    }
+  }
+
+  return visited.size === new Set(vertices).size
+}
 
 export const matrixSchema = z
   .array(z.array(z.number().int().min(0).max(1)).min(1).max(100))
@@ -213,9 +227,7 @@ export function puzzleSolveResultSchema(
           path: ['path', 0],
         })
       }
-      const goal = Array.from({ length: rows * columns }, (_, index) =>
-        index === rows * columns - 1 ? 0 : index + 1,
-      )
+      const goal = puzzleGoal(rows, columns)
       if (!sameTiles(result.path.at(-1), goal)) {
         context.addIssue({
           code: 'custom',
@@ -263,11 +275,10 @@ function isLegalStep(
     move
   ]
   if (delta !== expectedDelta) return false
-  if (
-    (move === 'left' || move === 'right') &&
-    Math.floor(currentBlank / columns) !== Math.floor(nextBlank / columns)
-  )
-    return false
+  const isHorizontalMove = move === 'left' || move === 'right'
+  const staysInSameRow =
+    Math.floor(currentBlank / columns) === Math.floor(nextBlank / columns)
+  if (isHorizontalMove && !staysInSameRow) return false
 
   return current.every((tile, index) => {
     if (index === currentBlank) return next[index] === current[nextBlank]
@@ -284,11 +295,7 @@ function validateTiles(
   path: PropertyKey[],
 ) {
   const tileCount = rows * columns
-  const isPermutation =
-    tiles.length === tileCount &&
-    new Set(tiles).size === tileCount &&
-    tiles.every((tile) => tile < tileCount)
-  if (!isPermutation) {
+  if (!isValidPuzzle(tiles, rows, columns)) {
     context.addIssue({
       code: 'custom',
       message: `Expected each tile from 0 to ${tileCount - 1} exactly once.`,

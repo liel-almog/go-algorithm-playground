@@ -78,8 +78,12 @@ export function useMatrixVerification() {
   }
 
   const accepted = trials.length > 0 && trials.every((trial) => trial.passed)
+  const failurePercent = 100 / 2 ** rounds
+  const decimalScale = 10_000
   // Round upward so the displayed upper bound never understates the risk.
-  const failureProbability = `${Math.ceil((100 / 2 ** rounds) * 10_000) / 10_000}%`
+  const roundedFailurePercent =
+    Math.ceil(failurePercent * decimalScale) / decimalScale
+  const failureProbability = `${roundedFailurePercent}%`
 
   const changeRounds = (value: number) => {
     setRounds(Math.max(1, Math.min(15, Math.round(value))))

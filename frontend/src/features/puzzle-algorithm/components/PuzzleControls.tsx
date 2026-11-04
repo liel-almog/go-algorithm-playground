@@ -31,6 +31,8 @@ export function PuzzleControls({
   onGenerate,
   onSolve,
 }: PuzzleControlsProps) {
+  const isBusy = isGenerating || isSolving
+
   return (
     <ControlPanel>
       <PanelHeading
@@ -44,7 +46,7 @@ export function PuzzleControls({
         inputValue={scramble}
         min={4}
         max={36}
-        disabled={isGenerating || isSolving}
+        disabled={isBusy}
         startLabel="Gentle"
         endLabel="Deeper"
         onChange={onScrambleChange}
@@ -53,7 +55,7 @@ export function PuzzleControls({
         variant="secondary"
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onGenerate}
-        disabled={isGenerating || isSolving}
+        disabled={isBusy}
       >
         <Shuffle aria-hidden="true" className="size-4" />
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
@@ -67,7 +69,7 @@ export function PuzzleControls({
       <Button
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onSolve}
-        disabled={!canSolve || isSolving || isGenerating}
+        disabled={!canSolve || isBusy}
       >
         {isSolving ? (
           <Spinner />

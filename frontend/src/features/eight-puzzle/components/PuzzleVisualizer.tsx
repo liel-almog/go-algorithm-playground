@@ -1,5 +1,5 @@
 import { VisualizerPanel } from '../../../components/LabPanels'
-import { PuzzleStage, PuzzleSkeleton } from '../../../components/PuzzleStage'
+import { PuzzleStage } from '../../../components/PuzzleStage'
 import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
 import type { SolveResult } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
@@ -99,18 +99,14 @@ export function PuzzleVisualizer({
       )}
 
       <PuzzleStage lastTile={rows * columns - 1}>
-        {tiles.length > 0 ? (
-          <PuzzleBoard
-            tiles={tiles}
-            rows={rows}
-            columns={columns}
-            move={currentMove}
-            onTileClick={onTileClick}
-            playable={isInteractive}
-          />
-        ) : (
-          <PuzzleSkeleton />
-        )}
+        <PuzzleBoard
+          tiles={tiles}
+          rows={rows}
+          columns={columns}
+          move={currentMove}
+          onTileClick={onTileClick}
+          playable={isInteractive}
+        />
       </PuzzleStage>
 
       <PuzzlePlayback

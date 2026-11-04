@@ -1,5 +1,5 @@
 import { VisualizerPanel } from '../../../components/LabPanels'
-import { PuzzleStage, PuzzleSkeleton } from '../../../components/PuzzleStage'
+import { PuzzleStage } from '../../../components/PuzzleStage'
 import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import type { SolveResult } from '../../../lib/api'
@@ -45,11 +45,7 @@ export function PuzzleVisualizer({
         detail={result ? `Step ${step} of ${finalStep}` : 'Initial state'}
       />
       <PuzzleStage lastTile={8}>
-        {visibleTiles.length > 0 ? (
-          <PuzzleBoard tiles={visibleTiles} move={currentMove} />
-        ) : (
-          <PuzzleSkeleton />
-        )}
+        <PuzzleBoard tiles={visibleTiles} move={currentMove} />
       </PuzzleStage>
       <PuzzlePlayback
         hasResult={!!result}

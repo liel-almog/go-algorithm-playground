@@ -8,7 +8,7 @@ import { generateLocalPuzzle } from '../../../lib/clientAlgorithms'
 import { errorMessage } from '../../../lib/errorMessage'
 import { usePuzzleAlgorithms } from '../../algorithms/usePuzzleAlgorithms'
 import { puzzleMutations } from '../mutations'
-import { areAdjacent, isSolved } from '../puzzle'
+import { areAdjacent, isSolved } from '../../../lib/puzzle'
 import { usePuzzlePlayback } from './usePuzzlePlayback'
 import { usePuzzleSolution } from './usePuzzleSolution'
 

@@ -17,12 +17,3 @@ export function PuzzleStage({ lastTile, children }: PuzzleStageProps) {
     </DottedSurface>
   )
 }
-
-export function PuzzleSkeleton() {
-  return (
-    <div
-      className="aspect-square w-[min(310px,76vw)] animate-shimmer rounded-xl bg-linear-[100deg,#e4e7e1_20%,#f2f3ef_38%,#e4e7e1_55%] bg-size-[200%_100%]"
-      aria-label="Loading puzzle"
-    />
-  )
-}

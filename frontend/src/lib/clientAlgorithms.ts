@@ -1,8 +1,4 @@
-function puzzleGoal(rows: number, columns: number) {
-  return Array.from({ length: rows * columns }, (_, index) =>
-    index === rows * columns - 1 ? 0 : index + 1,
-  )
-}
+import { puzzleGoal } from './puzzle'
 
 export function generateLocalPuzzle(
   rows: number,
@@ -25,35 +21,45 @@ export function generateLocalPuzzle(
 
   const tiles = puzzleGoal(rows, columns)
   const goalKey = tiles.join(',')
-  let empty = tiles.length - 1
-  let previous = -1
+  let emptyIndex = tiles.length - 1
+  let previousEmptyIndex = -1
 
   for (let move = 0; move < scramble; move += 1) {
-    const row = Math.floor(empty / columns)
-    const column = empty % columns
-    const options = [
-      row > 0 ? empty - columns : -1,
-      row < rows - 1 ? empty + columns : -1,
-      column > 0 ? empty - 1 : -1,
-      column < columns - 1 ? empty + 1 : -1,
-    ].filter((position) => position >= 0 && position !== previous)
-    const next = options[Math.floor(Math.random() * options.length)]
-    if (next === undefined) {
+    // Avoid immediately undoing the last move.
+    const neighbors = neighboringIndices(emptyIndex, rows, columns).filter(
+      (index) => index !== previousEmptyIndex,
+    )
+    const nextEmptyIndex =
+      neighbors[Math.floor(Math.random() * neighbors.length)]
+    if (nextEmptyIndex === undefined) {
       throw new Error('Could not find a legal puzzle move.')
     }
-    previous = empty
-    swapTiles(tiles, empty, next)
-    empty = next
+    previousEmptyIndex = emptyIndex
+    swapTiles(tiles, emptyIndex, nextEmptyIndex)
+    emptyIndex = nextEmptyIndex
   }
 
   // A longer random walk can occasionally loop back to the goal. Keep every
   // generated exercise meaningful while preserving solvability.
   if (tiles.join(',') === goalKey) {
-    const next = empty === tiles.length - 1 ? empty - 1 : empty + 1
-    swapTiles(tiles, empty, next)
+    // At the goal, the empty cell is in the bottom-right corner.
+    swapTiles(tiles, emptyIndex, emptyIndex - 1)
   }
 
   return tiles
+}
+
+function neighboringIndices(index: number, rows: number, columns: number) {
+  const row = Math.floor(index / columns)
+  const column = index % columns
+  const neighbors: number[] = []
+
+  if (row > 0) neighbors.push(index - columns)
+  if (row < rows - 1) neighbors.push(index + columns)
+  if (column > 0) neighbors.push(index - 1)
+  if (column < columns - 1) neighbors.push(index + 1)
+
+  return neighbors
 }
 
 function swapTiles(tiles: number[], first: number, second: number) {

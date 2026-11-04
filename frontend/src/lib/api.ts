@@ -37,16 +37,28 @@ export type {
 } from './apiSchemas'
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
+  readonly status: number
+
+  constructor(message: string, status: number) {
     super(message)
     this.name = 'ApiError'
+    this.status = status
   }
 }
 
-const apiBase = import.meta.env.VITE_API_BASE_URL ?? ''
+const apiBase = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
+function responseErrorMessage(data: unknown, status: number) {
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'error' in data &&
+    typeof data.error === 'string'
+  ) {
+    return data.error
+  }
+  return `Request failed (${status})`
+}
 
 async function request<TSchema extends z.ZodType>(
   path: string,
@@ -56,7 +68,7 @@ async function request<TSchema extends z.ZodType>(
   const timeout = AbortSignal.timeout(15_000)
   let response: Response
   try {
-    response = await fetch(`${apiBase.replace(/\/$/, '')}${path}`, {
+    response = await fetch(`${apiBase}${path}`, {
       ...options,
       signal: options?.signal
         ? AbortSignal.any([options.signal, timeout])
@@ -74,14 +86,10 @@ async function request<TSchema extends z.ZodType>(
   const data: unknown = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    const message =
-      typeof data === 'object' &&
-      data !== null &&
-      'error' in data &&
-      typeof data.error === 'string'
-        ? data.error
-        : `Request failed (${response.status})`
-    throw new ApiError(message, response.status)
+    throw new ApiError(
+      responseErrorMessage(data, response.status),
+      response.status,
+    )
   }
 
   const parsed = schema.safeParse(data)

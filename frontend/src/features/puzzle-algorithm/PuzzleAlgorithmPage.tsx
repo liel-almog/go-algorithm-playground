@@ -30,17 +30,8 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
       <ConceptExplainer
         problem="The 8-puzzle has eight numbered tiles and one empty space on a 3 × 3 board. A move slides one neighboring tile into the gap. The goal is to reach the ordered board in as few legal moves as possible, without searching every possible arrangement."
         algorithmName={lab.algorithm.name}
-        algorithm={
-          explanation?.algorithm ??
-          'The solver explores legal board arrangements until it reaches the ordered goal state.'
-        }
-        steps={
-          explanation?.steps ?? [
-            'Start from the shuffled board.',
-            'Explore boards reachable by one legal slide.',
-            'Stop at the ordered board and reconstruct the moves.',
-          ]
-        }
+        algorithm={explanation.algorithm}
+        steps={explanation.steps}
       />
       <LabLayout>
         <PuzzleControls

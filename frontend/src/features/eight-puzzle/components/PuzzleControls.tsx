@@ -50,6 +50,8 @@ export function PuzzleControls({
   onSolve,
   onReset,
 }: PuzzleControlsProps) {
+  const isBusy = isGenerating || isSolving
+
   return (
     <ControlPanel>
       <PanelHeading
@@ -64,7 +66,7 @@ export function PuzzleControls({
           <NativeSelect
             value={rows}
             onChange={(event) => onRowsChange(Number(event.target.value))}
-            disabled={isGenerating || isSolving}
+            disabled={isBusy}
           >
             {[2, 3, 4].map((value) => (
               <option key={value} value={value}>
@@ -80,7 +82,7 @@ export function PuzzleControls({
           <NativeSelect
             value={columns}
             onChange={(event) => onColumnsChange(Number(event.target.value))}
-            disabled={isGenerating || isSolving}
+            disabled={isBusy}
           >
             {[2, 3, 4].map((value) => (
               <option key={value} value={value}>
@@ -97,7 +99,7 @@ export function PuzzleControls({
         inputValue={scramble}
         min={4}
         max={36}
-        disabled={isGenerating || isSolving}
+        disabled={isBusy}
         startLabel="Gentle"
         endLabel="Deeper"
         onChange={onScrambleChange}
@@ -107,7 +109,7 @@ export function PuzzleControls({
         variant="secondary"
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onGenerate}
-        disabled={isGenerating || isSolving}
+        disabled={isBusy}
       >
         <Shuffle aria-hidden="true" className="size-4" />
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
@@ -142,7 +144,7 @@ export function PuzzleControls({
       <Button
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
         onClick={onSolve}
-        disabled={!hasPuzzle || isSolving || isGenerating}
+        disabled={!hasPuzzle || isBusy}
       >
         {isSolving ? (
           <Spinner />
@@ -158,7 +160,7 @@ export function PuzzleControls({
         variant="outline"
         className="mt-3 min-h-11 w-full gap-2 rounded-xl border-[#d5ded3] bg-white/70 px-4 text-sm text-secondary-foreground hover:border-[#adc7b4] hover:bg-[#f1f6f0]"
         onClick={onReset}
-        disabled={!canReset || isGenerating || isSolving}
+        disabled={!canReset || isBusy}
       >
         <RotateCcw aria-hidden="true" className="size-4" />
         Reset board and moves

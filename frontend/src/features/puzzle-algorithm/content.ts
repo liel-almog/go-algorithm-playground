@@ -1,5 +1,8 @@
-export const puzzleExplanations: Partial<
-  Record<string, { algorithm: string; steps: [string, string, string] }>
+import type { PuzzleAlgorithmId } from '../../lib/algorithms'
+
+export const puzzleExplanations: Record<
+  PuzzleAlgorithmId,
+  { algorithm: string; steps: [string, string, string] }
 > = {
   astar: {
     algorithm:

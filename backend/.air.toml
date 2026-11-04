@@ -6,4 +6,4 @@ cmd = "go build -o ./tmp/algorithm-playground ./cmd/server/main.go"
 bin = "./tmp/algorithm-playground"
 entrypoint = ["./tmp/algorithm-playground"]
 include_ext = ["go", "mod", "sum"]
-exclude_dir = ["tmp", "bin"]
+exclude_dir = ["tmp", "bin", ".agents"]

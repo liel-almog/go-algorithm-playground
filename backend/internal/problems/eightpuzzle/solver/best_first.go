@@ -8,20 +8,28 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle/board"
 )
 
-type AStar struct{}
+// AStar searches with g + h. Heuristic is optional and defaults to Manhattan
+// distance.
+type AStar struct {
+	Heuristic Heuristic
+}
 
 func (AStar) Metadata() Metadata {
 	return Metadata{
 		ID:          "astar",
 		Name:        "A* search",
-		Description: "Balances distance travelled with Manhattan distance to find a shortest path efficiently.",
+		Description: "Balances distance travelled with a heuristic estimate (Manhattan distance by default) to find a shortest path efficiently.",
 		Optimal:     true,
 		Category:    "informed",
 	}
 }
 
 func (algorithm AStar) Solve(ctx context.Context, initial board.Board) (Result, error) {
-	return solveAStar(ctx, initial, algorithm.Metadata())
+	heuristic := algorithm.Heuristic
+	if heuristic == nil {
+		heuristic = board.Board.Manhattan
+	}
+	return solveAStar(ctx, initial, algorithm.Metadata(), heuristic)
 }
 
 type searchNode struct {
@@ -49,12 +57,12 @@ func (q *priorityQueue) Pop() any {
 	return item
 }
 
-func solveAStar(ctx context.Context, initial board.Board, meta Metadata) (Result, error) {
+func solveAStar(ctx context.Context, initial board.Board, meta Metadata, heuristic Heuristic) (Result, error) {
 	start := time.Now()
 	initialKey := initial.Key()
 	parents := map[string]parentStep{initialKey: {board: initial}}
 	bestCost := map[string]int{initialKey: 0}
-	queue := &priorityQueue{{board: initial, priority: initial.Manhattan()}}
+	queue := &priorityQueue{{board: initial, priority: heuristic(initial)}}
 	heap.Init(queue)
 	expanded, generated, frontierMax, order := 0, 1, 1, 1
 	for queue.Len() > 0 {
@@ -82,7 +90,7 @@ func solveAStar(ctx context.Context, initial board.Board, meta Metadata) (Result
 			}
 			bestCost[nextKey] = nextCost
 			parents[nextKey] = parentStep{previous: key, board: neighbor.Board, move: neighbor.Move}
-			priority := nextCost + neighbor.Board.Manhattan()
+			priority := nextCost + heuristic(neighbor.Board)
 			heap.Push(queue, searchNode{board: neighbor.Board, priority: priority, cost: nextCost, order: order})
 			order++
 			generated++

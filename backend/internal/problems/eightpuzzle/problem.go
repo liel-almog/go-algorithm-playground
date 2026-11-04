@@ -25,19 +25,11 @@ type BoardRequest struct {
 	Tiles   []int
 }
 
-type SolveRequest struct {
-	BoardRequest
-	Algorithm string
-}
-
 type RandomPuzzleRequest struct {
 	Rows     int
 	Columns  int
 	Scramble int
 }
-
-// Algorithms lists the puzzle solvers, ordered by name.
-func Algorithms() []solver.Metadata { return solver.List() }
 
 func RandomPuzzle(request RandomPuzzleRequest) (map[string]any, error) {
 	if request.Rows == 0 {
@@ -56,17 +48,15 @@ func RandomPuzzle(request RandomPuzzleRequest) (map[string]any, error) {
 	return map[string]any{"row": board.Rows, "column": board.Columns, "tiles": board.Tiles, "scramble": request.Scramble}, nil
 }
 
-func Solve(ctx context.Context, request SolveRequest) (solver.Result, error) {
+// Solve validates the board and runs the given algorithm on it. Callers choose
+// and configure the algorithm, so every solver shares this entry point.
+func Solve(ctx context.Context, request BoardRequest, algorithm solver.Algorithm) (solver.Result, error) {
 	board, err := board.New(request.Rows, request.Columns, request.Tiles)
 	if err != nil {
 		return solver.Result{}, err
 	}
 	if !board.IsSolvable() {
 		return solver.Result{}, ErrUnsolvable
-	}
-	algorithm, err := solver.Get(request.Algorithm)
-	if err != nil {
-		return solver.Result{}, err
 	}
 	return runWithTimeout(ctx, algorithm, board)
 }

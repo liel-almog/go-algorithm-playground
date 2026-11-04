@@ -8,7 +8,10 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/minimumcut/karger"
 )
 
-const minimumCutID = "minimum-cut"
+const (
+	minimumCutID = "minimum-cut"
+	kargerID     = "karger"
+)
 
 type minimumCutSolveRequest struct {
 	Vertices []string `json:"vertices" validate:"required,min=2,max=50,dive,required,max=100"`
@@ -36,13 +39,14 @@ func (minimumCutProblem) describe() problemDescription {
 
 func (minimumCutProblem) algorithms() algorithmCatalog {
 	return algorithmCatalog{Tools: []algorithmTool{{
-		ID: "karger", Name: "Karger randomized minimum cut", Category: "graph", Endpoint: solveEndpoint(minimumCutID),
+		ID: kargerID, Name: "Karger randomized minimum cut", Category: "graph", Endpoint: algorithmSolveEndpoint(minimumCutID, kargerID),
 	}}}
 }
 
 func (p minimumCutProblem) register(routes problemRoutes) {
 	routes.generate(p.generate)
 	routes.solve(p.solve)
+	routes.solveWith(kargerID, p.solve)
 }
 
 func (minimumCutProblem) generate(c *echo.Context) error {

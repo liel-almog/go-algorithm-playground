@@ -38,9 +38,22 @@ func (r problemRoutes) solve(handler echo.HandlerFunc) {
 	r.server.registerAPI(r.echo, http.MethodPost, r.prefix+"/solve", handler, r.server.limitAlgorithm)
 }
 
+// solveWith registers a CPU-heavy route for one named algorithm of the problem,
+// at {prefix}/{algorithm}/solve. Problems that offer several algorithms
+// register each one separately, so every algorithm can accept its own options.
+func (r problemRoutes) solveWith(algorithm string, handler echo.HandlerFunc) {
+	r.server.registerAPI(r.echo, http.MethodPost, r.prefix+"/"+algorithm+"/solve", handler, r.server.limitAlgorithm)
+}
+
 func problemPath(id string) string      { return problemRoutePrefix + "/" + id }
 func generateEndpoint(id string) string { return problemPath(id) + "/generate" }
 func solveEndpoint(id string) string    { return problemPath(id) + "/solve" }
+
+// algorithmSolveEndpoint is the {problem}/{algorithm}/solve route registered by
+// problemRoutes.solveWith.
+func algorithmSolveEndpoint(id, algorithm string) string {
+	return problemPath(id) + "/" + algorithm + "/solve"
+}
 
 // defaultProblems is the single place that lists the problems the API serves.
 func defaultProblems() []problem {

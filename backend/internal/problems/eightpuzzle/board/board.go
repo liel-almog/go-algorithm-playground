@@ -159,6 +159,19 @@ func (b Board) Manhattan() int {
 	return total
 }
 
+// MisplacedTiles counts the non-blank tiles that are not on their goal square.
+func (b Board) MisplacedTiles() int {
+	count := 0
+
+	for index, tile := range b.Tiles {
+		if tile != 0 && tile != index+1 {
+			count++
+		}
+	}
+
+	return count
+}
+
 func Random(rows, columns, scramble int) (Board, error) {
 	if err := validateDimensions(rows, columns); err != nil {
 		return Board{}, err

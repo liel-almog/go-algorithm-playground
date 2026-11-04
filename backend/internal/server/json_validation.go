@@ -44,13 +44,7 @@ func validateJSONValue(decoder *json.Decoder, shape reflect.Type) error {
 // validateJSONObject reads fields after the opening object delimiter.
 func validateJSONObject(decoder *json.Decoder, shape reflect.Type) error {
 	fields := make(map[string]reflect.Type, shape.NumField())
-	for i := range shape.NumField() {
-		field := shape.Field(i)
-		name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
-		if name != "" && name != "-" {
-			fields[name] = field.Type
-		}
-	}
+	collectJSONFields(fields, shape)
 	seen := make(map[string]bool, len(fields))
 	for decoder.More() {
 		key, err := decoder.Token()
@@ -75,6 +69,23 @@ func validateJSONObject(decoder *json.Decoder, shape reflect.Type) error {
 	}
 	_, err := decoder.Token()
 	return err
+}
+
+// collectJSONFields records the JSON fields of shape. Untagged embedded structs
+// are flattened the way encoding/json does, so request types can extend a
+// shared base request by embedding it.
+func collectJSONFields(fields map[string]reflect.Type, shape reflect.Type) {
+	for i := range shape.NumField() {
+		field := shape.Field(i)
+		name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
+		if field.Anonymous && name == "" && field.Type.Kind() == reflect.Struct {
+			collectJSONFields(fields, field.Type)
+			continue
+		}
+		if name != "" && name != "-" {
+			fields[name] = field.Type
+		}
+	}
 }
 
 func validateJSONArray(decoder *json.Decoder, elementType reflect.Type) error {

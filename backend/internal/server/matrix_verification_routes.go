@@ -8,7 +8,10 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/matrixverification/freivalds"
 )
 
-const matrixVerificationID = "matrix-verification"
+const (
+	matrixVerificationID = "matrix-verification"
+	freivaldsID          = "freivalds"
+)
 
 type matrixSolveRequest struct {
 	A       freivalds.Matrix  `json:"a"`
@@ -42,13 +45,14 @@ func (matrixVerificationProblem) describe() problemDescription {
 
 func (matrixVerificationProblem) algorithms() algorithmCatalog {
 	return algorithmCatalog{Tools: []algorithmTool{{
-		ID: "freivalds", Name: "Freivalds matrix verification", Category: "matrix", Endpoint: solveEndpoint(matrixVerificationID),
+		ID: freivaldsID, Name: "Freivalds matrix verification", Category: "matrix", Endpoint: algorithmSolveEndpoint(matrixVerificationID, freivaldsID),
 	}}}
 }
 
 func (p matrixVerificationProblem) register(routes problemRoutes) {
 	routes.generate(p.generate)
 	routes.solve(p.solve)
+	routes.solveWith(freivaldsID, p.solve)
 }
 
 func (matrixVerificationProblem) generate(c *echo.Context) error {

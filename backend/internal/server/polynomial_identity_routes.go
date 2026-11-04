@@ -5,7 +5,10 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/polynomialidentity/schwartzippel"
 )
 
-const polynomialIdentityID = "polynomial-identity"
+const (
+	polynomialIdentityID = "polynomial-identity"
+	schwartzZippelID     = "schwartz-zippel"
+)
 
 type polynomialSolveRequest struct {
 	Left   []int64 `json:"left" validate:"required,min=1,max=21,dive,gte=0,lte=100"`
@@ -30,13 +33,14 @@ func (polynomialIdentityProblem) describe() problemDescription {
 
 func (polynomialIdentityProblem) algorithms() algorithmCatalog {
 	return algorithmCatalog{Tools: []algorithmTool{{
-		ID: "schwartz-zippel", Name: "Schwartz-Zippel polynomial identity test", Category: "polynomial", Endpoint: solveEndpoint(polynomialIdentityID),
+		ID: schwartzZippelID, Name: "Schwartz-Zippel polynomial identity test", Category: "polynomial", Endpoint: algorithmSolveEndpoint(polynomialIdentityID, schwartzZippelID),
 	}}}
 }
 
 func (p polynomialIdentityProblem) register(routes problemRoutes) {
 	routes.generate(p.generate)
 	routes.solve(p.solve)
+	routes.solveWith(schwartzZippelID, p.solve)
 }
 
 func (polynomialIdentityProblem) generate(c *echo.Context) error {

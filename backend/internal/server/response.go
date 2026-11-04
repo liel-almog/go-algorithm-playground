@@ -26,14 +26,6 @@ func writeResult(c *echo.Context, value any, err error) error {
 	return c.JSON(http.StatusOK, value)
 }
 
-func writeSolverError(c *echo.Context, err error) error {
-	status := http.StatusUnprocessableEntity
-	if eightpuzzle.IsSolverTimeout(err) {
-		status = http.StatusRequestTimeout
-	}
-	return writeError(c, status, err)
-}
-
 func writeError(c *echo.Context, status int, err error) error {
 	return c.JSON(status, errorResponse{Error: publicError(err), Status: status})
 }

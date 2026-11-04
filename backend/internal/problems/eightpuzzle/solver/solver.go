@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle/board"
@@ -44,58 +44,28 @@ type Algorithm interface {
 	Solve(context.Context, board.Board) (Result, error)
 }
 
-type Registry struct {
-	mu         sync.RWMutex
-	algorithms map[string]Algorithm
-}
+// algorithms is the fixed set of solvers offered for the puzzle. Adding a
+// solver means implementing Algorithm and listing it here.
+var algorithms = []Algorithm{BFS{}, IDDFS{}, AStar{}}
 
-func NewRegistry(algorithms ...Algorithm) *Registry {
-	registry := &Registry{algorithms: make(map[string]Algorithm)}
+// List returns the metadata of every solver, ordered by name.
+func List() []Metadata {
+	result := make([]Metadata, 0, len(algorithms))
 	for _, algorithm := range algorithms {
-		if err := registry.Register(algorithm); err != nil {
-			panic(err)
-		}
-	}
-	return registry
-}
-
-func DefaultRegistry() *Registry {
-	return NewRegistry(BFS{}, IDDFS{}, AStar{})
-}
-
-func (r *Registry) Register(algorithm Algorithm) error {
-	meta := algorithm.Metadata()
-	if meta.ID == "" || meta.Name == "" {
-		return errors.New("algorithm ID and name are required")
-	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if _, exists := r.algorithms[meta.ID]; exists {
-		return fmt.Errorf("algorithm %q is already registered", meta.ID)
-	}
-	r.algorithms[meta.ID] = algorithm
-	return nil
-}
-
-func (r *Registry) List() []Metadata {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	result := make([]Metadata, 0, len(r.algorithms))
-	for _, algorithm := range r.algorithms {
 		result = append(result, algorithm.Metadata())
 	}
-	slices.SortFunc(result, func(a, b Metadata) int { return compare(a.Name, b.Name) })
+	slices.SortFunc(result, func(a, b Metadata) int { return strings.Compare(a.Name, b.Name) })
 	return result
 }
 
-func (r *Registry) Get(id string) (Algorithm, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	algorithm, found := r.algorithms[id]
-	if !found {
-		return nil, fmt.Errorf("%w: %s", ErrNotFound, id)
+// Get returns the solver with the given ID, or ErrNotFound.
+func Get(id string) (Algorithm, error) {
+	for _, algorithm := range algorithms {
+		if algorithm.Metadata().ID == id {
+			return algorithm, nil
+		}
 	}
-	return algorithm, nil
+	return nil, fmt.Errorf("%w: %s", ErrNotFound, id)
 }
 
 type parentStep struct {
@@ -105,8 +75,10 @@ type parentStep struct {
 }
 
 func finish(meta Metadata, start time.Time, goalKey string, parents map[string]parentStep, expanded, generated, frontierMax int) Result {
+
 	boards := make([][]int, 0)
 	moves := make([]string, 0)
+
 	for key := goalKey; key != ""; {
 		step := parents[key]
 		boards = append(boards, append([]int(nil), step.board.Tiles...))
@@ -115,21 +87,13 @@ func finish(meta Metadata, start time.Time, goalKey string, parents map[string]p
 		}
 		key = step.previous
 	}
+
 	slices.Reverse(boards)
 	slices.Reverse(moves)
+
 	return Result{
 		Algorithm: meta.ID, Path: boards, Moves: moves, MoveCount: len(moves),
 		Expanded: expanded, Generated: generated, FrontierMax: frontierMax,
 		DurationUS: time.Since(start).Microseconds(), Optimal: meta.Optimal,
 	}
-}
-
-func compare(a, b string) int {
-	if a < b {
-		return -1
-	}
-	if a > b {
-		return 1
-	}
-	return 0
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
 )
 
 type healthResponse struct {
@@ -15,21 +14,16 @@ type healthResponse struct {
 	Algorithms int    `json:"algorithms"`
 }
 
-type algorithmsResponse struct {
-	Algorithms []eightpuzzle.Algorithm `json:"algorithms"`
-	Tools      []algorithmTool         `json:"tools"`
+// algorithmOption is an algorithm a client can select when solving a problem.
+type algorithmOption struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Optimal     bool   `json:"optimal"`
+	Category    string `json:"category"`
 }
 
-func (s *Server) health(c *echo.Context) error {
-	return c.JSON(http.StatusOK, healthResponse{
-		Status:     "ok",
-		GoVersion:  strings.TrimPrefix(runtimeVersion(), "go"),
-		Algorithms: len(s.eightPuzzle.Algorithms()) + len(algorithmTools()),
-	})
-}
-
-var runtimeVersion = runtime.Version
-
+// algorithmTool is an algorithm that is exposed as a problem endpoint itself.
 type algorithmTool struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -37,17 +31,35 @@ type algorithmTool struct {
 	Endpoint string `json:"endpoint"`
 }
 
-func algorithmTools() []algorithmTool {
-	return []algorithmTool{
-		{ID: "karger", Name: "Karger randomized minimum cut", Category: "graph", Endpoint: problemRoutePrefix + "/minimum-cut/solve"},
-		{ID: "freivalds", Name: "Freivalds matrix verification", Category: "matrix", Endpoint: problemRoutePrefix + "/matrix-verification/solve"},
-		{ID: "schwartz-zippel", Name: "Schwartz-Zippel polynomial identity test", Category: "polynomial", Endpoint: problemRoutePrefix + "/polynomial-identity/solve"},
+type algorithmCatalog struct {
+	Algorithms []algorithmOption `json:"algorithms"`
+	Tools      []algorithmTool   `json:"tools"`
+}
+
+// catalog merges what every registered problem offers.
+func (s *Server) catalog() algorithmCatalog {
+	catalog := algorithmCatalog{Algorithms: []algorithmOption{}, Tools: []algorithmTool{}}
+	for _, p := range s.problems {
+		offered := p.algorithms()
+		catalog.Algorithms = append(catalog.Algorithms, offered.Algorithms...)
+		catalog.Tools = append(catalog.Tools, offered.Tools...)
 	}
+	return catalog
+}
+
+func (s *Server) algorithmCount() int {
+	catalog := s.catalog()
+	return len(catalog.Algorithms) + len(catalog.Tools)
+}
+
+func (s *Server) health(c *echo.Context) error {
+	return c.JSON(http.StatusOK, healthResponse{
+		Status:     "ok",
+		GoVersion:  strings.TrimPrefix(runtime.Version(), "go"),
+		Algorithms: s.algorithmCount(),
+	})
 }
 
 func (s *Server) algorithms(c *echo.Context) error {
-	return c.JSON(http.StatusOK, algorithmsResponse{
-		Algorithms: s.eightPuzzle.Algorithms(),
-		Tools:      algorithmTools(),
-	})
+	return c.JSON(http.StatusOK, s.catalog())
 }

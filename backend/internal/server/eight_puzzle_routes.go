@@ -8,6 +8,8 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
 )
 
+const eightPuzzleID = "eight-puzzle"
+
 type puzzleSolveRequest struct {
 	Rows      int    `json:"row" validate:"required,min=2,max=4"`
 	Columns   int    `json:"column" validate:"required,min=2,max=4"`
@@ -21,33 +23,53 @@ type puzzleGenerateRequest struct {
 	Scramble int `json:"scramble" validate:"required,min=1,max=200"`
 }
 
-func (s *Server) registerEightPuzzleRoutes(e *echo.Echo) {
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/eight-puzzle/generate", s.generatePuzzle)
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/eight-puzzle/solve", s.solvePuzzle, s.limitAlgorithm)
+type eightPuzzleProblem struct{}
+
+func (eightPuzzleProblem) describe() problemDescription {
+	return problemDescription{
+		ID: eightPuzzleID, Title: "Sliding puzzle", Algorithm: "A*, breadth-first search, or iterative-deepening DFS",
+		Description:      "Rearrange numbered tiles into ascending order by sliding one tile at a time into the empty space.",
+		SolutionApproach: "The backend validates that the board is solvable, explores neighboring board states with the selected search strategy, and reconstructs the move-by-move path when it reaches the goal.",
+		Limits:           []string{"rows and columns: 2 to 4", "runtime: 5 seconds"},
+	}
 }
 
-func (s *Server) generatePuzzle(c *echo.Context) error {
+func (eightPuzzleProblem) algorithms() algorithmCatalog {
+	available := eightpuzzle.Algorithms()
+	options := make([]algorithmOption, 0, len(available))
+	for _, algorithm := range available {
+		options = append(options, algorithmOption(algorithm))
+	}
+	return algorithmCatalog{Algorithms: options}
+}
+
+func (p eightPuzzleProblem) register(routes problemRoutes) {
+	routes.generate(p.generate)
+	routes.solve(p.solve)
+}
+
+func (eightPuzzleProblem) generate(c *echo.Context) error {
 	var request puzzleGenerateRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
-	result, err := s.eightPuzzle.RandomPuzzle(eightpuzzle.RandomPuzzleRequest{Rows: request.Rows, Columns: request.Columns, Scramble: request.Scramble})
+	result, err := eightpuzzle.RandomPuzzle(eightpuzzle.RandomPuzzleRequest{Rows: request.Rows, Columns: request.Columns, Scramble: request.Scramble})
 	return writeResult(c, result, err)
 }
 
-func (s *Server) solvePuzzle(c *echo.Context) error {
+func (eightPuzzleProblem) solve(c *echo.Context) error {
 	var request puzzleSolveRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
-	result, err := s.eightPuzzle.Solve(c.Request().Context(), eightpuzzle.SolveRequest{
+	result, err := eightpuzzle.Solve(c.Request().Context(), eightpuzzle.SolveRequest{
 		BoardRequest: eightpuzzle.BoardRequest{Rows: request.Rows, Columns: request.Columns, Tiles: request.Tiles},
 		Algorithm:    request.Algorithm,
 	})
 	if err != nil {
 		switch {
 		case eightpuzzle.IsSolverTimeout(err):
-			return writeSolverError(c, err)
+			return writeError(c, http.StatusRequestTimeout, err)
 		case eightpuzzle.IsSolverLimit(err), errors.Is(err, eightpuzzle.ErrUnsolvable):
 			return writeError(c, http.StatusUnprocessableEntity, err)
 		default:

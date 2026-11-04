@@ -10,6 +10,10 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// requestValidator is safe for concurrent use and caches struct metadata, so
+// all problems share one instance.
+var requestValidator = newValidator()
+
 func newValidator() *validator.Validate {
 	validate := validator.New()
 	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
@@ -22,11 +26,11 @@ func newValidator() *validator.Validate {
 	return validate
 }
 
-func (s *Server) decodeAndValidate(c *echo.Context, destination any) error {
+func decodeAndValidate(c *echo.Context, destination any) error {
 	if err := decode(c, destination); err != nil {
 		return err
 	}
-	if err := s.validator.Struct(destination); err != nil {
+	if err := requestValidator.Struct(destination); err != nil {
 		return validationError(err)
 	}
 	return nil

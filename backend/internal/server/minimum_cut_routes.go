@@ -8,6 +8,8 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/minimumcut/karger"
 )
 
+const minimumCutID = "minimum-cut"
+
 type minimumCutSolveRequest struct {
 	Vertices []string `json:"vertices" validate:"required,min=2,max=50,dive,required,max=100"`
 	Edges    []struct {
@@ -21,23 +23,40 @@ type minimumCutGenerateRequest struct {
 	Vertices int `json:"vertices" validate:"required,min=3,max=50"`
 }
 
-func (s *Server) registerMinimumCutRoutes(e *echo.Echo) {
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/minimum-cut/generate", s.generateMinimumCut)
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/minimum-cut/solve", s.solveMinimumCut, s.limitAlgorithm)
+type minimumCutProblem struct{}
+
+func (minimumCutProblem) describe() problemDescription {
+	return problemDescription{
+		ID: minimumCutID, Title: "Minimum cut", Algorithm: "Karger's randomized contraction",
+		Description:      "Find a small set of edges whose removal separates a connected graph into two groups.",
+		SolutionApproach: "Each trial repeatedly contracts a random edge until two components remain. The backend returns the smallest crossing cut found across all requested trials.",
+		Limits:           []string{"50 vertices", "1,000 edges", "500 trials", "250,000 edge-trial units", "runtime: 5 seconds"},
+	}
 }
 
-func (s *Server) generateMinimumCut(c *echo.Context) error {
+func (minimumCutProblem) algorithms() algorithmCatalog {
+	return algorithmCatalog{Tools: []algorithmTool{{
+		ID: "karger", Name: "Karger randomized minimum cut", Category: "graph", Endpoint: solveEndpoint(minimumCutID),
+	}}}
+}
+
+func (p minimumCutProblem) register(routes problemRoutes) {
+	routes.generate(p.generate)
+	routes.solve(p.solve)
+}
+
+func (minimumCutProblem) generate(c *echo.Context) error {
 	var request minimumCutGenerateRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
 	result, err := karger.Generate(request.Vertices)
 	return writeResult(c, result, err)
 }
 
-func (s *Server) solveMinimumCut(c *echo.Context) error {
+func (minimumCutProblem) solve(c *echo.Context) error {
 	var request minimumCutSolveRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
 	if len(request.Edges)*request.Trials > maxMinCutWork {

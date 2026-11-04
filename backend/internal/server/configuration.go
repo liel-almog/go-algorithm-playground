@@ -9,10 +9,12 @@ import (
 
 const defaultPort = "8080"
 
-func AllowedOriginsFromEnv() []string {
+// allowedOriginsFromEnv returns the configured CORS origins. An empty result
+// lets New apply its default.
+func allowedOriginsFromEnv() []string {
 	value := strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGINS"))
 	if value == "" {
-		return []string{"*"}
+		return nil
 	}
 	result := make([]string, 0)
 	for _, part := range strings.Split(value, ",") {
@@ -23,7 +25,7 @@ func AllowedOriginsFromEnv() []string {
 	return result
 }
 
-func ParsePort() string {
+func parsePort() string {
 	port := strings.TrimSpace(os.Getenv("PORT"))
 	if port == "" {
 		return defaultPort

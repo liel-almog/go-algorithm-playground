@@ -1,36 +1,31 @@
-// Package server adapts the problem services to the playground's HTTP API.
+// Package server adapts the problem packages to the playground's HTTP API.
 package server
 
 import (
 	"net/http"
 	"slices"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
-	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle"
 )
 
+// Server hosts a collection of independent problems. It owns only the
+// cross-cutting concerns: CORS, middleware, limits, errors, and discovery.
 type Server struct {
-	eightPuzzle    *eightpuzzle.Service
+	problems       []problem
 	allowedOrigins []string
 	apiRoutes      map[string]map[string]struct{}
 	handler        *echo.Echo
-	validator      *validator.Validate
 	algorithmSlots chan struct{}
 }
 
-func New(service *eightpuzzle.Service, allowedOrigins []string) *Server {
-	if service == nil {
-		service = eightpuzzle.New(nil)
-	}
+func New(allowedOrigins []string) *Server {
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
 	}
 	server := &Server{
-		eightPuzzle:    service,
+		problems:       defaultProblems(),
 		allowedOrigins: slices.Clone(allowedOrigins),
 		apiRoutes:      make(map[string]map[string]struct{}),
-		validator:      newValidator(),
 		algorithmSlots: algorithmSlots(),
 	}
 	e := echo.New()

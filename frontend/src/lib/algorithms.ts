@@ -32,15 +32,6 @@ export const puzzleAlgorithms: PuzzleAlgorithm[] = [
   },
 ]
 
-export const kargerAlgorithm: Algorithm = {
-  id: 'karger',
-  name: "Karger's minimum cut",
-  description:
-    'Repeatedly contracts random edges to reveal a small set of edges that separates a graph.',
-  optimal: false,
-  category: 'randomized graph',
-}
-
 export const fallbackAlgorithmCatalog = {
   algorithms: puzzleAlgorithms,
   tools: [

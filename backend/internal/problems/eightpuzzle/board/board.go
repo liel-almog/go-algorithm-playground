@@ -3,6 +3,7 @@ package board
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand/v2"
 )
 
@@ -56,82 +57,105 @@ func (b Board) IsGoal() bool {
 			return false
 		}
 	}
+
 	return b.Tiles[len(b.Tiles)-1] == 0
 }
 
 func (b Board) IsSolvable() bool {
 	inversions := 0
+
 	for i, left := range b.Tiles {
 		if left == 0 {
 			continue
 		}
+
 		for _, right := range b.Tiles[i+1:] {
 			if right != 0 && left > right {
 				inversions++
 			}
 		}
 	}
+
 	if b.Columns%2 == 1 {
 		return inversions%2 == 0
 	}
+
 	blank := 0
+
 	for i, tile := range b.Tiles {
 		if tile == 0 {
 			blank = i
 			break
 		}
 	}
+
 	blankRowFromBottom := b.Rows - blank/b.Columns
+
 	return (blankRowFromBottom%2 == 0) != (inversions%2 == 0)
 }
 
 func (b Board) Key() string {
 	key := make([]byte, len(b.Tiles))
+
 	for i, tile := range b.Tiles {
 		key[i] = byte(tile)
 	}
+
 	return string(key)
 }
 
 func (b Board) Neighbors() []Neighbor {
 	blank := 0
+
 	for i, tile := range b.Tiles {
 		if tile == 0 {
 			blank = i
 			break
 		}
 	}
+
 	row, col := blank/b.Columns, blank%b.Columns
+
 	type direction struct {
 		dr, dc int
 		name   string
 	}
+
 	directions := [...]direction{{-1, 0, "up"}, {0, 1, "right"}, {1, 0, "down"}, {0, -1, "left"}}
 	result := make([]Neighbor, 0, 4)
+
 	for _, d := range directions {
 		nr, nc := row+d.dr, col+d.dc
+
 		if nr < 0 || nr >= b.Rows || nc < 0 || nc >= b.Columns {
 			continue
 		}
+
 		next := append([]int(nil), b.Tiles...)
 		target := nr*b.Columns + nc
+
 		next[blank], next[target] = next[target], next[blank]
+
 		result = append(result, Neighbor{Board: Board{Rows: b.Rows, Columns: b.Columns, Tiles: next}, Move: d.name})
 	}
+
 	return result
 }
 
 func (b Board) Manhattan() int {
 	total := 0
+
 	for index, tile := range b.Tiles {
 		if tile == 0 {
 			continue
 		}
+
 		goal := tile - 1
 		row, col := index/b.Columns, index%b.Columns
 		goalRow, goalCol := goal/b.Columns, goal%b.Columns
-		total += abs(row-goalRow) + abs(col-goalCol)
+		total += int(math.Abs(float64(row-goalRow)) + math.Abs(float64(col-goalCol)))
 	}
+
 	return total
 }
 
@@ -139,9 +163,11 @@ func Random(rows, columns, scramble int) (Board, error) {
 	if err := validateDimensions(rows, columns); err != nil {
 		return Board{}, err
 	}
+
 	if scramble < 1 || scramble > 200 {
 		return Board{}, fmt.Errorf("%w: scramble must be between 1 and 200", ErrInvalidBoard)
 	}
+
 	board := Goal(rows, columns)
 	previous := ""
 	for range scramble {
@@ -180,12 +206,4 @@ func opposite(move string) string {
 	default:
 		return "right"
 	}
-}
-
-func abs(value int) int {
-	if value < 0 {
-		return -value
-	}
-
-	return value
 }

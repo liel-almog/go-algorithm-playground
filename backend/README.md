@@ -49,9 +49,11 @@ the binary. It does not start the API. The container build copies `go.sum` with
 
 ## HTTP structure and diagnostics
 
-`internal/server/server.go` wires the API together. Route registration, CORS,
-environment parsing, request decoding, response handling, and middleware each
-have their own files. The problem packages retain ownership of all algorithm
+`internal/server/server.go` wires the API together. Each problem is a type in its
+own `*_routes.go` file that implements the `problem` interface (description,
+algorithm listing, and routes) and is listed in `defaultProblems()` in
+`problem.go`. Startup (`run.go`), CORS, environment parsing, request decoding,
+response handling, and middleware each have their own files. The problem packages retain ownership of all algorithm
 behavior, validation rules, randomness, and result calculations.
 
 Every response includes a server-generated `X-Request-ID` and
@@ -67,18 +69,18 @@ produce a startup warning.
 
 ## HTTP API
 
-| Method | Endpoint          | Purpose                                            |
-| ------ | ----------------- | -------------------------------------------------- |
-| `GET`  | `/api/health`     | Server and registry status                         |
-| `GET`  | `/api/algorithms` | Discover puzzle solvers and other algorithm tools |
+| Method | Endpoint          | Purpose                                               |
+| ------ | ----------------- | ----------------------------------------------------- |
+| `GET`  | `/api/health`     | Server status and algorithm count                     |
+| `GET`  | `/api/algorithms` | Discover puzzle solvers and other algorithm tools     |
 | `GET`  | `/api/problems`   | Problem descriptions, solution approaches, and limits |
 
 Each problem has a dedicated route group:
 
-| Problem | Solve endpoint | Generate endpoint |
-| --- | --- | --- |
-| Eight puzzle | `POST /api/problems/eight-puzzle/solve` | `POST /api/problems/eight-puzzle/generate` |
-| Minimum cut | `POST /api/problems/minimum-cut/solve` | `POST /api/problems/minimum-cut/generate` |
+| Problem             | Solve endpoint                                 | Generate endpoint                                 |
+| ------------------- | ---------------------------------------------- | ------------------------------------------------- |
+| Eight puzzle        | `POST /api/problems/eight-puzzle/solve`        | `POST /api/problems/eight-puzzle/generate`        |
+| Minimum cut         | `POST /api/problems/minimum-cut/solve`         | `POST /api/problems/minimum-cut/generate`         |
 | Matrix verification | `POST /api/problems/matrix-verification/solve` | `POST /api/problems/matrix-verification/generate` |
 | Polynomial identity | `POST /api/problems/polynomial-identity/solve` | `POST /api/problems/polynomial-identity/generate` |
 
@@ -104,7 +106,20 @@ and GET requests must not contain a body.
 Send `a`, `b`, and `c` to `POST /api/problems/matrix-verification/solve`:
 
 ```json
-{"a":[[1,1],[0,1]],"b":[[0,1],[1,0]],"c":[[1,1],[1,0]]}
+{
+  "a": [
+    [1, 1],
+    [0, 1]
+  ],
+  "b": [
+    [0, 1],
+    [1, 0]
+  ],
+  "c": [
+    [1, 1],
+    [1, 0]
+  ]
+}
 ```
 
 The API independently samples each entry of `vector` uniformly from `{0,1}`.
@@ -113,7 +128,7 @@ whether those vectors match. Arithmetic uses ordinary integer sums and products.
 For example, one possible response is:
 
 ```json
-{"vector":[1,0],"left":[1,1],"right":[1,1],"equal":true}
+{ "vector": [1, 0], "left": [1, 1], "right": [1, 1], "equal": true }
 ```
 
 A mismatch proves that `AB != C`. A match is probabilistic: an incorrect product
@@ -144,6 +159,6 @@ type Algorithm interface {
 }
 ```
 
-Then register it in `DefaultRegistry`. The algorithms endpoint and frontend algorithm list pick it up automatically; no new HTTP route is needed.
+Then add it to the `algorithms` list in `solver.go`. The algorithms endpoint and frontend algorithm list pick it up automatically; no new HTTP route is needed.
 
 Problem implementations live below `internal/problems`. Each problem owns its domain and algorithm subpackages, while `internal/server` keeps one route file per problem. For example, `internal/problems/minimumcut/karger` validates a connected undirected graph, performs repeated random contractions, and returns both partitions plus every crossing edge.

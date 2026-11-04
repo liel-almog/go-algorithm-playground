@@ -8,6 +8,8 @@ import (
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/matrixverification/freivalds"
 )
 
+const matrixVerificationID = "matrix-verification"
+
 type matrixSolveRequest struct {
 	A       freivalds.Matrix  `json:"a"`
 	B       freivalds.Matrix  `json:"b"`
@@ -27,23 +29,40 @@ type matrixCheckResponse struct {
 	Equal  bool    `json:"equal"`
 }
 
-func (s *Server) registerMatrixVerificationRoutes(e *echo.Echo) {
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/matrix-verification/generate", s.generateMatrices)
-	s.registerAPI(e, http.MethodPost, problemRoutePrefix+"/matrix-verification/solve", s.solveMatrixVerification, s.limitAlgorithm)
+type matrixVerificationProblem struct{}
+
+func (matrixVerificationProblem) describe() problemDescription {
+	return problemDescription{
+		ID: matrixVerificationID, Title: "Matrix multiplication verification", Algorithm: "Freivalds' algorithm",
+		Description:      "Check whether a claimed product C is equal to A multiplied by B without recomputing the full matrix product.",
+		SolutionApproach: "For each round the backend samples a binary vector r and compares A(Br) with Cr. Any mismatch proves the claim false; repeated matches reduce the false-positive probability.",
+		Limits:           []string{"binary matrices: 1x1 to 100x100", "one random check for a, b, c; 1 to 15 rounds with product", "runtime: 5 seconds"},
+	}
 }
 
-func (s *Server) generateMatrices(c *echo.Context) error {
+func (matrixVerificationProblem) algorithms() algorithmCatalog {
+	return algorithmCatalog{Tools: []algorithmTool{{
+		ID: "freivalds", Name: "Freivalds matrix verification", Category: "matrix", Endpoint: solveEndpoint(matrixVerificationID),
+	}}}
+}
+
+func (p matrixVerificationProblem) register(routes problemRoutes) {
+	routes.generate(p.generate)
+	routes.solve(p.solve)
+}
+
+func (matrixVerificationProblem) generate(c *echo.Context) error {
 	var request matrixGenerateRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
 	result, err := freivalds.Generate(request.Size)
 	return writeResult(c, result, err)
 }
 
-func (s *Server) solveMatrixVerification(c *echo.Context) error {
+func (matrixVerificationProblem) solve(c *echo.Context) error {
 	var request matrixSolveRequest
-	if err := s.decodeAndValidate(c, &request); err != nil {
+	if err := decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
 	if request.C != nil {

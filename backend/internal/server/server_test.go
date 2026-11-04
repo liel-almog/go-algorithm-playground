@@ -8,7 +8,7 @@ import (
 )
 
 func TestHealthAndCORS(t *testing.T) {
-	server := New(nil, []string{"http://localhost:3000"})
+	server := New([]string{"http://localhost:3000"})
 
 	request := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	request.Header.Set("Origin", "http://localhost:3000")
@@ -23,7 +23,7 @@ func TestHealthAndCORS(t *testing.T) {
 }
 
 func TestStaticAppIsServed(t *testing.T) {
-	server := New(nil, nil)
+	server := New(nil)
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, request)
@@ -36,7 +36,7 @@ func TestStaticAppIsServed(t *testing.T) {
 }
 
 func TestPuzzleProblemAcceptsRowAndColumn(t *testing.T) {
-	server := New(nil, nil)
+	server := New(nil)
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/api/problems/eight-puzzle/generate",

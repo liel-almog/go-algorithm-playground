@@ -5,11 +5,26 @@ type Matrix = number[][]
 export function generateLocalProblem(size: number): MatrixClaim {
   const randomMatrix = () =>
     Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => Math.floor(Math.random() * 7) - 3),
+      Array.from({ length: size }, () => Math.floor(Math.random() * 2)),
     )
   const a = randomMatrix()
-  const b = randomMatrix()
+  const b = Array.from({ length: size }, () => Array(size).fill(0) as number[])
+  for (const [row, column] of shuffledColumns(size).entries()) {
+    b[row]![column] = 1
+  }
   return { a, b, product: multiplyMatrices(a, b) }
+}
+
+function shuffledColumns(size: number) {
+  const columns = Array.from({ length: size }, (_, index) => index)
+  for (let index = size - 1; index > 0; index--) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[columns[index], columns[randomIndex]] = [
+      columns[randomIndex]!,
+      columns[index]!,
+    ]
+  }
+  return columns
 }
 
 export function verifyLocally(

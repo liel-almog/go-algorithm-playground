@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import labStyles from './lab.module.css'
 import verifierStyles from './verifier.module.css'
 import { ResultHeading } from './ResultHeading'
@@ -10,7 +11,7 @@ interface VerificationVerdictProps {
   acceptedTitle: string
   rejectedTitle: string
   idleDescription: string
-  acceptedDescription: string
+  acceptedDescription: ReactNode
   rejectedDescription: string
 }
 

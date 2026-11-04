@@ -7,30 +7,94 @@ import { MatrixView } from './MatrixView'
 interface MatrixWorkspaceProps {
   problem: MatrixClaim
   trials: MatrixTrial[]
-  tampered: boolean
+  original: MatrixClaim
+  disabled: boolean
+  onCellChange: (
+    matrix: keyof MatrixClaim,
+    row: number,
+    column: number,
+    value: number,
+  ) => void
 }
 
 export function MatrixWorkspace({
   problem,
   trials,
-  tampered,
+  original,
+  disabled,
+  onCellChange,
 }: MatrixWorkspaceProps) {
   return (
     <section
       className={`${labStyles['visualizer-panel']} ${labStyles['verifier-panel']}`}
     >
       <VisualizerTopbar
-        status="Matrix claim"
-        detail={
-          tampered ? 'C contains one altered cell' : 'C is the true product'
-        }
+        status="A × B = C"
+        detail="Orange cells differ from the generated matrices"
       />
       <div className={verifierStyles['matrix-equation']}>
-        <MatrixView label="A" matrix={problem.a} />
-        <span className={verifierStyles['equation-mark']}>×</span>
-        <MatrixView label="B" matrix={problem.b} />
-        <span className={verifierStyles['equation-mark']}>=</span>
-        <MatrixView label="C" matrix={problem.product} highlight={tampered} />
+        <section aria-labelledby="matrix-inputs-heading">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 id="matrix-inputs-heading" className="text-sm font-semibold">
+              Input matrices
+            </h2>
+            <span className="rounded-full bg-secondary px-3 py-1 font-mono text-xs text-secondary-foreground">
+              A × B
+            </span>
+          </div>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+            <MatrixView
+              label="A"
+              role="input"
+              matrix={problem.a}
+              original={original.a}
+              disabled={disabled}
+              onChange={(row, column, value) =>
+                onCellChange('a', row, column, value)
+              }
+            />
+            <MatrixView
+              label="B"
+              role="input"
+              matrix={problem.b}
+              original={original.b}
+              disabled={disabled}
+              onChange={(row, column, value) =>
+                onCellChange('b', row, column, value)
+              }
+            />
+          </div>
+        </section>
+        <div className="flex items-center justify-center gap-3 py-5 text-xs text-muted-foreground">
+          <span aria-hidden="true" className="text-xl text-primary">
+            ↓
+          </span>
+          Compare their product with C
+        </div>
+        <section aria-labelledby="matrix-result-heading">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 id="matrix-result-heading" className="text-sm font-semibold">
+              Claimed result
+            </h2>
+            <span className="rounded-full bg-primary px-3 py-1 font-mono text-xs text-primary-foreground">
+              C = A × B ?
+            </span>
+          </div>
+          <MatrixView
+            label="C"
+            role="result"
+            matrix={problem.product}
+            original={original.product}
+            disabled={disabled}
+            onChange={(row, column, value) =>
+              onCellChange('product', row, column, value)
+            }
+          />
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            The verifier checks whether C equals A × B. Editing an input does
+            not automatically update C.
+          </p>
+        </section>
       </div>
       <div className={verifierStyles['trial-strip']} aria-live="polite">
         {trials.length === 0 ? (

@@ -1,18 +1,39 @@
-// Package matrixverify implements Freivalds' randomized matrix product check.
+// Package freivalds implements Freivalds' randomized matrix product check.
 package freivalds
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"math/rand/v2"
 )
 
 const (
-	maxSize   = 10
-	maxRounds = 10
+	maxSize   = 100
+	maxRounds = 15
 )
 
 type Matrix [][]int64
+
+// UnmarshalJSON preserves the distinction between a binary value and JSON null.
+func (m *Matrix) UnmarshalJSON(data []byte) error {
+	var rows [][]*int64
+	if err := json.Unmarshal(data, &rows); err != nil {
+		return err
+	}
+	matrix := make(Matrix, len(rows))
+	for i, row := range rows {
+		matrix[i] = make([]int64, len(row))
+		for j, value := range row {
+			if value == nil || (*value != 0 && *value != 1) {
+				return errors.New("matrix values must be 0 or 1")
+			}
+			matrix[i][j] = *value
+		}
+	}
+	*m = matrix
+	return nil
+}
 
 type Claim struct {
 	A       Matrix `json:"a"`
@@ -35,19 +56,23 @@ type Result struct {
 }
 
 func Generate(size int) (Claim, error) {
-	if size < 2 || size > maxSize {
-		return Claim{}, errors.New("matrix size must be between 2 and 10")
+	if size < 1 || size > maxSize {
+		return Claim{}, errors.New("matrix size must be between 1 and 100")
 	}
 	a := randomMatrix(size)
-	b := randomMatrix(size)
+	b := make(Matrix, size)
+	for row, column := range rand.Perm(size) {
+		b[row] = make([]int64, size)
+		b[row][column] = 1
+	}
 	return Claim{A: a, B: b, Product: multiply(a, b)}, nil
 }
 
 func Solve(ctx context.Context, a, b, product Matrix, rounds int) (Result, error) {
 	if rounds < 1 || rounds > maxRounds {
-		return Result{}, errors.New("rounds must be between 1 and 10")
+		return Result{}, errors.New("rounds must be between 1 and 15")
 	}
-	size, err := validateMatrices(a, b, product)
+	size, err := ValidateMatrices(a, b, product)
 	if err != nil {
 		return Result{}, err
 	}
@@ -77,22 +102,23 @@ func Solve(ctx context.Context, a, b, product Matrix, rounds int) (Result, error
 	return result, nil
 }
 
-func validateMatrices(matrices ...Matrix) (int, error) {
-	size := len(matrices[0])
-	if size < 2 || size > maxSize {
-		return 0, errors.New("matrices must be between 2x2 and 10x10")
+// ValidateMatrices checks that A, B, and C are equally sized binary square matrices.
+func ValidateMatrices(a, b, c Matrix) (int, error) {
+	size := len(a)
+	if size < 1 || size > maxSize {
+		return 0, errors.New("matrices must be square with a size between 1 and 100")
 	}
-	for _, matrix := range matrices {
+	for _, matrix := range [...]Matrix{a, b, c} {
 		if len(matrix) != size {
-			return 0, errors.New("a, b, and product must have the same dimensions")
+			return 0, errors.New("a, b, and c must have the same dimensions")
 		}
 		for _, row := range matrix {
 			if len(row) != size {
 				return 0, errors.New("all matrices must be square")
 			}
 			for _, value := range row {
-				if value < -1_000_000 || value > 1_000_000 {
-					return 0, errors.New("matrix values must be between -1000000 and 1000000")
+				if value != 0 && value != 1 {
+					return 0, errors.New("matrix values must be 0 or 1")
 				}
 			}
 		}
@@ -105,7 +131,7 @@ func randomMatrix(size int) Matrix {
 	for row := range matrix {
 		matrix[row] = make([]int64, size)
 		for column := range matrix[row] {
-			matrix[row][column] = int64(rand.IntN(7) - 3)
+			matrix[row][column] = int64(rand.IntN(2))
 		}
 	}
 	return matrix

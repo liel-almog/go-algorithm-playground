@@ -1,53 +1,58 @@
 .matrix-equation {
   min-height: 350px;
-  padding: 38px 28px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
+  padding: 28px;
+  display: block;
   background-image: radial-gradient(#c9cec7 0.7px, transparent 0.7px);
   background-size: 22px 22px;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
 }
-.matrix-block > span {
+.matrix-block legend {
   display: block;
-  margin-bottom: 9px;
-  color: #6e776f;
-  text-align: center;
+  margin-bottom: 10px;
+  color: var(--primary);
   font:
-    0.65rem 'DM Mono',
+    500 0.8rem 'DM Mono',
     monospace;
 }
 .matrix-block {
-  flex: none;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fffffff0;
+}
+.matrix-block[data-role='result'] {
+  border-color: #87ac95;
+  background: #edf4ed;
 }
 .matrix-grid {
   display: grid;
-  min-width: 108px;
-  padding: 10px;
-  border-left: 2px solid var(--primary);
-  border-right: 2px solid var(--primary);
-  background: #ffffffca;
+  gap: 2px;
+  margin-inline: auto;
 }
-.matrix-grid i {
-  min-width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
+.matrix-grid input {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid #dce3da;
+  border-radius: 4px;
+  background: #f6f8f4;
+  color: var(--foreground);
+  text-align: center;
   font:
-    normal 0.68rem 'DM Mono',
+    0.72rem 'DM Mono',
     monospace;
+}
+.matrix-grid input:hover {
+  border-color: var(--primary);
+}
+.matrix-grid input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 .matrix-grid .changed-cell {
   background: #f5d9cd;
   color: #944e35;
-  border-radius: 3px;
-}
-.equation-mark {
-  color: var(--orange);
-  font-size: 1.15rem;
-  font-weight: 700;
 }
 .trial-strip {
   min-height: 110px;
@@ -142,7 +147,9 @@
 }
 .evaluation-table > div {
   display: grid;
-  grid-template-columns: minmax(100px, 1.3fr) minmax(55px, 0.8fr) minmax(55px, 0.8fr) minmax(75px, 1fr);
+  grid-template-columns:
+    minmax(100px, 1.3fr) minmax(55px, 0.8fr) minmax(55px, 0.8fr)
+    minmax(75px, 1fr);
   gap: 8px;
   padding: 7px 10px;
   font:
@@ -154,23 +161,9 @@
   text-transform: uppercase;
   background: transparent;
 }
-@media (max-width: 900px) {
-  .matrix-equation {
-    justify-content: flex-start;
-  }
-}
 @media (max-width: 680px) {
   .matrix-equation {
     padding-inline: 18px;
-    gap: 9px;
-  }
-  .matrix-grid {
-    min-width: 90px;
-    padding: 6px;
-  }
-  .matrix-grid i {
-    min-width: 26px;
-    height: 28px;
   }
   .polynomial-workspace {
     grid-template-columns: 1fr;

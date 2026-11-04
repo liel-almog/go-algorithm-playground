@@ -63,9 +63,31 @@ over 256 KiB return `413`. API errors use `{"error":"...","status":400}`.
 - at most 4 CPU-heavy requests run concurrently (or half the available CPUs on smaller machines)
 - search boards are limited to 2x2 through 4x4
 - minimum cut is limited to 50 vertices, 1,000 edges, 500 trials, and 250,000 edge-trial units
-- matrix verification is limited to 10x10 matrices and 10 rounds
+- matrix verification accepts equally sized binary square matrices from 1x1 through 100x100
 - polynomial verification is limited to degree 20 and 10 rounds
 - JSON request bodies are limited to 256 KiB
+
+### Matrix verification
+
+Send `a`, `b`, and `c` to `POST /api/problems/matrix-verification/solve`:
+
+```json
+{"a":[[1,1],[0,1]],"b":[[0,1],[1,0]],"c":[[1,1],[1,0]]}
+```
+
+The API independently samples each entry of `vector` uniformly from `{0,1}`.
+It returns `left = A(B vector)`, `right = C vector`, and `equal`, which indicates
+whether those vectors match. Arithmetic uses ordinary integer sums and products.
+For example, one possible response is:
+
+```json
+{"vector":[1,0],"left":[1,1],"right":[1,1],"equal":true}
+```
+
+A mismatch proves that `AB != C`. A match is probabilistic: an incorrect product
+can pass a single check with probability at most one half. The existing
+`product` field and optional `rounds` (1 to 15, default 1) remain supported for
+the web client and return the existing `trials` response.
 
 Example:
 

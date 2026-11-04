@@ -8,14 +8,22 @@ import (
 )
 
 type matrixSolveRequest struct {
-	A       freivalds.Matrix `json:"a" validate:"required,min=2,max=10,dive,required,min=2,max=10,dive,gte=-1000000,lte=1000000"`
-	B       freivalds.Matrix `json:"b" validate:"required,min=2,max=10,dive,required,min=2,max=10,dive,gte=-1000000,lte=1000000"`
-	Product freivalds.Matrix `json:"product" validate:"required,min=2,max=10,dive,required,min=2,max=10,dive,gte=-1000000,lte=1000000"`
-	Rounds  int              `json:"rounds" validate:"required,min=1,max=10"`
+	A       freivalds.Matrix  `json:"a"`
+	B       freivalds.Matrix  `json:"b"`
+	C       *freivalds.Matrix `json:"c"`
+	Product freivalds.Matrix  `json:"product"`
+	Rounds  int               `json:"rounds"`
 }
 
 type matrixGenerateRequest struct {
-	Size int `json:"size" validate:"required,min=2,max=10"`
+	Size int `json:"size" validate:"required,min=1,max=100"`
+}
+
+type matrixCheckResponse struct {
+	Vector []int64 `json:"vector"`
+	Left   []int64 `json:"left"`
+	Right  []int64 `json:"right"`
+	Equal  bool    `json:"equal"`
 }
 
 func (s *Server) registerMatrixVerificationRoutes(e *echo.Echo) {
@@ -37,6 +45,29 @@ func (s *Server) solveMatrixVerification(c *echo.Context) error {
 	if err := s.decodeAndValidate(c, &request); err != nil {
 		return writeRequestError(c, err)
 	}
-	result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, request.Product, request.Rounds)
+	if request.C != nil {
+		if _, err := freivalds.ValidateMatrices(request.A, request.B, *request.C); err != nil {
+			return writeRequestError(c, err)
+		}
+		result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, *request.C, 1)
+		if err != nil {
+			return writeResult(c, nil, err)
+		}
+		trial := result.Trials[0]
+		return c.JSON(http.StatusOK, matrixCheckResponse{
+			Vector: trial.Vector,
+			Left:   trial.Left,
+			Right:  trial.Right,
+			Equal:  trial.Passed,
+		})
+	}
+	rounds := request.Rounds
+	if rounds == 0 {
+		rounds = 1
+	}
+	if _, err := freivalds.ValidateMatrices(request.A, request.B, request.Product); err != nil {
+		return writeRequestError(c, err)
+	}
+	result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, request.Product, rounds)
 	return writeResult(c, result, err)
 }

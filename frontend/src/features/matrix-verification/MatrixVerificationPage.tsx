@@ -1,10 +1,11 @@
 import shellStyles from '../../styles/shell.module.css'
 import { useMutation } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
 import { VerificationVerdict } from '../../components/VerificationVerdict'
 import type { MatrixClaim, MatrixTrial } from '../../lib/api'
+import { ErrorProbabilityNote } from './components/ErrorProbabilityNote'
 import { MatrixControls } from './components/MatrixControls'
 import { MatrixWorkspace } from './components/MatrixWorkspace'
 import { generateLocalProblem, verifyLocally } from './matrixVerification'
@@ -17,48 +18,73 @@ export function MatrixVerificationPage() {
     generateLocalProblem(3),
   )
   const [trials, setTrials] = useState<MatrixTrial[]>([])
-  const [tampered, setTampered] = useState(false)
-  const didGenerate = useRef(false)
+  const [original, setOriginal] = useState(problem)
+  const tampered = (Object.keys(problem) as Array<keyof MatrixClaim>).some(
+    (key) =>
+      problem[key].some((row, i) =>
+        row.some((value, j) => value !== original[key][i]?.[j]),
+      ),
+  )
   const generation = useMutation(matrixVerificationMutations.generate())
   const verification = useMutation(matrixVerificationMutations.solve())
 
-  const regenerate = useCallback(
-    async (requestedSize = size) => {
-      setTrials([])
-      setTampered(false)
+  const regenerate = async () => {
+    setTrials([])
+    generation.reset()
+    verification.reset()
+    try {
+      const generated = await generation.mutateAsync({ size })
+      setProblem(generated)
+      setOriginal(generated)
+    } catch {
+      const generated = generateLocalProblem(size)
+      setProblem(generated)
+      setOriginal(generated)
       generation.reset()
-      verification.reset()
-      try {
-        setProblem(await generation.mutateAsync({ size: requestedSize }))
-      } catch {
-        setProblem(generateLocalProblem(requestedSize))
-        generation.reset()
-      }
-    },
-    [generation, size, verification],
-  )
-
-  useEffect(() => {
-    if (didGenerate.current) return
-    didGenerate.current = true
-    void regenerate()
-  }, [regenerate])
+    }
+  }
 
   const changeSize = (nextSize: number) => {
     setSize(nextSize)
-    void regenerate(nextSize)
+    const generated = generateLocalProblem(nextSize)
+    setProblem(generated)
+    setOriginal(generated)
+    setTrials([])
+    verification.reset()
   }
 
   const toggleTamper = () => {
+    if (tampered) {
+      setProblem(original)
+    } else {
+      const rowIndex = Math.floor(Math.random() * problem.product.length)
+      const columnIndex = Math.floor(Math.random() * problem.product.length)
+      setProblem((current) => {
+        const product = current.product.map((row) => [...row])
+        const row = product[rowIndex]
+        const value = row?.[columnIndex]
+        if (!row || value === undefined) return current
+        row[columnIndex] = value === 0 ? 1 : 0
+        return { ...current, product }
+      })
+    }
+    setTrials([])
+    verification.reset()
+  }
+
+  const changeCell = (
+    matrix: keyof MatrixClaim,
+    row: number,
+    column: number,
+    value: number,
+  ) => {
     setProblem((current) => {
-      const product = current.product.map((row) => [...row])
-      const firstRow = product[0]
-      const firstValue = firstRow?.[0]
-      if (!firstRow || firstValue === undefined) return current
-      firstRow[0] = firstValue + (tampered ? -1 : 1)
-      return { ...current, product }
+      const updated = current[matrix].map((values) => [...values])
+      const targetRow = updated[row]
+      if (!targetRow) return current
+      targetRow[column] = value
+      return { ...current, [matrix]: updated }
     })
-    setTampered((current) => !current)
     setTrials([])
     verification.reset()
   }
@@ -76,10 +102,8 @@ export function MatrixVerificationPage() {
   }
 
   const accepted = trials.length > 0 && trials.every((trial) => trial.passed)
-  const failureProbability = useMemo(
-    () => `${(100 / 2 ** rounds).toFixed(rounds > 6 ? 2 : 3)}%`,
-    [rounds],
-  )
+  // Round upward so the displayed upper bound never understates the risk.
+  const failureProbability = `${Math.ceil((100 / 2 ** rounds) * 10_000) / 10_000}%`
 
   return (
     <div className={shellStyles['lab-page']}>
@@ -110,15 +134,21 @@ export function MatrixVerificationPage() {
           isVerifying={verification.isPending}
           failureProbability={failureProbability}
           onSizeChange={changeSize}
-          onRoundsChange={setRounds}
+          onRoundsChange={(value) => {
+            setRounds(Math.max(1, Math.min(15, Math.round(value))))
+            setTrials([])
+            verification.reset()
+          }}
           onGenerate={() => void regenerate()}
           onToggleTamper={toggleTamper}
           onVerify={() => void verify()}
         />
         <MatrixWorkspace
           problem={problem}
+          original={original}
           trials={trials}
-          tampered={tampered}
+          disabled={generation.isPending || verification.isPending}
+          onCellChange={changeCell}
         />
         <VerificationVerdict
           ariaLabel="Verification result"
@@ -128,7 +158,15 @@ export function MatrixVerificationPage() {
           acceptedTitle="Claim accepted"
           rejectedTitle="Claim rejected"
           idleDescription="Run at least one randomized round."
-          acceptedDescription={`All ${rounds} checks matched. The claim is probably correct.`}
+          acceptedDescription={
+            <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span>All {trials.length} checks matched.</span>
+              <ErrorProbabilityNote
+                rounds={rounds}
+                probability={failureProbability}
+              />
+            </span>
+          }
           rejectedDescription="A random vector exposed the incorrect product."
         />
       </div>

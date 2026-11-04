@@ -1,93 +1,91 @@
 ---
-name: golang-fullstack-error-handling
-description: Unified Go + GORM + PostgreSQL error handling review. Covers error wrapping, context propagation, PostgreSQL error codes (23505, 40001), errors.Is/As mapping, and retry logic. Ensures proper error chains and robust database failure recovery.
+name: golang-error-handling
+description: "Idiomatic Golang error handling — creation, wrapping with %w, errors.Is/As, errors.Join, custom error types, sentinel errors, panic/recover, the single handling rule, structured logging with slog, HTTP request logging middleware, and samber/oops for production errors. Built to make logs usable at scale with log aggregation 3rd-party tools. Apply when creating, wrapping, inspecting, or logging errors in Go code. For samber/oops specifics → See `samber/cc-skills-golang@golang-samber-oops` skill; for slog handler ecosystem → See `samber/cc-skills-golang@golang-samber-slog` skill."
+user-invocable: true
 license: MIT
+compatibility: Designed for Claude Code, Codex or similar harness, and for projects using Golang.
 metadata:
-  author: saifoelloh
-  version: "3.0.0"
-  parent_skill: golang-fullstack-best-practices
-  sources:
-    - "Learning Go: An Idiomatic Approach (Jon Bodner)"
-    - "PostgreSQL Error Codes Appendix"
-    - "GORM Official Documentation"
-    - "Go Blog - Working with Errors"
-  last_updated: "2026-03-13"
+  author: samber
+  version: "1.3.1"
+  openclaw:
+    emoji: "⚠"
+    homepage: https://github.com/samber/cc-skills-golang
+    requires:
+      bins:
+        - go
+    install: []
+allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent
+paths:
+  - "**/*.go"
 ---
 
-# Error Handling (Unified Go & DB)
+**Persona:** You are a Go reliability engineer. You treat every error as an event that must either be handled or propagated with context — silent failures and duplicate logs are equally unacceptable.
 
-Expert-level review for error handling in Go services using GORM and PostgreSQL. Ensures errors are correctly identified, preserved via wrapping, mapped to domain errors, and retried where appropriate.
+**Orchestration mode:** Fan out the five category sub-agents described in the "Parallelizing Error Handling Audits" section (creation, wrapping, single-handling rule, panic/recover, structured logging) for auditing error handling across a large codebase, and consolidate their findings. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
 
-## When to Apply
+**Modes:**
 
-Use this skill when:
+- **Coding mode** — writing new error handling code. Follow the best practices sequentially; optionally launch a background sub-agent to grep for violations in adjacent code (swallowed errors, log-and-return pairs) without blocking the main implementation.
+- **Review mode** — reviewing a PR's error handling changes. Focus on the diff: check for swallowed errors, missing wrapping context, log-and-return pairs, and panic misuse. Sequential.
+- **Audit mode** — auditing existing error handling across a codebase. Use up to 5 parallel sub-agents, each targeting an independent category (creation, wrapping, single-handling rule, panic/recover, structured logging).
 
-- Reviewing general Go error propagation and context usage
-- Debugging database errors (e.g., duplicate keys, serialization failures)
-- Auditing error wrapping with `%w` vs `%v`
-- Ensuring correct use of `errors.Is` / `errors.As`
-- Adding retry logic for serializable transactions or deadlocks
+> **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-error-handling` skill takes precedence.
 
-## Rule Categories
+# Go Error Handling Best Practices
 
-| Priority     | Count | Focus                                                      |
-| ------------ | ----- | ---------------------------------------------------------- |
-| **CRITICAL** | 6     | error chains, context leaks, PgError mapping, retries      |
-| **HIGH**     | 6     | propagation, Is/As usage, RowsAffected, deadlock detection |
-| **MEDIUM**   | 2     | sentinel errors, structured logging                        |
+This skill guides the creation of robust, idiomatic error handling in Go applications. Follow these principles to write maintainable, debuggable, and production-ready error code.
 
-## Rules Covered (14 total)
+## Best Practices Summary
 
-### Critical Issues (6)
+1. **Returned errors MUST always be checked** — NEVER discard with `_`
+2. **Errors MUST be wrapped with context** using `fmt.Errorf("{context}: %w", err)`
+3. **Error strings MUST be lowercase**, without trailing punctuation
+4. **Use `%w` internally, `%v` at system boundaries** to control error chain exposure
+5. **MUST use `errors.Is` for sentinel matching and `errors.As`/`errors.AsType` for typed chain inspection** instead of direct comparison or bare type assertions. For Go 1.26+, prefer `errors.AsType[T](err)` when `T` implements `error`; use `errors.As(err, &target)` for Go <1.26 or for non-error interface targets.
+6. **SHOULD use `errors.Join`** (Go 1.20+) to combine independent errors
+7. **Errors MUST be either logged OR returned**, NEVER both (single handling rule)
+8. **Use sentinel errors** for expected conditions, custom types for carrying data
+9. **NEVER use `panic` for expected error conditions** — reserve for truly unrecoverable states
+10. **SHOULD use `slog`** (Go 1.21+) for structured error logging — not `fmt.Println` or `log.Printf`
+11. **Use `samber/oops`** for production errors needing stack traces, user/tenant context, or structured attributes
+12. **Log HTTP requests** with structured middleware capturing method, path, status, and duration
+13. **Use log levels** to indicate error severity
+14. **Never expose technical errors to users** — translate internal errors to user-friendly messages, log technical details separately
+15. **Keep log grouping low-cardinality** — at logging/APM boundaries, keep message templates stable and attach IDs, paths, line numbers, and counts as structured attributes. Error values may include useful operational context, but avoid putting high-cardinality data into the stable log message used for grouping.
 
-- `critical-error-wrapping` — Use `%w`, not `%v`, to preserve error chains
-- `critical-context-leak` — Always `defer cancel()` after context creation
-- `critical-error-shadow` — Don't shadow `err` in nested scopes
-- `critical-errors-is-as` — Use `errors.Is`/`As` for DB and wrapped errors
-- `critical-pg-error-mapping` — Map Postgres codes to domain errors at repo boundary
-- `critical-serialization-retry` — Retry transactions on `40001` serialization failure
+## Detailed Reference
 
-### High-Impact Patterns (6)
+- **[Error Creation](./references/error-creation.md)** — How to create errors that tell the story: error messages should be lowercase, no punctuation, and describe what happened without prescribing action. Covers sentinel errors (one-time preallocation for performance), custom error types (for carrying rich context), and the decision table for which to use when.
 
-- `high-context-propagation` — Propagate context through the call chain
-- `high-error-is-as` — Prescriptive rule for using Is/As over string matching
-- `high-interface-nil` — Check for nil in interfaces correctly
-- `high-rows-affected` — Check `RowsAffected` after Update/Delete
-- `high-wrap-with-context` — Wrap DB errors with operation context
-- `high-deadlock-detection` — Handle `40P01` deadlocks as retryable
+- **[Error Wrapping and Inspection](./references/error-wrapping.md)** — Why `fmt.Errorf("{context}: %w", err)` beats `fmt.Errorf("{context}: %v", err)` (chains vs concatenation). How to inspect chains with `errors.Is`, `errors.As`, and Go 1.26+ `errors.AsType` for type-safe error handling, and `errors.Join` for combining independent errors.
 
-### Medium Improvements (2)
+- **[Error Handling Patterns and Logging](./references/error-handling.md)** — The single handling rule: errors are either logged OR returned, NEVER both (prevents duplicate logs cluttering aggregators). Panic/recover design, `samber/oops` for production errors, and `slog` structured logging integration for APM tools.
 
-- `medium-sentinel-error-usage` — Use sentinel errors for stable categories
-- `medium-structured-logging` — Log DB/Go errors with structured fields
+## Parallelizing Error Handling Audits
 
-## Trigger Phrases
+When auditing error handling across a large codebase, use up to 5 parallel sub-agents — each targets an independent error category:
 
-- "Review error handling"
-- "Debug this DB error"
-- "23505 / 40001 / 40P01"
-- "Check for context leaks"
-- "Review error chains"
-- "Transaction retry"
-- "ErrRecordNotFound"
+- Sub-agent 1: Error creation — validate `errors.New`/`fmt.Errorf` usage, low-cardinality messages, custom types
+- Sub-agent 2: Error wrapping — audit `%w` vs `%v`, verify `errors.Is`/`errors.As` patterns
+- Sub-agent 3: Single handling rule — find log-and-return violations, swallowed errors, discarded errors (`_`)
+- Sub-agent 4: Panic/recover — audit `panic` usage, verify recovery at goroutine boundaries
+- Sub-agent 5: Structured logging — verify `slog` usage at error sites, check for PII in error messages
 
-## Output Format
+## Cross-References
 
-````
-## Critical Issues Found: X
+- → See `samber/cc-skills-golang@golang-samber-oops` for full samber/oops API, builder patterns, and logger integration
+- → See `samber/cc-skills-golang@golang-observability` for structured logging setup, log levels, and request logging middleware
+- → See `samber/cc-skills-golang@golang-safety` for nil interface trap and nil error comparison pitfalls
+- → See `samber/cc-skills-golang@golang-naming` for error naming conventions (ErrNotFound, PathError)
+- → See `samber/cc-skills-golang@golang-continuous-integration` skill for automated AI-driven code review in CI using these guidelines
 
-### [Rule ID] (Line Y)
-**Issue**: Description
-**Impact**: Context leak / Lost chain / Data inconsistency
-**Fix**: Suggested code
-**Example**:
-```go
-// Corrected code
-````
+## References
 
-```
-
-## Related Skills
-- [gorm-query-patterns](../gorm-query-patterns/SKILL.md) — For `.Error` check safety
-- [concurrency-safety](../concurrency-safety/SKILL.md) — For context timeout patterns
-```
+- [lmittmann/tint](https://github.com/lmittmann/tint)
+- [samber/oops](https://github.com/samber/oops)
+- [samber/slog-multi](https://github.com/samber/slog-multi)
+- [samber/slog-sampling](https://github.com/samber/slog-sampling)
+- [samber/slog-formatter](https://github.com/samber/slog-formatter)
+- [samber/slog-http](https://github.com/samber/slog-http)
+- [samber/slog-sentry](https://github.com/samber/slog-sentry)
+- [log/slog package](https://pkg.go.dev/log/slog)

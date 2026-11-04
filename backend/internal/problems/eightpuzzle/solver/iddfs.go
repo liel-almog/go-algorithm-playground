@@ -2,9 +2,11 @@ package solver
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/liel-almog/go-algorithm-playground/internal/problems/eightpuzzle/board"
+	"github.com/liel-almog/go-algorithm-playground/internal/stack"
 )
 
 type IDDFS struct{}
@@ -25,23 +27,35 @@ func (algorithm IDDFS) Solve(ctx context.Context, initial board.Board) (Result, 
 	search := depthFirstSearch{generated: 1, frontierMax: 1, maxExpanded: 2_000_000}
 	const maxDepth = 80
 	for limit := 0; limit <= maxDepth; limit++ {
-		search.path = []board.Board{initial}
-		search.moves = make([]string, 0, limit)
+		search.path = stack.NewSliceStack[board.Board]()
+		if err := search.path.Push(initial); err != nil {
+			return Result{}, err
+		}
+		search.moves = stack.NewSliceStack[string]()
 		search.onPath = map[string]bool{initial.Key(): true}
 		found, err := search.visit(ctx, initial, limit)
 		if err != nil {
 			return Result{}, err
 		}
+
 		if found {
-			boards := make([][]int, len(search.path))
-			for i, board := range search.path {
-				boards[i] = append([]int(nil), board.Tiles...)
+			path, err := drain(search.path)
+			if err != nil {
+				return Result{}, err
+			}
+			moves, err := drain(search.moves)
+			if err != nil {
+				return Result{}, err
+			}
+			boards := make([][]int, len(path))
+			for i, step := range path {
+				boards[i] = append([]int(nil), step.Tiles...)
 			}
 			return Result{
 				Algorithm:   meta.ID,
 				Path:        boards,
-				Moves:       search.moves,
-				MoveCount:   len(search.moves),
+				Moves:       moves,
+				MoveCount:   len(moves),
 				Expanded:    search.expanded,
 				Generated:   search.generated,
 				FrontierMax: search.frontierMax,
@@ -53,11 +67,25 @@ func (algorithm IDDFS) Solve(ctx context.Context, initial board.Board) (Result, 
 	return Result{}, ErrNoSolution
 }
 
+// drain empties the stack and returns its items from bottom to top.
+func drain[T any](s stack.Stack[T]) ([]T, error) {
+	items := make([]T, 0, s.Len())
+	for !s.IsEmpty() {
+		item, err := s.Pop()
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	slices.Reverse(items)
+	return items, nil
+}
+
 // depthFirstSearch owns the current path and counters for one solve operation.
 // Counters accumulate across depth limits; the path is reset for each iteration.
 type depthFirstSearch struct {
-	path        []board.Board
-	moves       []string
+	path        stack.Stack[board.Board]
+	moves       stack.Stack[string]
 	onPath      map[string]bool
 	expanded    int
 	generated   int
@@ -69,35 +97,54 @@ func (search *depthFirstSearch) visit(ctx context.Context, current board.Board, 
 	if err := ctx.Err(); err != nil {
 		return false, err
 	}
+
 	if current.IsGoal() {
 		return true, nil
 	}
+
 	if remaining == 0 {
 		return false, nil
 	}
+
 	search.expanded++
 	if search.expanded > search.maxExpanded {
 		return false, ErrSearchLimit
 	}
+
 	for _, neighbor := range current.Neighbors() {
 		key := neighbor.Board.Key()
 		if search.onPath[key] {
 			continue
 		}
+
 		search.generated++
 		search.onPath[key] = true
-		search.path = append(search.path, neighbor.Board)
-		search.moves = append(search.moves, neighbor.Move)
-		if len(search.path) > search.frontierMax {
-			search.frontierMax = len(search.path)
+		if err := search.path.Push(neighbor.Board); err != nil {
+			return false, err
 		}
+
+		if err := search.moves.Push(neighbor.Move); err != nil {
+			return false, err
+		}
+
+		if search.path.Len() > search.frontierMax {
+			search.frontierMax = search.path.Len()
+		}
+
 		found, err := search.visit(ctx, neighbor.Board, remaining-1)
 		if err != nil || found {
 			return found, err
 		}
+
 		delete(search.onPath, key)
-		search.path = search.path[:len(search.path)-1]
-		search.moves = search.moves[:len(search.moves)-1]
+		if _, err := search.path.Pop(); err != nil {
+			return false, err
+		}
+
+		if _, err := search.moves.Pop(); err != nil {
+			return false, err
+		}
 	}
+
 	return false, nil
 }

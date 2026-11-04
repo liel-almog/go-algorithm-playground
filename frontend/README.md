@@ -1,194 +1,65 @@
-Welcome to your new TanStack Start app!
+# Algorithm Playground frontend
 
-# Getting Started
+A React and TypeScript SPA using Vite, TanStack Router, TanStack Query, Zod,
+and Tailwind CSS. The Go API lives in `../backend`.
 
-To run this application:
+## Development
 
-```bash
-npm install
-npm run dev
-```
+The development server runs at `http://localhost:3000` and proxies `/api` to
+`http://localhost:8080`. Respect `AGENTS.md`: the servers are already running;
+do not start or restart them from an agent session.
 
-# Building For Production
+For a separate API origin, configure `VITE_API_BASE_URL` at build time and allow
+the frontend origin in the backend's `CORS_ALLOWED_ORIGINS` setting.
 
-To build this application for production:
+## Checks
 
-```bash
+Run from this directory:
+
+```sh
+npm run typecheck
+npm run lint
+npm run check
 npm run build
 ```
 
-## Styling
+`npm run format` formats application sources and configuration. Generated routes,
+build output, lockfiles, and vendored skills are excluded from formatting.
+Do not create tests for this repository.
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## Structure and conventions
 
-### Removing Tailwind CSS
+- `src/routes` defines file routes, redirects, and parameter validation. The Vite
+  Router plugin generates `src/routeTree.gen.ts`; do not edit that file manually.
+- `src/router.tsx` creates the QueryClient and provides it through router context
+  and QueryClientProvider. Router preloading delegates freshness to Query.
+- `src/features` owns each lab's components, mutation options, and query options.
+  Server results and request state belong to Query; editable inputs and playback
+  state belong to React. Reset results when their inputs change.
+- `src/lib/apiSchemas.ts` defines runtime request and response contracts and
+  inferred TypeScript types. `src/lib/api.ts` handles bounded HTTP requests,
+  cancellation, error responses, and validation at the network boundary.
+- `src/components` contains shared accessible controls and Tailwind-based layout
+  components. Keep styles on the elements they affect, use `cn` for conditional
+  utilities, and use named variants for complex visual states. Extract repeated
+  markup into focused components instead of duplicating long utility lists.
+- `src/styles.css` owns Tailwind theme tokens, global defaults, reduced-motion
+  handling, and animation keyframes. Component styling uses Tailwind utilities;
+  there are no CSS modules. Keep genuinely dynamic values, such as board dimensions
+  and playback progress, in inline styles rather than constructing class names.
 
-If you prefer not to use Tailwind CSS:
+Labs open with local examples. Explicit generation and solving actions call the
+API and display failures; they do not silently substitute a browser calculation.
+Deterministic puzzle solutions reuse a query keyed by all solver inputs, with a
+five-minute inactive cache lifetime. Randomized verification is a mutation so
+every run samples fresh randomness. Matrix verification supports 1–15 rounds in
+a single request.
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
+## Reading and extending a lab
 
-## Linting & Formatting
-
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Start with the feature's `*Page.tsx` for the UI composition, then its `hooks/`
+directory for state and user actions. Keep transformations such as matrix cell
+updates in the feature's plain TypeScript module. Pass named actions to controls
+instead of embedding state transitions in JSX. Both puzzle screens share
+`usePuzzlePlayback`, `usePuzzleSolution`, and `usePuzzleAlgorithms`; update these
+hooks when changing behavior common to both screens.

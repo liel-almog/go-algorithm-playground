@@ -1,5 +1,4 @@
-import labStyles from '../../../components/lab.module.css'
-import graphStyles from '../minCut.module.css'
+import { VisualizerPanel } from '../../../components/LabPanels'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import type { MinCutResult } from '../../../lib/api'
 import type { GraphProblem } from '../minCut'
@@ -12,25 +11,23 @@ interface MinCutWorkspaceProps {
 
 export function MinCutWorkspace({ graph, result }: MinCutWorkspaceProps) {
   return (
-    <section
-      className={`${labStyles['visualizer-panel']} ${graphStyles['graph-panel']}`}
-    >
+    <VisualizerPanel className="min-h-[505px]">
       <VisualizerTopbar
         status={result ? 'Minimum cut found' : 'Graph ready'}
         detail={`${graph.vertices.length} vertices · ${graph.edges.length} edges`}
       />
       <GraphVisualizer graph={graph} result={result} />
-      <div className={graphStyles['graph-legend']}>
-        <span>
-          <i className={graphStyles['legend-a']} /> Partition A
+      <div className="flex h-[49px] items-center justify-end gap-5 border-t px-5 text-xs text-[#7f8881] max-[620px]:justify-center">
+        <span className="flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-[#77aa87]" /> Partition A
         </span>
-        <span>
-          <i className={graphStyles['legend-b']} /> Partition B
+        <span className="flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-[#78a8b8]" /> Partition B
         </span>
-        <span>
-          <i className={graphStyles['legend-cut']} /> Cut edge
+        <span className="flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-orange" /> Cut edge
         </span>
       </div>
-    </section>
+    </VisualizerPanel>
   )
 }

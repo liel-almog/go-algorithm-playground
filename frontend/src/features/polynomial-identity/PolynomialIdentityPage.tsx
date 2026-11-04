@@ -1,105 +1,18 @@
-import shellStyles from '../../styles/shell.module.css'
-import { useMutation } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { LabLayout } from '../../components/PageLayout'
+import { RequestError } from '../../components/RequestError'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
 import { VerificationVerdict } from '../../components/VerificationVerdict'
-import type { PolynomialCheck } from '../../lib/api'
 import { PolynomialControls } from './components/PolynomialControls'
 import { PolynomialWorkspace } from './components/PolynomialWorkspace'
-import { polynomialIdentityMutations } from './mutations'
-import { prime, randomCoefficients, verifyLocally } from './polynomialIdentity'
+import { prime } from './polynomialIdentity'
+import { usePolynomialIdentity } from './hooks/usePolynomialIdentity'
 
 export function PolynomialIdentityPage() {
-  const [degree, setDegree] = useState(4)
-  const [rounds, setRounds] = useState(4)
-  const [left, setLeft] = useState(() => randomCoefficients(4))
-  const [right, setRight] = useState(() => [...left])
-  const [checks, setChecks] = useState<PolynomialCheck[]>([])
-  const didGenerate = useRef(false)
-  const generation = useMutation(polynomialIdentityMutations.generate())
-  const verification = useMutation(polynomialIdentityMutations.solve())
-
-  const generate = useCallback(
-    async (requestedDegree = degree) => {
-      setChecks([])
-      generation.reset()
-      verification.reset()
-      try {
-        const identity = await generation.mutateAsync({
-          degree: requestedDegree,
-        })
-        setLeft(identity.left)
-        setRight(identity.right)
-      } catch {
-        const coefficients = randomCoefficients(requestedDegree)
-        setLeft(coefficients)
-        setRight([...coefficients])
-        generation.reset()
-      }
-    },
-    [degree, generation, verification],
-  )
-
-  useEffect(() => {
-    if (didGenerate.current) return
-    didGenerate.current = true
-    void generate()
-  }, [generate])
-
-  const changeDegree = (nextDegree: number) => {
-    setDegree(nextDegree)
-    void generate(nextDegree)
-  }
-
-  const alter = () => {
-    setRight((current) => {
-      const next = [...current]
-      const index = Math.floor(Math.random() * next.length)
-      const coefficient = next[index]
-      if (coefficient === undefined) return current
-      next[index] = (coefficient + 1 + Math.floor(Math.random() * 9)) % prime
-      return next
-    })
-    setChecks([])
-    verification.reset()
-  }
-
-  const verify = async () => {
-    verification.reset()
-    setChecks([])
-    try {
-      const result = await verification.mutateAsync({
-        identity: { left, right },
-        rounds,
-      })
-      setChecks(result.checks)
-    } catch {
-      setChecks(verifyLocally(left, right, rounds))
-      verification.reset()
-    }
-  }
-
-  const updateCoefficient = (
-    side: 'left' | 'right',
-    index: number,
-    value: number,
-  ) => {
-    const setter = side === 'left' ? setLeft : setRight
-    setter((current) =>
-      current.map((coefficient, position) =>
-        position === index ? value : coefficient,
-      ),
-    )
-    setChecks([])
-    verification.reset()
-  }
-
-  const identical = checks.length > 0 && checks.every((check) => check.passed)
-  const disabled = generation.isPending || verification.isPending
+  const lab = usePolynomialIdentity()
 
   return (
-    <div className={shellStyles['lab-page']}>
+    <div className="pb-[70px]">
       <LabHeader
         eyebrow="randomized verification · Schwartz–Zippel"
         title="Verify polynomial identities"
@@ -116,39 +29,42 @@ export function PolynomialIdentityPage() {
           'Reject on a mismatch; repeat matches to lower the error chance.',
         ]}
       />
-      <div
-        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
-      >
+      <LabLayout>
+        {lab.error && (
+          <div className="col-span-full">
+            <RequestError error={lab.error} />
+          </div>
+        )}
         <PolynomialControls
-          degree={degree}
-          rounds={rounds}
-          isGenerating={generation.isPending}
-          isVerifying={verification.isPending}
-          onDegreeChange={changeDegree}
-          onRoundsChange={setRounds}
-          onGenerate={() => void generate()}
-          onAlter={alter}
-          onVerify={() => void verify()}
+          degree={lab.degree}
+          rounds={lab.rounds}
+          isGenerating={lab.isGenerating}
+          isVerifying={lab.isVerifying}
+          onDegreeChange={lab.changeDegree}
+          onRoundsChange={lab.changeRounds}
+          onGenerate={lab.generate}
+          onAlter={lab.alterCoefficient}
+          onVerify={lab.verify}
         />
         <PolynomialWorkspace
-          left={left}
-          right={right}
-          checks={checks}
-          disabled={disabled}
-          onCoefficientChange={updateCoefficient}
+          left={lab.left}
+          right={lab.right}
+          checks={lab.checks}
+          disabled={lab.isBusy}
+          onCoefficientChange={lab.updateCoefficient}
         />
         <VerificationVerdict
           ariaLabel="Identity result"
-          hasResult={checks.length > 0}
-          accepted={identical}
+          hasResult={lab.hasResult}
+          accepted={lab.accepted}
           idleTitle="Ready to verify"
           acceptedTitle="Identity accepted"
           rejectedTitle="Not an identity"
           idleDescription="Choose the number of rounds and start the test."
-          acceptedDescription={`P and Q matched at all ${rounds} sampled points.`}
+          acceptedDescription={`P and Q matched at all ${lab.checks.length} sampled points.`}
           rejectedDescription="One evaluation was enough to prove P and Q differ."
         />
-      </div>
+      </LabLayout>
     </div>
   )
 }

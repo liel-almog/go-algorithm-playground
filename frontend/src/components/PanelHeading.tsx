@@ -9,12 +9,12 @@ interface PanelHeadingProps {
 export function PanelHeading({ step, title, description }: PanelHeadingProps) {
   return (
     <div className="flex gap-3">
-      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#e4ece3] font-['DM_Mono'] text-[0.6rem] text-primary">
+      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#e4ece3] font-mono text-xs text-primary">
         {step}
       </span>
       <div>
         <strong className="text-[0.8rem]">{title}</strong>
-        <p className="mt-[5px] text-[0.67rem] leading-normal text-muted-foreground">
+        <p className="mt-[5px] text-sm leading-relaxed text-muted-foreground">
           {description}
         </p>
       </div>

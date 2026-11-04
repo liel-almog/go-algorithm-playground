@@ -1,5 +1,6 @@
-import labStyles from '../../../components/lab.module.css'
-import verifierStyles from '../../../components/verifier.module.css'
+import type { ComponentProps } from 'react'
+import { DottedSurface, VisualizerPanel } from '../../../components/LabPanels'
+import { cn } from '../../../lib/utils'
 import type { PolynomialCheck } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { CoefficientEditor } from './CoefficientEditor'
@@ -16,6 +17,18 @@ interface PolynomialWorkspaceProps {
   ) => void
 }
 
+function EvaluationRow({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      className={cn(
+        'grid grid-cols-[minmax(100px,1.3fr)_minmax(55px,0.8fr)_minmax(55px,0.8fr)_minmax(75px,1fr)] gap-2 px-2.5 py-[7px] font-mono text-xs leading-[normal]',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
 export function PolynomialWorkspace({
   left,
   right,
@@ -24,21 +37,21 @@ export function PolynomialWorkspace({
   onCoefficientChange,
 }: PolynomialWorkspaceProps) {
   return (
-    <section
-      className={`${labStyles['visualizer-panel']} ${labStyles['verifier-panel']}`}
-    >
+    <VisualizerPanel className="min-h-[520px]">
       <VisualizerTopbar
         status="Identity claim"
         detail="Editable coefficients"
       />
-      <div className={verifierStyles['polynomial-workspace']}>
+      <DottedSurface className="grid min-h-[325px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 p-7 max-[680px]:grid-cols-1 max-[680px]:gap-3 max-[680px]:p-4.5">
         <CoefficientEditor
           name="P(x)"
           coefficients={left}
           disabled={disabled}
           onChange={(index, value) => onCoefficientChange('left', index, value)}
         />
-        <div className={verifierStyles['identity-mark']}>≟</div>
+        <div className="text-[1.6rem] text-orange max-[680px]:text-center">
+          ≟
+        </div>
         <CoefficientEditor
           name="Q(x)"
           coefficients={right}
@@ -47,34 +60,36 @@ export function PolynomialWorkspace({
             onCoefficientChange('right', index, value)
           }
         />
-      </div>
-      <div className={verifierStyles['evaluation-table']}>
-        <div className={verifierStyles['evaluation-head']}>
+      </DottedSurface>
+      <div className="min-h-[135px] overflow-x-auto border-t px-5 py-3">
+        <EvaluationRow className="text-muted-foreground uppercase">
           <span>Random point</span>
           <span>P(r)</span>
           <span>Q(r)</span>
           <span>Check</span>
-        </div>
+        </EvaluationRow>
         {checks.length === 0 ? (
-          <p>Run the verifier to sample points from 𝔽₁₀₁.</p>
+          <p className="text-center text-xs text-muted-foreground">
+            Run the verifier to sample points from 𝔽₁₀₁.
+          </p>
         ) : (
           checks.map((check, index) => (
-            <div
+            <EvaluationRow
               key={index}
               className={
                 check.passed
-                  ? verifierStyles['trial-pass']
-                  : verifierStyles['trial-fail']
+                  ? 'bg-[#e9f2eb] text-[#397155]'
+                  : 'bg-[#f9e8e1] text-[#974f36]'
               }
             >
               <span>r = {check.point}</span>
               <span>{check.left}</span>
               <span>{check.right}</span>
               <strong>{check.passed ? 'match' : 'mismatch'}</strong>
-            </div>
+            </EvaluationRow>
           ))
         )}
       </div>
-    </section>
+    </VisualizerPanel>
   )
 }

@@ -10,7 +10,13 @@ import (
 type BFS struct{}
 
 func (BFS) Metadata() Metadata {
-	return Metadata{ID: "bfs", Name: "Breadth-first search", Description: "Explores every state one level at a time. Complete and shortest-path optimal.", Optimal: true, Category: "uninformed"}
+	return Metadata{
+		ID:          "bfs",
+		Name:        "Breadth-first search",
+		Description: "Explores every state one level at a time. Complete and shortest-path optimal.",
+		Optimal:     true,
+		Category:    "uninformed",
+	}
 }
 
 func (algorithm BFS) Solve(ctx context.Context, initial board.Board) (Result, error) {

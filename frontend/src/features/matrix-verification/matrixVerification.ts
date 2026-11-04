@@ -1,4 +1,4 @@
-import type { MatrixClaim, MatrixTrial } from '../../lib/api'
+import type { MatrixClaim } from '../../lib/api'
 
 type Matrix = number[][]
 
@@ -8,9 +8,12 @@ export function generateLocalProblem(size: number): MatrixClaim {
       Array.from({ length: size }, () => Math.floor(Math.random() * 2)),
     )
   const a = randomMatrix()
-  const b = Array.from({ length: size }, () => Array(size).fill(0) as number[])
+  const b = Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => 0),
+  )
   for (const [row, column] of shuffledColumns(size).entries()) {
-    b[row]![column] = 1
+    const values = b[row]
+    if (values) values[column] = 1
   }
   return { a, b, product: multiplyMatrices(a, b) }
 }
@@ -19,32 +22,14 @@ function shuffledColumns(size: number) {
   const columns = Array.from({ length: size }, (_, index) => index)
   for (let index = size - 1; index > 0; index--) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
-    ;[columns[index], columns[randomIndex]] = [
-      columns[randomIndex]!,
-      columns[index]!,
-    ]
+    const current = columns[index]
+    const next = columns[randomIndex]
+    if (current !== undefined && next !== undefined) {
+      columns[index] = next
+      columns[randomIndex] = current
+    }
   }
   return columns
-}
-
-export function verifyLocally(
-  problem: MatrixClaim,
-  rounds: number,
-): MatrixTrial[] {
-  const size = problem.a.length
-  return Array.from({ length: rounds }, () => {
-    const vector = Array.from({ length: size }, () =>
-      Math.random() < 0.5 ? 0 : 1,
-    )
-    const right = multiplyVector(problem.product, vector)
-    const left = multiplyVector(problem.a, multiplyVector(problem.b, vector))
-    return {
-      vector,
-      left,
-      right,
-      passed: left.every((value, index) => value === right[index]),
-    }
-  })
 }
 
 function multiplyMatrices(a: Matrix, b: Matrix) {
@@ -72,17 +57,27 @@ function multiplyMatrices(a: Matrix, b: Matrix) {
   )
 }
 
-function multiplyVector(matrix: Matrix, vector: number[]) {
-  if (matrix.some((row) => row.length !== vector.length)) {
-    throw new Error('Matrix and vector dimensions do not match.')
-  }
-  return matrix.map((row) =>
-    row.reduce((sum, value, index) => {
-      const multiplier = vector[index]
-      if (multiplier === undefined) {
-        throw new Error('Matrix and vector dimensions do not match.')
-      }
-      return sum + value * multiplier
-    }, 0),
+export function claimsDiffer(claim: MatrixClaim, original: MatrixClaim) {
+  return (['a', 'b', 'product'] as const).some((matrix) =>
+    claim[matrix].some((row, rowIndex) =>
+      row.some(
+        (value, columnIndex) =>
+          value !== original[matrix][rowIndex]?.[columnIndex],
+      ),
+    ),
   )
+}
+
+export function updateMatrixCell(
+  claim: MatrixClaim,
+  matrix: keyof MatrixClaim,
+  rowIndex: number,
+  columnIndex: number,
+  value: number,
+): MatrixClaim {
+  const updated = claim[matrix].map((row) => [...row])
+  const row = updated[rowIndex]
+  if (!row) return claim
+  row[columnIndex] = value
+  return { ...claim, [matrix]: updated }
 }

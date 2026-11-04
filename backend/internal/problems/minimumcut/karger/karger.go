@@ -6,7 +6,10 @@ import (
 	"math"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 const (
@@ -127,8 +130,8 @@ func validate(graph Graph) (map[string]int, error) {
 	}
 	indices := make(map[string]int, len(graph.Vertices))
 	for index, vertex := range graph.Vertices {
-		if vertex == "" {
-			return nil, errors.New("vertex names cannot be empty")
+		if strings.TrimSpace(vertex) == "" || utf8.RuneCountInString(vertex) > 100 || strings.IndexFunc(vertex, unicode.IsControl) >= 0 {
+			return nil, errors.New("vertex names must contain 1 to 100 characters and no control characters")
 		}
 		if _, exists := indices[vertex]; exists {
 			return nil, errors.New("vertex names must be unique")
@@ -169,32 +172,7 @@ func validate(graph Graph) (map[string]int, error) {
 }
 
 func contract(ctx context.Context, graph Graph, indices map[string]int) (Result, error) {
-	parents := make([]int, len(graph.Vertices))
-	ranks := make([]int, len(graph.Vertices))
-	for i := range parents {
-		parents[i] = i
-	}
-	var find func(int) int
-	find = func(value int) int {
-		if parents[value] != value {
-			parents[value] = find(parents[value])
-		}
-		return parents[value]
-	}
-	union := func(a, b int) bool {
-		a, b = find(a), find(b)
-		if a == b {
-			return false
-		}
-		if ranks[a] < ranks[b] {
-			a, b = b, a
-		}
-		parents[b] = a
-		if ranks[a] == ranks[b] {
-			ranks[a]++
-		}
-		return true
-	}
+	sets := newDisjointSet(len(graph.Vertices))
 
 	components := len(graph.Vertices)
 	for components > 2 {
@@ -202,21 +180,21 @@ func contract(ctx context.Context, graph Graph, indices map[string]int) (Result,
 			return Result{}, err
 		}
 		edge := graph.Edges[rand.IntN(len(graph.Edges))]
-		if union(indices[edge.From], indices[edge.To]) {
+		if sets.union(indices[edge.From], indices[edge.To]) {
 			components--
 		}
 	}
-	root := find(0)
+	root := sets.find(0)
 	result := Result{Algorithm: "karger"}
 	for index, vertex := range graph.Vertices {
 		partition := 1
-		if find(index) == root {
+		if sets.find(index) == root {
 			partition = 0
 		}
 		result.Partitions[partition] = append(result.Partitions[partition], vertex)
 	}
 	for _, edge := range graph.Edges {
-		if find(indices[edge.From]) != find(indices[edge.To]) {
+		if sets.find(indices[edge.From]) != sets.find(indices[edge.To]) {
 			result.CrossingEdges = append(result.CrossingEdges, edge)
 		}
 	}

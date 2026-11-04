@@ -1,4 +1,7 @@
-import labStyles from '../../../components/lab.module.css'
+import { ControlError } from '../../../components/ControlError'
+import { CodePreview } from '../../../components/CodePreview'
+import { Spinner } from '../../../components/Spinner'
+import { ControlPanel, PanelDivider } from '../../../components/LabPanels'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
 import { Button } from '../../../components/ui/button'
@@ -29,7 +32,7 @@ export function MinCutControls({
   const disabled = isGenerating || isSolving
 
   return (
-    <aside className={labStyles['control-panel']}>
+    <ControlPanel>
       <PanelHeading
         step="01"
         title="Generate a problem"
@@ -48,14 +51,14 @@ export function MinCutControls({
       />
       <Button
         variant="secondary"
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-[43px] w-full text-xs"
         onClick={onGenerate}
         disabled={disabled}
       >
         <span aria-hidden="true">↻</span>{' '}
         {isGenerating ? 'Generating…' : 'Generate new graph'}
       </Button>
-      <div className={labStyles['panel-divider']} />
+      <PanelDivider />
       <PanelHeading
         step="02"
         title="Ask the backend"
@@ -74,31 +77,19 @@ export function MinCutControls({
         onChange={onTrialsChange}
       />
       <Button
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-[43px] w-full text-xs"
         onClick={onSolve}
         disabled={disabled}
       >
-        {isSolving ? (
-          <span className={labStyles['spinner']} />
-        ) : (
-          <span aria-hidden="true">▶</span>
-        )}
+        {isSolving ? <Spinner /> : <span aria-hidden="true">▶</span>}
         {isSolving ? 'Contracting…' : 'Find minimum cut'}
       </Button>
-      {error && (
-        <div className={labStyles['error-message']} role="alert">
-          <strong>Couldn’t calculate the cut</strong>
-          <span>{error}</span>
-        </div>
-      )}
-      <div className={labStyles['request-preview']}>
-        <span>Request</span>
-        <code>
-          POST /api/problems/minimum-cut/solve · local fallback
-          <br />
-          trials: {trials}
-        </code>
-      </div>
-    </aside>
+      <ControlError title="Request failed" message={error} />
+      <CodePreview label="Request">
+        POST /api/problems/minimum-cut/solve
+        <br />
+        trials: {trials}
+      </CodePreview>
+    </ControlPanel>
   )
 }

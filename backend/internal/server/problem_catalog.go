@@ -17,8 +17,12 @@ type problemDescription struct {
 	Limits           []string `json:"limits"`
 }
 
+type problemsResponse struct {
+	Problems []problemDescription `json:"problems"`
+}
+
 func (s *Server) problems(c *echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]any{"problems": problemCatalog()})
+	return c.JSON(http.StatusOK, problemsResponse{Problems: problemCatalog()})
 }
 
 func problemCatalog() []problemDescription {
@@ -42,7 +46,7 @@ func problemCatalog() []problemDescription {
 			Description:      "Check whether a claimed product C is equal to A multiplied by B without recomputing the full matrix product.",
 			SolutionApproach: "For each round the backend samples a binary vector r and compares A(Br) with Cr. Any mismatch proves the claim false; repeated matches reduce the false-positive probability.",
 			GenerateEndpoint: problemRoutePrefix + "/matrix-verification/generate", SolveEndpoint: problemRoutePrefix + "/matrix-verification/solve",
-			Limits: []string{"binary matrices: 1x1 to 100x100", "one random check for a, b, c", "runtime: 5 seconds"},
+			Limits: []string{"binary matrices: 1x1 to 100x100", "one random check for a, b, c; 1 to 15 rounds with product", "runtime: 5 seconds"},
 		},
 		{
 			ID: "polynomial-identity", Title: "Polynomial identity testing", Algorithm: "Schwartz-Zippel",

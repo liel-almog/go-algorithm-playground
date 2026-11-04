@@ -17,6 +17,14 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		slog.Error("server stopped", "error", err)
+		os.Exit(1)
+	}
+}
+
+// run owns startup and cleanup, so deferred shutdown runs before main exits.
+func run() error {
 	registry := solver.DefaultRegistry()
 	service := eightpuzzle.New(registry)
 	server := appserver.New(service, appserver.AllowedOriginsFromEnv())
@@ -42,8 +50,5 @@ func main() {
 			return nil
 		},
 	}
-	if err := config.Start(ctx, server.Handler()); err != nil {
-		slog.Error("server stopped", "error", err)
-		os.Exit(1)
-	}
+	return config.Start(ctx, server.Handler())
 }

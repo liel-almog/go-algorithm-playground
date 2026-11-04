@@ -1,7 +1,6 @@
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
-import labStyles from '../../../components/lab.module.css'
-import puzzleStyles from '../../../components/puzzle.module.css'
-import { PlaybackButton } from '../../../components/PlaybackButton'
+import { VisualizerPanel } from '../../../components/LabPanels'
+import { PuzzleStage, PuzzleSkeleton } from '../../../components/PuzzleStage'
+import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import type { SolveResult } from '../../../lib/api'
 import { PuzzleBoard } from './PuzzleBoard'
@@ -12,8 +11,9 @@ interface PuzzleVisualizerProps {
   step: number
   isPlaying: boolean
   isGenerating: boolean
-  onStepChange: (step: number) => void
-  onPlayingChange: (playing: boolean) => void
+  onPrevious: () => void
+  onNext: () => void
+  onTogglePlayback: () => void
 }
 
 export function PuzzleVisualizer({
@@ -22,88 +22,45 @@ export function PuzzleVisualizer({
   step,
   isPlaying,
   isGenerating,
-  onStepChange,
-  onPlayingChange,
+  onPrevious,
+  onNext,
+  onTogglePlayback,
 }: PuzzleVisualizerProps) {
   const visibleTiles = result?.path[step] ?? tiles
   const currentMove = step > 0 ? result?.moves[step - 1] : undefined
   const nextMove = result?.moves[step]
   const finalStep = result ? result.path.length - 1 : 0
 
+  let status = 'Problem ready'
+  if (isGenerating) status = 'Building puzzle'
+  if (result) status = 'Solution ready'
+
+  let moveLabel = result ? 'complete' : 'waiting'
+  if (nextMove) moveLabel = `next: ${nextMove}`
+
   return (
-    <section className={labStyles['visualizer-panel']}>
+    <VisualizerPanel>
       <VisualizerTopbar
-        status={
-          result
-            ? 'Solution ready'
-            : isGenerating
-              ? 'Building puzzle'
-              : 'Problem ready'
-        }
+        status={status}
         detail={result ? `Step ${step} of ${finalStep}` : 'Initial state'}
       />
-      <div className={puzzleStyles['puzzle-stage']}>
+      <PuzzleStage lastTile={8}>
         {visibleTiles.length > 0 ? (
           <PuzzleBoard tiles={visibleTiles} move={currentMove} />
         ) : (
-          <div
-            className={puzzleStyles['board-skeleton']}
-            aria-label="Loading puzzle"
-          />
+          <PuzzleSkeleton />
         )}
-        <div className={puzzleStyles['goal-key']}>
-          <span /> Goal: arrange 1–8 with the empty space last
-        </div>
-      </div>
-      <div className={puzzleStyles['playback-bar']}>
-        <PlaybackButton
-          aria-label="Previous step"
-          onClick={() => {
-            onPlayingChange(false)
-            onStepChange(Math.max(0, step - 1))
-          }}
-          disabled={!result || step === 0}
-        >
-          <ChevronLeft aria-hidden="true" className="size-5" />
-        </PlaybackButton>
-        <PlaybackButton
-          primary
-          aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
-          onClick={() => {
-            if (result && step === finalStep) onStepChange(0)
-            onPlayingChange(!isPlaying)
-          }}
-          disabled={!result}
-        >
-          {isPlaying ? (
-            <Pause aria-hidden="true" className="size-4 fill-current" />
-          ) : (
-            <Play aria-hidden="true" className="size-4 fill-current" />
-          )}
-        </PlaybackButton>
-        <PlaybackButton
-          aria-label="Next step"
-          onClick={() => {
-            onPlayingChange(false)
-            onStepChange(Math.min(finalStep, step + 1))
-          }}
-          disabled={!result || step === finalStep}
-        >
-          <ChevronRight aria-hidden="true" className="size-5" />
-        </PlaybackButton>
-        <div className={puzzleStyles['progress-track']}>
-          <span
-            style={{
-              width: result
-                ? `${(step / Math.max(1, finalStep)) * 100}%`
-                : '0%',
-            }}
-          />
-        </div>
-        <span className={puzzleStyles['move-label']}>
-          {nextMove ? `next: ${nextMove}` : result ? 'complete' : 'waiting'}
-        </span>
-      </div>
-    </section>
+      </PuzzleStage>
+      <PuzzlePlayback
+        hasResult={!!result}
+        step={step}
+        finalStep={finalStep}
+        isPlaying={isPlaying}
+        moveLabel={moveLabel}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        onTogglePlayback={onTogglePlayback}
+      />
+    </VisualizerPanel>
   )
 }

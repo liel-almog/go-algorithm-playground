@@ -11,7 +11,13 @@ import (
 type AStar struct{}
 
 func (AStar) Metadata() Metadata {
-	return Metadata{ID: "astar", Name: "A* search", Description: "Balances distance travelled with Manhattan distance to find a shortest path efficiently.", Optimal: true, Category: "informed"}
+	return Metadata{
+		ID:          "astar",
+		Name:        "A* search",
+		Description: "Balances distance travelled with Manhattan distance to find a shortest path efficiently.",
+		Optimal:     true,
+		Category:    "informed",
+	}
 }
 
 func (algorithm AStar) Solve(ctx context.Context, initial board.Board) (Result, error) {

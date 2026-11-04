@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -12,7 +13,7 @@ type matrixSolveRequest struct {
 	B       freivalds.Matrix  `json:"b"`
 	C       *freivalds.Matrix `json:"c"`
 	Product freivalds.Matrix  `json:"product"`
-	Rounds  int               `json:"rounds"`
+	Rounds  *int              `json:"rounds" validate:"omitempty,min=1,max=15"`
 }
 
 type matrixGenerateRequest struct {
@@ -46,8 +47,8 @@ func (s *Server) solveMatrixVerification(c *echo.Context) error {
 		return writeRequestError(c, err)
 	}
 	if request.C != nil {
-		if _, err := freivalds.ValidateMatrices(request.A, request.B, *request.C); err != nil {
-			return writeRequestError(c, err)
+		if request.Product != nil || request.Rounds != nil {
+			return writeRequestError(c, errors.New("c cannot be combined with product or rounds; use product for multiple rounds"))
 		}
 		result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, *request.C, 1)
 		if err != nil {
@@ -61,12 +62,9 @@ func (s *Server) solveMatrixVerification(c *echo.Context) error {
 			Equal:  trial.Passed,
 		})
 	}
-	rounds := request.Rounds
-	if rounds == 0 {
-		rounds = 1
-	}
-	if _, err := freivalds.ValidateMatrices(request.A, request.B, request.Product); err != nil {
-		return writeRequestError(c, err)
+	rounds := 1
+	if request.Rounds != nil {
+		rounds = *request.Rounds
 	}
 	result, err := freivalds.Solve(c.Request().Context(), request.A, request.B, request.Product, rounds)
 	return writeResult(c, result, err)

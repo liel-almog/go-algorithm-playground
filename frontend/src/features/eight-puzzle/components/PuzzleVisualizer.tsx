@@ -1,7 +1,6 @@
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
-import labStyles from '../../../components/lab.module.css'
-import puzzleStyles from '../../../components/puzzle.module.css'
-import { PlaybackButton } from '../../../components/PlaybackButton'
+import { VisualizerPanel } from '../../../components/LabPanels'
+import { PuzzleStage, PuzzleSkeleton } from '../../../components/PuzzleStage'
+import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
 import type { SolveResult } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { Button } from '../../../components/ui/button'
@@ -46,21 +45,25 @@ export function PuzzleVisualizer({
   onTogglePlayback,
   onNext,
 }: PuzzleVisualizerProps) {
+  let status = 'Your turn — click a neighboring tile'
+  if (isGenerating) status = 'Building puzzle'
+  if (result) status = 'Solution ready'
+  if (playerSolved) status = 'Puzzle complete'
+
+  let moveLabel = generationSource === 'local' ? 'local board' : 'playable'
+  if (result) {
+    const nextMove = result.moves[step]
+    moveLabel = nextMove ? `next: ${nextMove}` : 'complete'
+  }
+  const finalStep = result ? result.path.length - 1 : 0
+
   return (
-    <section className={labStyles['visualizer-panel']}>
+    <VisualizerPanel>
       <VisualizerTopbar
-        status={
-          playerSolved
-            ? 'Puzzle complete'
-            : result
-              ? 'Solution ready'
-              : isGenerating
-                ? 'Building puzzle'
-                : 'Your turn — click a neighboring tile'
-        }
+        status={status}
         detail={
           result
-            ? `Step ${step} of ${result.path.length - 1}`
+            ? `Step ${step} of ${finalStep}`
             : `${playerMoves} player ${playerMoves === 1 ? 'move' : 'moves'}`
         }
       />
@@ -95,7 +98,7 @@ export function PuzzleVisualizer({
         </div>
       )}
 
-      <div className={puzzleStyles['puzzle-stage']}>
+      <PuzzleStage lastTile={rows * columns - 1}>
         {tiles.length > 0 ? (
           <PuzzleBoard
             tiles={tiles}
@@ -106,63 +109,20 @@ export function PuzzleVisualizer({
             playable={isInteractive}
           />
         ) : (
-          <div
-            className={puzzleStyles['board-skeleton']}
-            aria-label="Loading puzzle"
-          />
+          <PuzzleSkeleton />
         )}
-        <div className={puzzleStyles['goal-key']}>
-          <span /> Goal: arrange 1–{rows * columns - 1} with the empty space
-          last
-        </div>
-      </div>
+      </PuzzleStage>
 
-      <div className={puzzleStyles['playback-bar']}>
-        <PlaybackButton
-          aria-label="Previous solution step"
-          onClick={onPrevious}
-          disabled={!result || step === 0}
-        >
-          <ChevronLeft aria-hidden="true" className="size-5" />
-        </PlaybackButton>
-        <PlaybackButton
-          primary
-          aria-label={isPlaying ? 'Pause solution' : 'Play solution'}
-          onClick={onTogglePlayback}
-          disabled={!result}
-        >
-          {isPlaying ? (
-            <Pause aria-hidden="true" className="size-4 fill-current" />
-          ) : (
-            <Play aria-hidden="true" className="size-4 fill-current" />
-          )}
-        </PlaybackButton>
-        <PlaybackButton
-          aria-label="Next solution step"
-          onClick={onNext}
-          disabled={!result || step === result.path.length - 1}
-        >
-          <ChevronRight aria-hidden="true" className="size-5" />
-        </PlaybackButton>
-        <div className={puzzleStyles['progress-track']}>
-          <span
-            style={{
-              width: result
-                ? `${(step / Math.max(1, result.path.length - 1)) * 100}%`
-                : '0%',
-            }}
-          />
-        </div>
-        <span className={puzzleStyles['move-label']}>
-          {result
-            ? result.moves[step]
-              ? `next: ${result.moves[step]}`
-              : 'complete'
-            : generationSource === 'local'
-              ? 'local board'
-              : 'playable'}
-        </span>
-      </div>
-    </section>
+      <PuzzlePlayback
+        hasResult={!!result}
+        step={step}
+        finalStep={finalStep}
+        isPlaying={isPlaying}
+        moveLabel={moveLabel}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        onTogglePlayback={onTogglePlayback}
+      />
+    </VisualizerPanel>
   )
 }

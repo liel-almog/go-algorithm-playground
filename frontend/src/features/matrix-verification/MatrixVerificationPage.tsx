@@ -1,112 +1,18 @@
-import shellStyles from '../../styles/shell.module.css'
-import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { LabLayout } from '../../components/PageLayout'
+import { RequestError } from '../../components/RequestError'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
 import { VerificationVerdict } from '../../components/VerificationVerdict'
-import type { MatrixClaim, MatrixTrial } from '../../lib/api'
 import { ErrorProbabilityNote } from './components/ErrorProbabilityNote'
 import { MatrixControls } from './components/MatrixControls'
 import { MatrixWorkspace } from './components/MatrixWorkspace'
-import { generateLocalProblem, verifyLocally } from './matrixVerification'
-import { matrixVerificationMutations } from './mutations'
+import { useMatrixVerification } from './hooks/useMatrixVerification'
 
 export function MatrixVerificationPage() {
-  const [size, setSize] = useState(3)
-  const [rounds, setRounds] = useState(5)
-  const [problem, setProblem] = useState<MatrixClaim>(() =>
-    generateLocalProblem(3),
-  )
-  const [trials, setTrials] = useState<MatrixTrial[]>([])
-  const [original, setOriginal] = useState(problem)
-  const tampered = (Object.keys(problem) as Array<keyof MatrixClaim>).some(
-    (key) =>
-      problem[key].some((row, i) =>
-        row.some((value, j) => value !== original[key][i]?.[j]),
-      ),
-  )
-  const generation = useMutation(matrixVerificationMutations.generate())
-  const verification = useMutation(matrixVerificationMutations.solve())
-
-  const regenerate = async () => {
-    setTrials([])
-    generation.reset()
-    verification.reset()
-    try {
-      const generated = await generation.mutateAsync({ size })
-      setProblem(generated)
-      setOriginal(generated)
-    } catch {
-      const generated = generateLocalProblem(size)
-      setProblem(generated)
-      setOriginal(generated)
-      generation.reset()
-    }
-  }
-
-  const changeSize = (nextSize: number) => {
-    setSize(nextSize)
-    const generated = generateLocalProblem(nextSize)
-    setProblem(generated)
-    setOriginal(generated)
-    setTrials([])
-    verification.reset()
-  }
-
-  const toggleTamper = () => {
-    if (tampered) {
-      setProblem(original)
-    } else {
-      const rowIndex = Math.floor(Math.random() * problem.product.length)
-      const columnIndex = Math.floor(Math.random() * problem.product.length)
-      setProblem((current) => {
-        const product = current.product.map((row) => [...row])
-        const row = product[rowIndex]
-        const value = row?.[columnIndex]
-        if (!row || value === undefined) return current
-        row[columnIndex] = value === 0 ? 1 : 0
-        return { ...current, product }
-      })
-    }
-    setTrials([])
-    verification.reset()
-  }
-
-  const changeCell = (
-    matrix: keyof MatrixClaim,
-    row: number,
-    column: number,
-    value: number,
-  ) => {
-    setProblem((current) => {
-      const updated = current[matrix].map((values) => [...values])
-      const targetRow = updated[row]
-      if (!targetRow) return current
-      targetRow[column] = value
-      return { ...current, [matrix]: updated }
-    })
-    setTrials([])
-    verification.reset()
-  }
-
-  const verify = async () => {
-    verification.reset()
-    setTrials([])
-    try {
-      const result = await verification.mutateAsync({ claim: problem, rounds })
-      setTrials(result.trials)
-    } catch {
-      setTrials(verifyLocally(problem, rounds))
-      verification.reset()
-    }
-  }
-
-  const accepted = trials.length > 0 && trials.every((trial) => trial.passed)
-  // Round upward so the displayed upper bound never understates the risk.
-  const failureProbability = `${Math.ceil((100 / 2 ** rounds) * 10_000) / 10_000}%`
+  const lab = useMatrixVerification()
 
   return (
-    <div className={shellStyles['lab-page']}>
+    <div className="pb-[70px]">
       <LabHeader
         eyebrow="randomized verification · Freivalds’ algorithm"
         title="Verify matrix multiplication"
@@ -123,53 +29,52 @@ export function MatrixVerificationPage() {
           'Reject on any mismatch; repeat matches for more confidence.',
         ]}
       />
-      <div
-        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
-      >
+      <LabLayout>
+        {lab.error && (
+          <div className="col-span-full">
+            <RequestError error={lab.error} />
+          </div>
+        )}
         <MatrixControls
-          size={size}
-          rounds={rounds}
-          tampered={tampered}
-          isGenerating={generation.isPending}
-          isVerifying={verification.isPending}
-          failureProbability={failureProbability}
-          onSizeChange={changeSize}
-          onRoundsChange={(value) => {
-            setRounds(Math.max(1, Math.min(15, Math.round(value))))
-            setTrials([])
-            verification.reset()
-          }}
-          onGenerate={() => void regenerate()}
-          onToggleTamper={toggleTamper}
-          onVerify={() => void verify()}
+          size={lab.size}
+          rounds={lab.rounds}
+          tampered={lab.isTampered}
+          isGenerating={lab.isGenerating}
+          isVerifying={lab.isVerifying}
+          failureProbability={lab.failureProbability}
+          onSizeChange={lab.changeSize}
+          onRoundsChange={lab.changeRounds}
+          onGenerate={lab.generate}
+          onToggleTamper={lab.toggleTamper}
+          onVerify={lab.verify}
         />
         <MatrixWorkspace
-          problem={problem}
-          original={original}
-          trials={trials}
-          disabled={generation.isPending || verification.isPending}
-          onCellChange={changeCell}
+          problem={lab.claim}
+          original={lab.originalClaim}
+          trials={lab.trials}
+          disabled={lab.isBusy}
+          onCellChange={lab.changeCell}
         />
         <VerificationVerdict
           ariaLabel="Verification result"
-          hasResult={trials.length > 0}
-          accepted={accepted}
+          hasResult={lab.hasResult}
+          accepted={lab.accepted}
           idleTitle="Ready to verify"
           acceptedTitle="Claim accepted"
           rejectedTitle="Claim rejected"
           idleDescription="Run at least one randomized round."
           acceptedDescription={
             <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span>All {trials.length} checks matched.</span>
+              <span>All {lab.trials.length} checks matched.</span>
               <ErrorProbabilityNote
-                rounds={rounds}
-                probability={failureProbability}
+                rounds={lab.rounds}
+                probability={lab.failureProbability}
               />
             </span>
           }
           rejectedDescription="A random vector exposed the incorrect product."
         />
-      </div>
+      </LabLayout>
     </div>
   )
 }

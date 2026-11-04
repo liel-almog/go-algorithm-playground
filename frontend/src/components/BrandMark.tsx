@@ -5,7 +5,7 @@ export function BrandMark() {
       aria-hidden="true"
     >
       <span className="size-2 rounded-[2px] bg-primary" />
-      <span className="size-2 rounded-full bg-[var(--orange)]" />
+      <span className="size-2 rounded-full bg-orange" />
       <span className="size-2 rounded-full bg-[var(--blue)]" />
       <span className="size-2 rounded-[2px] bg-accent" />
     </span>

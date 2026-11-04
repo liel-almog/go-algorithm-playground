@@ -41,6 +41,10 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
 ::selection {
   background: var(--accent);
   color: var(--secondary-foreground);
@@ -58,6 +62,8 @@ a {
 
 @theme inline {
   --font-sans: 'Manrope', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --color-orange: var(--orange);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -83,6 +89,31 @@ a {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@theme {
+  --animate-tile-in: tile-in 0.25s ease both;
+  --animate-shimmer: shimmer 1.4s infinite;
+  --animate-cut-dash: cut-dash 1s linear infinite;
+
+  @keyframes tile-in {
+    from {
+      transform: scale(0.94);
+      opacity: 0.65;
+    }
+  }
+
+  @keyframes shimmer {
+    to {
+      background-position-x: -200%;
+    }
+  }
+
+  @keyframes cut-dash {
+    to {
+      stroke-dashoffset: -13;
+    }
+  }
 }
 
 @layer base {

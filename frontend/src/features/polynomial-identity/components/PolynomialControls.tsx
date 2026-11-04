@@ -1,4 +1,5 @@
-import labStyles from '../../../components/lab.module.css'
+import { CodePreview } from '../../../components/CodePreview'
+import { ControlPanel, PanelDivider } from '../../../components/LabPanels'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
 import { Button } from '../../../components/ui/button'
@@ -29,7 +30,7 @@ export function PolynomialControls({
   const disabled = isGenerating || isVerifying
 
   return (
-    <aside className={labStyles['control-panel']}>
+    <ControlPanel>
       <PanelHeading
         step="01"
         title="Create two polynomials"
@@ -48,7 +49,7 @@ export function PolynomialControls({
       />
       <Button
         variant="secondary"
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-[43px] w-full text-xs"
         onClick={onGenerate}
         disabled={disabled}
       >
@@ -57,13 +58,13 @@ export function PolynomialControls({
       </Button>
       <Button
         variant="ghost"
-        className="mt-[9px] w-full text-[0.65rem] text-[var(--orange)]"
+        className="mt-[9px] w-full text-xs text-orange"
         onClick={onAlter}
         disabled={disabled}
       >
         Change one random coefficient
       </Button>
-      <div className={labStyles['panel-divider']} />
+      <PanelDivider />
       <PanelHeading
         step="02"
         title="Test random points"
@@ -81,21 +82,18 @@ export function PolynomialControls({
         onChange={onRoundsChange}
       />
       <Button
-        className="min-h-[43px] w-full text-[0.72rem]"
+        className="min-h-[43px] w-full text-xs"
         onClick={onVerify}
         disabled={disabled}
       >
         <span aria-hidden="true">▶</span>{' '}
         {isVerifying ? 'Verifying…' : 'Verify identity'}
       </Button>
-      <div className={labStyles['request-preview']}>
-        <span>Method</span>
-        <code>
-          Choose r ∈ 𝔽₁₀₁
-          <br />
-          Compare P(r) and Q(r)
-        </code>
-      </div>
-    </aside>
+      <CodePreview label="Method">
+        Choose r ∈ 𝔽₁₀₁
+        <br />
+        Compare P(r) and Q(r)
+      </CodePreview>
+    </ControlPanel>
   )
 }

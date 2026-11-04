@@ -1,4 +1,4 @@
-import shellStyles from '../../styles/shell.module.css'
+import { LabLayout } from '../../components/PageLayout'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { PuzzleControls } from './components/PuzzleControls'
 import { PuzzleVisualizer } from './components/PuzzleVisualizer'
@@ -19,9 +19,7 @@ export function EightPuzzlePage() {
         steps={explanation.steps}
       />
 
-      <div
-        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
-      >
+      <LabLayout>
         <PuzzleControls
           algorithm={puzzle.algorithm}
           algorithms={puzzle.algorithms}
@@ -64,7 +62,7 @@ export function EightPuzzlePage() {
         />
 
         <ResultMetrics result={puzzle.result} />
-      </div>
+      </LabLayout>
     </>
   )
 }

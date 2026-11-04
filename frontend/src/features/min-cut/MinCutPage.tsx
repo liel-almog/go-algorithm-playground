@@ -1,80 +1,17 @@
-import shellStyles from '../../styles/shell.module.css'
-import graphStyles from './minCut.module.css'
-import { useMutation } from '@tanstack/react-query'
+import { LabLayout, PageSection } from '../../components/PageLayout'
 import { Link } from '@tanstack/react-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
-import type { MinCutResult } from '../../lib/api'
-import { solveMinCutLocally } from '../../lib/clientAlgorithms'
 import { MinCutControls } from './components/MinCutControls'
 import { MinCutMetrics } from './components/MinCutMetrics'
 import { MinCutWorkspace } from './components/MinCutWorkspace'
-import { formatError, generateLocalGraph } from './minCut'
-import { minCutMutations } from './mutations'
+import { useMinCut } from './hooks/useMinCut'
 
 export function MinCutPage() {
-  const [vertexCount, setVertexCount] = useState(7)
-  const [trials, setTrials] = useState(90)
-  const [graph, setGraph] = useState(() => generateLocalGraph(7))
-  const [result, setResult] = useState<MinCutResult | null>(null)
-  const [fallbackError, setFallbackError] = useState('')
-  const didGenerate = useRef(false)
-  const generation = useMutation(minCutMutations.generate())
-  const solver = useMutation(minCutMutations.solve())
-  const error = fallbackError || formatError(solver.error)
-
-  const regenerate = useCallback(
-    async (vertices = vertexCount) => {
-      setResult(null)
-      setFallbackError('')
-      generation.reset()
-      solver.reset()
-      try {
-        setGraph(await generation.mutateAsync({ vertices }))
-      } catch {
-        setGraph(generateLocalGraph(vertices))
-        generation.reset()
-      }
-    },
-    [generation, solver, vertexCount],
-  )
-
-  useEffect(() => {
-    if (didGenerate.current) return
-    didGenerate.current = true
-    void regenerate()
-  }, [regenerate])
-
-  const changeVertexCount = (vertices: number) => {
-    setVertexCount(vertices)
-    void regenerate(vertices)
-  }
-
-  const solve = async () => {
-    solver.reset()
-    setFallbackError('')
-    setResult(null)
-    try {
-      setResult(
-        await solver.mutateAsync({
-          vertices: graph.vertices,
-          edges: graph.edges,
-          trials,
-        }),
-      )
-    } catch {
-      try {
-        setResult(solveMinCutLocally(graph.vertices, graph.edges, trials))
-        solver.reset()
-      } catch (reason) {
-        setFallbackError(formatError(reason))
-      }
-    }
-  }
+  const lab = useMinCut()
 
   return (
-    <div className={shellStyles['lab-page']}>
+    <div className="pb-[70px]">
       <LabHeader
         eyebrow="randomized graph · minimum cut"
         title="The minimum cut problem"
@@ -91,29 +28,27 @@ export function MinCutPage() {
           'Keep the smallest two-supernode cut across all trials.',
         ]}
       />
-      <div
-        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
-      >
+      <LabLayout>
         <MinCutControls
-          vertexCount={vertexCount}
-          trials={trials}
-          error={error}
-          isGenerating={generation.isPending}
-          isSolving={solver.isPending}
-          onVertexCountChange={changeVertexCount}
-          onTrialsChange={setTrials}
-          onGenerate={() => void regenerate()}
-          onSolve={() => void solve()}
+          vertexCount={lab.vertexCount}
+          trials={lab.trials}
+          error={lab.error}
+          isGenerating={lab.isGenerating}
+          isSolving={lab.isSolving}
+          onVertexCountChange={lab.changeVertexCount}
+          onTrialsChange={lab.changeTrials}
+          onGenerate={lab.generate}
+          onSolve={lab.solve}
         />
-        <MinCutWorkspace graph={graph} result={result} />
-        <MinCutMetrics result={result} />
-      </div>
-      <div
-        className={`${graphStyles['next-lab']} ${shellStyles['section-wrap']}`}
-      >
+        <MinCutWorkspace graph={lab.graph} result={lab.result} />
+        <MinCutMetrics result={lab.result} />
+      </LabLayout>
+      <PageSection className="mt-[25px] flex justify-between border-t py-[25px] text-xs text-muted-foreground">
         <span>Try another family</span>
-        <Link to="/problems/eight-puzzle">Explore informed search →</Link>
-      </div>
+        <Link to="/problems/eight-puzzle" className="font-bold text-primary">
+          Explore informed search →
+        </Link>
+      </PageSection>
     </div>
   )
 }

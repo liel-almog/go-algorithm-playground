@@ -1,4 +1,4 @@
-// Package polynomial implements randomized polynomial identity testing over F_101.
+// Package schwartzippel implements randomized polynomial identity testing over F_101.
 package schwartzippel
 
 import (

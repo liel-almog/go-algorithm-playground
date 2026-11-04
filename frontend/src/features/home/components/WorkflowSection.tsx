@@ -1,4 +1,5 @@
-import shellStyles from '../../../styles/shell.module.css'
+import { PageSection } from '../../../components/PageLayout'
+import { Eyebrow } from '../../../components/Eyebrow'
 
 export function WorkflowSection() {
   const steps = [
@@ -11,12 +12,12 @@ export function WorkflowSection() {
   ]
 
   return (
-    <section
-      className={`${shellStyles['section-wrap']} grid grid-cols-[0.8fr_1.2fr] gap-[110px] border-t border-border pt-[100px] pb-[120px] max-[900px]:grid-cols-1 max-[900px]:gap-10 max-[620px]:py-[70px]`}
+    <PageSection
+      className="grid grid-cols-[0.8fr_1.2fr] gap-[110px] border-t border-border pt-[100px] pb-[120px] max-[900px]:grid-cols-1 max-[900px]:gap-10 max-[620px]:py-[70px]"
       id="workflow"
     >
       <div>
-        <span className={shellStyles['kicker']}>A repeatable method</span>
+        <Eyebrow>A repeatable method</Eyebrow>
         <h2 className="mt-2 text-[clamp(2rem,4vw,3rem)] leading-[1.1] tracking-[-0.045em]">
           A distinct workspace for every problem.
         </h2>
@@ -31,18 +32,18 @@ export function WorkflowSection() {
             key={title}
             className="flex gap-[26px] border-b border-border py-[25px]"
           >
-            <span className="pt-1 font-['DM_Mono'] text-[0.7rem] text-[var(--orange)]">
+            <span className="pt-1 font-mono text-xs text-orange">
               {String(index + 1).padStart(2, '0')}
             </span>
             <div>
               <strong className="text-[0.98rem]">{title}</strong>
-              <p className="mt-[6px] text-[0.77rem] text-muted-foreground">
+              <p className="mt-[6px] text-sm text-muted-foreground">
                 {description}
               </p>
             </div>
           </li>
         ))}
       </ol>
-    </section>
+    </PageSection>
   )
 }

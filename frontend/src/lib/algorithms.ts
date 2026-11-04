@@ -4,12 +4,12 @@ export type PuzzleAlgorithmId = 'astar' | 'bfs' | 'dfs'
 export type PuzzleAlgorithm = Algorithm & { id: PuzzleAlgorithmId }
 
 export const defaultPuzzleAlgorithm: PuzzleAlgorithm = {
-    id: 'astar',
-    name: 'A* Search',
-    description:
-      'Balances the path already travelled with a Manhattan-distance estimate of what remains.',
-    optimal: true,
-    category: 'informed',
+  id: 'astar',
+  name: 'A* Search',
+  description:
+    'Balances the path already travelled with a Manhattan-distance estimate of what remains.',
+  optimal: true,
+  category: 'informed',
 }
 
 export const puzzleAlgorithms: PuzzleAlgorithm[] = [

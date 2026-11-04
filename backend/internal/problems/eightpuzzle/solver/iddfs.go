@@ -10,35 +10,62 @@ import (
 type IDDFS struct{}
 
 func (IDDFS) Metadata() Metadata {
-	return Metadata{ID: "dfs", Name: "Iterative deepening DFS", Description: "Uses depth-first memory while increasing the depth limit until it reaches a shortest solution.", Optimal: true, Category: "uninformed"}
+	return Metadata{
+		ID:          "dfs",
+		Name:        "Iterative deepening DFS",
+		Description: "Uses depth-first memory while increasing the depth limit until it reaches a shortest solution.",
+		Optimal:     true,
+		Category:    "uninformed",
+	}
 }
 
 func (algorithm IDDFS) Solve(ctx context.Context, initial board.Board) (Result, error) {
 	start := time.Now()
 	meta := algorithm.Metadata()
-	expanded, generated, frontierMax := 0, 1, 1
+	search := depthFirstSearch{generated: 1, frontierMax: 1, maxExpanded: 2_000_000}
 	const maxDepth = 80
-	const maxExpanded = 2_000_000
 	for limit := 0; limit <= maxDepth; limit++ {
-		path := []board.Board{initial}
-		moves := make([]string, 0, limit)
-		onPath := map[string]bool{initial.Key(): true}
-		found, err := depthLimited(ctx, initial, limit, &path, &moves, onPath, &expanded, &generated, &frontierMax, maxExpanded)
+		search.path = []board.Board{initial}
+		search.moves = make([]string, 0, limit)
+		search.onPath = map[string]bool{initial.Key(): true}
+		found, err := search.visit(ctx, initial, limit)
 		if err != nil {
 			return Result{}, err
 		}
 		if found {
-			boards := make([][]int, len(path))
-			for i, board := range path {
+			boards := make([][]int, len(search.path))
+			for i, board := range search.path {
 				boards[i] = append([]int(nil), board.Tiles...)
 			}
-			return Result{Algorithm: meta.ID, Path: boards, Moves: moves, MoveCount: len(moves), Expanded: expanded, Generated: generated, FrontierMax: frontierMax, DurationUS: time.Since(start).Microseconds(), Optimal: true}, nil
+			return Result{
+				Algorithm:   meta.ID,
+				Path:        boards,
+				Moves:       search.moves,
+				MoveCount:   len(search.moves),
+				Expanded:    search.expanded,
+				Generated:   search.generated,
+				FrontierMax: search.frontierMax,
+				DurationUS:  time.Since(start).Microseconds(),
+				Optimal:     true,
+			}, nil
 		}
 	}
 	return Result{}, ErrNoSolution
 }
 
-func depthLimited(ctx context.Context, current board.Board, remaining int, path *[]board.Board, moves *[]string, onPath map[string]bool, expanded, generated, frontierMax *int, maxExpanded int) (bool, error) {
+// depthFirstSearch owns the current path and counters for one solve operation.
+// Counters accumulate across depth limits; the path is reset for each iteration.
+type depthFirstSearch struct {
+	path        []board.Board
+	moves       []string
+	onPath      map[string]bool
+	expanded    int
+	generated   int
+	frontierMax int
+	maxExpanded int
+}
+
+func (search *depthFirstSearch) visit(ctx context.Context, current board.Board, remaining int) (bool, error) {
 	if err := ctx.Err(); err != nil {
 		return false, err
 	}
@@ -48,29 +75,29 @@ func depthLimited(ctx context.Context, current board.Board, remaining int, path 
 	if remaining == 0 {
 		return false, nil
 	}
-	(*expanded)++
-	if *expanded > maxExpanded {
+	search.expanded++
+	if search.expanded > search.maxExpanded {
 		return false, ErrSearchLimit
 	}
 	for _, neighbor := range current.Neighbors() {
 		key := neighbor.Board.Key()
-		if onPath[key] {
+		if search.onPath[key] {
 			continue
 		}
-		(*generated)++
-		onPath[key] = true
-		*path = append(*path, neighbor.Board)
-		*moves = append(*moves, neighbor.Move)
-		if len(*path) > *frontierMax {
-			*frontierMax = len(*path)
+		search.generated++
+		search.onPath[key] = true
+		search.path = append(search.path, neighbor.Board)
+		search.moves = append(search.moves, neighbor.Move)
+		if len(search.path) > search.frontierMax {
+			search.frontierMax = len(search.path)
 		}
-		found, err := depthLimited(ctx, neighbor.Board, remaining-1, path, moves, onPath, expanded, generated, frontierMax, maxExpanded)
+		found, err := search.visit(ctx, neighbor.Board, remaining-1)
 		if err != nil || found {
 			return found, err
 		}
-		delete(onPath, key)
-		*path = (*path)[:len(*path)-1]
-		*moves = (*moves)[:len(*moves)-1]
+		delete(search.onPath, key)
+		search.path = search.path[:len(search.path)-1]
+		search.moves = search.moves[:len(search.moves)-1]
 	}
 	return false, nil
 }

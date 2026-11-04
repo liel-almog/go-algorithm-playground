@@ -1,5 +1,8 @@
+import { ControlError } from '../../../components/ControlError'
+import { CodePreview } from '../../../components/CodePreview'
+import { Spinner } from '../../../components/Spinner'
+import { ControlPanel, PanelDivider } from '../../../components/LabPanels'
 import { Play, RotateCcw, Shuffle } from 'lucide-react'
-import labStyles from '../../../components/lab.module.css'
 import type { Algorithm } from '../../../lib/api'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
@@ -22,8 +25,8 @@ interface PuzzleControlsProps {
   onScrambleChange: (scramble: number) => void
   onRowsChange: (rows: number) => void
   onColumnsChange: (columns: number) => void
-  onGenerate: () => Promise<void>
-  onSolve: () => Promise<void>
+  onGenerate: () => void
+  onSolve: () => void
   onReset: () => void
 }
 
@@ -48,7 +51,7 @@ export function PuzzleControls({
   onReset,
 }: PuzzleControlsProps) {
   return (
-    <aside className={labStyles['control-panel']}>
+    <ControlPanel>
       <PanelHeading
         step="01"
         title="Generate a problem"
@@ -57,9 +60,7 @@ export function PuzzleControls({
 
       <div className="grid grid-cols-2 gap-2.5">
         <label className="mb-3.5 block">
-          <span className="mb-2 block text-[0.67rem] text-muted-foreground">
-            Rows
-          </span>
+          <span className="mb-2 block text-xs text-muted-foreground">Rows</span>
           <NativeSelect
             value={rows}
             onChange={(event) => onRowsChange(Number(event.target.value))}
@@ -73,7 +74,7 @@ export function PuzzleControls({
           </NativeSelect>
         </label>
         <label className="mb-3.5 block">
-          <span className="mb-2 block text-[0.67rem] text-muted-foreground">
+          <span className="mb-2 block text-xs text-muted-foreground">
             Columns
           </span>
           <NativeSelect
@@ -105,14 +106,14 @@ export function PuzzleControls({
       <Button
         variant="secondary"
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
-        onClick={() => void onGenerate()}
+        onClick={onGenerate}
         disabled={isGenerating || isSolving}
       >
         <Shuffle aria-hidden="true" className="size-4" />
         {isGenerating ? 'Generating…' : 'Generate new puzzle'}
       </Button>
 
-      <div className={labStyles['panel-divider']} />
+      <PanelDivider />
 
       <PanelHeading
         step="02"
@@ -121,7 +122,7 @@ export function PuzzleControls({
       />
 
       <label className="mt-5 mb-3.5 block">
-        <span className="mb-2 block text-[0.67rem] text-muted-foreground">
+        <span className="mb-2 block text-xs text-muted-foreground">
           Algorithm
         </span>
         <NativeSelect
@@ -140,11 +141,11 @@ export function PuzzleControls({
 
       <Button
         className="min-h-12 w-full gap-2.5 rounded-xl px-4 text-sm"
-        onClick={() => void onSolve()}
+        onClick={onSolve}
         disabled={!hasPuzzle || isSolving || isGenerating}
       >
         {isSolving ? (
-          <span className={labStyles['spinner']} />
+          <Spinner />
         ) : (
           <Play aria-hidden="true" className="size-4 fill-current" />
         )}
@@ -163,25 +164,17 @@ export function PuzzleControls({
         Reset board and moves
       </Button>
 
-      {error && (
-        <div className={labStyles['error-message']} role="alert">
-          <strong>Couldn’t reach a solution</strong>
-          <span>{error}</span>
-        </div>
-      )}
+      <ControlError title="Couldn’t reach a solution" message={error} />
 
-      <div className={labStyles['request-preview']}>
-        <span>Requests</span>
-        <code>
-          POST /api/problems/eight-puzzle/generate
-          <br />
-          POST /api/problems/eight-puzzle/solve
-          <br />
-          row: {rows}, column: {columns}
-          <br />
-          algorithm: “{algorithm.id}”
-        </code>
-      </div>
-    </aside>
+      <CodePreview label="Requests">
+        POST /api/problems/eight-puzzle/generate
+        <br />
+        POST /api/problems/eight-puzzle/solve
+        <br />
+        row: {rows}, column: {columns}
+        <br />
+        algorithm: “{algorithm.id}”
+      </CodePreview>
+    </ControlPanel>
   )
 }

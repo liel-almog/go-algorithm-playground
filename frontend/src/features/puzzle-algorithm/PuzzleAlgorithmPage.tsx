@@ -1,4 +1,4 @@
-import shellStyles from '../../styles/shell.module.css'
+import { LabLayout } from '../../components/PageLayout'
 import { ConceptExplainer } from '../../components/ConceptExplainer'
 import { LabHeader } from '../../components/LabHeader'
 import { AlgorithmNotFound } from './components/AlgorithmNotFound'
@@ -18,7 +18,7 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
 
   const explanation = puzzleExplanations[lab.algorithm.id]
   return (
-    <div className={shellStyles['lab-page']}>
+    <div className="pb-[70px]">
       <LabHeader
         eyebrow="state-space search · classic 8-puzzle"
         title="The 8-puzzle problem"
@@ -42,9 +42,7 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
           ]
         }
       />
-      <div
-        className={`${shellStyles['lab-layout']} ${shellStyles['section-wrap']}`}
-      >
+      <LabLayout>
         <PuzzleControls
           algorithm={lab.algorithm}
           scramble={lab.scramble}
@@ -53,8 +51,8 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
           isSolving={lab.isSolving}
           canSolve={lab.tiles.length > 0 && !lab.result}
           onScrambleChange={lab.setScramble}
-          onGenerate={() => void lab.generateProblem()}
-          onSolve={() => void lab.runAlgorithm()}
+          onGenerate={lab.generateProblem}
+          onSolve={lab.runAlgorithm}
         />
         <PuzzleVisualizer
           tiles={lab.tiles}
@@ -62,11 +60,12 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
           step={lab.step}
           isPlaying={lab.isPlaying}
           isGenerating={lab.isGenerating}
-          onStepChange={lab.setStep}
-          onPlayingChange={lab.setIsPlaying}
+          onPrevious={lab.previousStep}
+          onNext={lab.nextStep}
+          onTogglePlayback={lab.togglePlayback}
         />
         <PuzzleMetrics result={lab.result} />
-      </div>
+      </LabLayout>
     </div>
   )
 }

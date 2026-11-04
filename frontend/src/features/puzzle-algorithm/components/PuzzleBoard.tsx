@@ -1,4 +1,4 @@
-import puzzleStyles from '../../../components/puzzle.module.css'
+import { PuzzleBoardFrame, PuzzleTile } from '../../../components/PuzzleBoard'
 
 interface PuzzleBoardProps {
   tiles: number[]
@@ -7,23 +7,12 @@ interface PuzzleBoardProps {
 
 export function PuzzleBoard({ tiles, move }: PuzzleBoardProps) {
   return (
-    <div
-      className={puzzleStyles['puzzle-board']}
+    <PuzzleBoardFrame
       aria-label={`Puzzle board${move ? `, last move ${move}` : ''}`}
     >
       {tiles.map((tile) => (
-        <div
-          key={tile}
-          className={
-            tile === 0
-              ? `${puzzleStyles.tile} ${puzzleStyles['tile-empty']}`
-              : puzzleStyles.tile
-          }
-        >
-          {tile === 0 ? <span className="sr-only">empty</span> : tile}
-          {tile !== 0 && <small>{String.fromCharCode(64 + tile)}</small>}
-        </div>
+        <PuzzleTile key={tile} tile={tile} />
       ))}
-    </div>
+    </PuzzleBoardFrame>
   )
 }

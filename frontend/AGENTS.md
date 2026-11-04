@@ -1,6 +1,8 @@
 The server is ALWAYS open at http://localhost:3000 - DO NOT RUN it yourself
 MINIMIZE the amount of CSS classes you create, if you do use CSS MODULES, Use TAILWIND as much as you can
 
+for every component that you need to style, use the CSS module classes defined in the component's `.module.css` file. DO NOT use other CSS files that belong to another component.
+
 <!-- intent-skills:start -->
 
 ## Skill Loading

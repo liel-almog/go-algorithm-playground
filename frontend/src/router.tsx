@@ -1,11 +1,14 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { PageError, PageNotFound } from './components/RouteFeedback'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
   const queryClient = new QueryClient()
   const router = createTanStackRouter({
     routeTree,
+    defaultErrorComponent: PageError,
+    defaultNotFoundComponent: PageNotFound,
     context: { queryClient },
     scrollRestoration: true,
     defaultPreload: 'intent',

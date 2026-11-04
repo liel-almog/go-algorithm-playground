@@ -1,5 +1,4 @@
-import puzzleStyles from '../../../components/puzzle.module.css'
-import styles from '../eightPuzzle.module.css'
+import { PuzzleBoardFrame, PuzzleTile } from '../../../components/PuzzleBoard'
 import { areAdjacent } from '../puzzle'
 
 interface PuzzleBoardProps {
@@ -22,8 +21,7 @@ export function PuzzleBoard({
   const empty = tiles.indexOf(0)
 
   return (
-    <div
-      className={`${puzzleStyles['puzzle-board']}${playable ? ` ${styles.playable}` : ''}`}
+    <PuzzleBoardFrame
       style={{
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
         aspectRatio: `${columns} / ${rows}`,
@@ -34,32 +32,15 @@ export function PuzzleBoard({
         const movable =
           playable && tile !== 0 && areAdjacent(index, empty, columns)
         return (
-          <button
+          <PuzzleTile
             key={tile}
-            type="button"
-            className={
-              tile === 0
-                ? `${puzzleStyles.tile} ${puzzleStyles['tile-empty']}`
-                : movable
-                  ? `${puzzleStyles.tile} ${styles.movable}`
-                  : puzzleStyles.tile
-            }
+            tile={tile}
+            playable={playable}
+            movable={movable}
             onClick={() => onTileClick(index)}
-            disabled={!movable}
-            data-tile={tile === 0 ? undefined : tile}
-            aria-label={
-              tile === 0
-                ? 'Empty space'
-                : movable
-                  ? `Slide tile ${tile}`
-                  : `Tile ${tile}`
-            }
-          >
-            {tile === 0 ? <span className="sr-only">empty</span> : tile}
-            {tile !== 0 && <small>{String.fromCharCode(64 + tile)}</small>}
-          </button>
+          />
         )
       })}
-    </div>
+    </PuzzleBoardFrame>
   )
 }

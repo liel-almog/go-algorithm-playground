@@ -34,6 +34,37 @@ go build -o bin/algorithm-playground ./cmd/server
 
 The Docker image uses the same Go build path and runs the compiled binary directly. Air and its configuration are only used for local development and are excluded from the Docker build context.
 
+## Development checks
+
+```bash
+make check
+# Optional: run the existing suite with the race detector.
+go test -race ./...
+```
+
+`make check` verifies formatting, runs `go vet` and the existing tests, and builds
+the binary. It does not start the API. The container build copies `go.sum` with
+`go.mod`, downloads dependencies in a separate cached layer, and compiles with
+`-mod=readonly` so dependency checksums remain reproducible.
+
+## HTTP structure and diagnostics
+
+`internal/server/server.go` wires the API together. Route registration, CORS,
+environment parsing, request decoding, response handling, and middleware each
+have their own files. The problem packages retain ownership of all algorithm
+behavior, validation rules, randomness, and result calculations.
+
+Every response includes a server-generated `X-Request-ID` and
+`X-Content-Type-Options: nosniff`. API request logs include the request ID, method,
+path, actual HTTP status, response size, and duration. CORS exposes the request
+ID so a browser client can attach it to a bug report. Request bodies and query
+strings are not logged.
+
+Unexpected panics are logged with a stack trace and return a generic error.
+Once a response has been committed, error handling does not append another
+JSON document to it. Invalid `PORT` values still fall back to 8080 and now
+produce a startup warning.
+
 ## HTTP API
 
 | Method | Endpoint          | Purpose                                            |
@@ -52,10 +83,11 @@ Each problem has a dedicated route group:
 | Polynomial identity | `POST /api/problems/polynomial-identity/solve` | `POST /api/problems/polynomial-identity/generate` |
 
 POST requests require `Content-Type: application/json`. Bodies are decoded as
-strict JSON and validated with `go-playground/validator`. Unknown fields,
-trailing JSON values, missing fields, and out-of-range values return a JSON
+strict JSON and validated with `go-playground/validator`. Unknown or incorrectly cased fields, duplicate keys, nulls (including array entries),
+trailing JSON values, missing required fields, and out-of-range values return a JSON
 `400 Bad Request` response. Unsupported content types return `415` and bodies
-over 256 KiB return `413`. API errors use `{"error":"...","status":400}`.
+over 256 KiB return `413`. API errors use `{"error":"...","status":400}`. Query parameters are not supported,
+and GET requests must not contain a body.
 
 ### Resource limits
 
@@ -87,7 +119,9 @@ For example, one possible response is:
 A mismatch proves that `AB != C`. A match is probabilistic: an incorrect product
 can pass a single check with probability at most one half. The existing
 `product` field and optional `rounds` (1 to 15, default 1) remain supported for
-the web client and return the existing `trials` response.
+the web client and return the existing `trials` response. `c` cannot be combined
+with `product` or `rounds`. Explicit zero or null rounds are rejected; omitting
+rounds with `product` defaults to one.
 
 Example:
 

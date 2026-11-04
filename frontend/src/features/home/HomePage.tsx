@@ -1,4 +1,4 @@
-import shellStyles from '../../styles/shell.module.css'
+import { PageSection } from '../../components/PageLayout'
 import { ProblemCatalog } from './components/ProblemCatalog'
 import { WorkflowSection } from './components/WorkflowSection'
 import { buttonVariants } from '../../components/ui/button'
@@ -6,12 +6,10 @@ import { buttonVariants } from '../../components/ui/button'
 export function HomePage() {
   return (
     <div>
-      <section
-        className={`${shellStyles['section-wrap']} grid min-h-[520px] grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] items-end gap-12 py-[96px] max-[1100px]:min-h-0 max-[1100px]:grid-cols-1 max-[1100px]:gap-8 max-[680px]:py-[60px]`}
-      >
+      <PageSection className="grid min-h-[520px] grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] items-end gap-12 py-[96px] max-[1100px]:min-h-0 max-[1100px]:grid-cols-1 max-[1100px]:gap-8 max-[680px]:py-[60px]">
         <div>
-          <span className="flex items-center gap-[9px] text-[0.72rem] font-bold tracking-[0.15em] text-primary uppercase">
-            <span className="size-[7px] rounded-full bg-[var(--orange)] shadow-[0_0_0_5px_#e3835520]" />{' '}
+          <span className="flex items-center gap-[9px] text-xs font-bold tracking-[0.15em] text-primary uppercase">
+            <span className="size-[7px] rounded-full bg-orange shadow-[0_0_0_5px_#e3835520]" />{' '}
             Interactive algorithm laboratory
           </span>
           <h1 className="mt-6 max-w-[850px] text-[clamp(3rem,7vw,6.7rem)] leading-[0.98] font-semibold tracking-[-0.065em] max-[680px]:text-[clamp(2.7rem,10vw,3.6rem)]">
@@ -35,7 +33,7 @@ export function HomePage() {
             Choose a problem <span>↓</span>
           </a>
         </div>
-      </section>
+      </PageSection>
       <ProblemCatalog />
       <WorkflowSection />
     </div>

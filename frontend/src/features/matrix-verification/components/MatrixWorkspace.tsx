@@ -1,5 +1,5 @@
-import labStyles from '../../../components/lab.module.css'
-import verifierStyles from '../../../components/verifier.module.css'
+import { DottedSurface, VisualizerPanel } from '../../../components/LabPanels'
+import { cn } from '../../../lib/utils'
 import type { MatrixClaim, MatrixTrial } from '../../../lib/api'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { MatrixView } from './MatrixView'
@@ -25,14 +25,12 @@ export function MatrixWorkspace({
   onCellChange,
 }: MatrixWorkspaceProps) {
   return (
-    <section
-      className={`${labStyles['visualizer-panel']} ${labStyles['verifier-panel']}`}
-    >
+    <VisualizerPanel className="min-h-[520px]">
       <VisualizerTopbar
         status="A × B = C"
         detail="Orange cells differ from the generated matrices"
       />
-      <div className={verifierStyles['matrix-equation']}>
+      <DottedSurface className="min-h-[350px] p-7 max-[680px]:px-4.5">
         <section aria-labelledby="matrix-inputs-heading">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 id="matrix-inputs-heading" className="text-sm font-semibold">
@@ -95,19 +93,25 @@ export function MatrixWorkspace({
             not automatically update C.
           </p>
         </section>
-      </div>
-      <div className={verifierStyles['trial-strip']} aria-live="polite">
+      </DottedSurface>
+      <div
+        className="grid min-h-[110px] grid-cols-2 content-center gap-x-5 gap-y-1.5 border-t px-5 py-4 max-[680px]:grid-cols-1"
+        aria-live="polite"
+      >
         {trials.length === 0 ? (
-          <p>Each round compares A(Br) with Cr for a fresh random vector r.</p>
+          <p className="col-span-full text-center text-xs text-muted-foreground">
+            Each round compares A(Br) with Cr for a fresh random vector r.
+          </p>
         ) : (
           trials.map((trial, index) => (
             <div
               key={index}
-              className={
+              className={cn(
+                'flex justify-between rounded px-2 py-1.5 font-mono text-xs leading-[normal]',
                 trial.passed
-                  ? verifierStyles['trial-pass']
-                  : verifierStyles['trial-fail']
-              }
+                  ? 'bg-[#e9f2eb] text-[#397155]'
+                  : 'bg-[#f9e8e1] text-[#974f36]',
+              )}
             >
               <span>
                 r{index + 1} = [{trial.vector.join(', ')}]
@@ -117,6 +121,6 @@ export function MatrixWorkspace({
           ))
         )}
       </div>
-    </section>
+    </VisualizerPanel>
   )
 }

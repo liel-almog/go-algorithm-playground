@@ -1,7 +1,7 @@
 .PHONY: run test build fmt
 
 run:
-	go run ./cmd/server
+	air -c .air.toml
 
 test:
 	go test ./...

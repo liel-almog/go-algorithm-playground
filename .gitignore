@@ -1,3 +1,4 @@
 /bin/
+/backend/tmp/
 /coverage.out
 .DS_Store

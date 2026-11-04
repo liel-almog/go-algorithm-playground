@@ -13,14 +13,17 @@ The hub currently includes:
 
 ## Run it
 
+For local development, install [Air](https://github.com/air-verse/air) once, then start the backend from this directory. Air rebuilds and restarts the server when Go files change:
+
 ```bash
-go run ./cmd/server
+go install github.com/air-verse/air@latest
+make run
 ```
 
 Open <http://localhost:8080/api/problems>. To use another port or restrict CORS:
 
 ```bash
-PORT=3000 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000 go run ./cmd/server
+PORT=3000 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000 make run
 ```
 
 ## Build
@@ -28,6 +31,8 @@ PORT=3000 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000 go ru
 ```bash
 go build -o bin/algorithm-playground ./cmd/server
 ```
+
+The Docker image uses the same Go build path and runs the compiled binary directly. Air and its configuration are only used for local development and are excluded from the Docker build context.
 
 ## HTTP API
 

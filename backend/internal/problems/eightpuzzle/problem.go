@@ -297,5 +297,6 @@ func publicError(err error) string {
 
 func round(value float64, places int) float64 {
 	power := math.Pow10(places)
+
 	return math.Round(value*power) / power
 }

@@ -1,4 +1,4 @@
-package server
+package httpapi
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ func newValidator() *validator.Validate {
 	return validate
 }
 
-func decodeAndValidate(c *echo.Context, destination any) error {
+func DecodeAndValidate(c *echo.Context, destination any) error {
 	if err := decode(c, destination); err != nil {
 		return err
 	}

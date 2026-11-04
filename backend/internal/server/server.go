@@ -2,18 +2,20 @@
 package server
 
 import (
-	"net/http"
 	"slices"
 
 	"github.com/labstack/echo/v5"
+	"github.com/liel-almog/go-algorithm-playground/internal/controllers"
+	"github.com/liel-almog/go-algorithm-playground/internal/routes"
+	"github.com/liel-almog/go-algorithm-playground/internal/services"
 )
 
 // Server hosts a collection of independent problems. It owns only the
 // cross-cutting concerns: CORS, middleware, limits, errors, and discovery.
 type Server struct {
-	problems       []problem
+	catalog        *services.Catalog
 	allowedOrigins []string
-	apiRoutes      map[string]map[string]struct{}
+	apiRoutes      apiRouteRegistry
 	handler        *echo.Echo
 	algorithmSlots chan struct{}
 }
@@ -23,19 +25,16 @@ func New(allowedOrigins []string) *Server {
 		allowedOrigins = []string{"*"}
 	}
 	server := &Server{
-		problems:       defaultProblems(),
+		catalog:        services.NewCatalog(),
 		allowedOrigins: slices.Clone(allowedOrigins),
-		apiRoutes:      make(map[string]map[string]struct{}),
+		apiRoutes:      make(apiRouteRegistry),
 		algorithmSlots: algorithmSlots(),
 	}
 	e := echo.New()
 	e.HTTPErrorHandler = server.handleHTTPError
 	// Apply diagnostics and recovery before routing, including CORS preflights.
 	e.Pre(server.requestMetadata, server.logRequests, server.recoverPanic, server.cors)
-	e.GET("/", server.index)
-	server.registerAPI(e, http.MethodGet, "/api/health", server.health)
-	server.registerAPI(e, http.MethodGet, "/api/algorithms", server.algorithms)
-	server.registerProblemRoutes(e)
+	routes.Register(e, controllers.New(server.catalog), server.registerAPI, server.limitAlgorithm)
 	e.RouteNotFound("/api", server.apiFallback)
 	e.RouteNotFound("/api/*", server.apiFallback)
 	server.handler = e
@@ -43,7 +42,3 @@ func New(allowedOrigins []string) *Server {
 }
 
 func (s *Server) Handler() *echo.Echo { return s.handler }
-
-func (s *Server) index(c *echo.Context) error {
-	return c.HTML(http.StatusOK, "<!doctype html><title>Algorithm Playground</title><h1>Algorithm Playground API</h1>")
-}

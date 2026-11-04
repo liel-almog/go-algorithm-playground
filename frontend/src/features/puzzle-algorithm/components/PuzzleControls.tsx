@@ -80,9 +80,7 @@ export function PuzzleControls({
       </Button>
       <ControlError title="Couldn’t reach a solution" message={error} />
       <CodePreview label="Request">
-        POST /api/problems/eight-puzzle/solve
-        <br />
-        algorithm: “{algorithm.id}”
+        POST /api/problems/eight-puzzle/{algorithm.id}/solve
       </CodePreview>
     </ControlPanel>
   )

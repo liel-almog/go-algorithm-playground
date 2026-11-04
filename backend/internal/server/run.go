@@ -42,7 +42,7 @@ func (s *Server) start(ctx context.Context, port string) error {
 			slog.Info("algorithm playground ready",
 				"url", "http://localhost:"+port,
 				"go", runtime.Version(),
-				"algorithms", s.algorithmCount(),
+				"algorithms", s.catalog.AlgorithmCount(),
 			)
 			return nil
 		},

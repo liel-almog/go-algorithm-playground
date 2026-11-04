@@ -7,32 +7,53 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/liel-almog/go-algorithm-playground/internal/httpapi"
 )
 
-func (s *Server) registerAPI(e *echo.Echo, method, path string, handler echo.HandlerFunc, middleware ...echo.MiddlewareFunc) {
-	middleware = append([]echo.MiddlewareFunc{s.validateAPIRequest}, middleware...)
-	e.Add(method, path, handler, middleware...)
-	methods := s.apiRoutes[path]
-	if methods == nil {
-		methods = make(map[string]struct{})
-		s.apiRoutes[path] = methods
+var (
+	errAPIRouteNotFound = errors.New("API route not found")
+	errMethodNotAllowed = errors.New("method not allowed")
+)
+
+type routeMethods map[string]struct{}
+
+type apiRouteRegistry map[string]routeMethods
+
+func (r apiRouteRegistry) add(path, method string) {
+	methods, exists := r[path]
+	if !exists {
+		methods = make(routeMethods)
+		r[path] = methods
 	}
+
 	methods[method] = struct{}{}
 }
 
+func (s *Server) registerAPI(group *echo.Group, method, path string, handler echo.HandlerFunc, middleware ...echo.MiddlewareFunc) {
+	routeMiddleware := append([]echo.MiddlewareFunc{httpapi.ValidateAPIRequest}, middleware...)
+	registeredRoute := group.Add(method, path, handler, routeMiddleware...)
+	s.apiRoutes.add(registeredRoute.Path, registeredRoute.Method)
+}
+
 func apiNotFound(c *echo.Context) error {
-	return writeError(c, http.StatusNotFound, errors.New("API route not found"))
+	return httpapi.WriteError(c, http.StatusNotFound, errAPIRouteNotFound)
 }
 
 func (s *Server) apiFallback(c *echo.Context) error {
-	if methods, exists := s.apiRoutes[c.Request().URL.Path]; exists {
-		c.Response().Header().Set("Allow", strings.Join(allowedMethods(methods), ", "))
-		return writeError(c, http.StatusMethodNotAllowed, errors.New("method not allowed"))
+	methods, pathExists := s.apiRoutes[c.Request().URL.Path]
+	if !pathExists {
+		return apiNotFound(c)
 	}
-	return apiNotFound(c)
+
+	setAllowedMethodsHeader(c, methods)
+	return httpapi.WriteError(c, http.StatusMethodNotAllowed, errMethodNotAllowed)
 }
 
-func allowedMethods(methods map[string]struct{}) []string {
+func setAllowedMethodsHeader(c *echo.Context, methods routeMethods) {
+	c.Response().Header().Set("Allow", strings.Join(allowedMethods(methods), ", "))
+}
+
+func allowedMethods(methods routeMethods) []string {
 	allowed := make([]string, 0, len(methods))
 	for method := range methods {
 		allowed = append(allowed, method)

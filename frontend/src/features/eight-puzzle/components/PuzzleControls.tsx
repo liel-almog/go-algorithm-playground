@@ -171,11 +171,9 @@ export function PuzzleControls({
       <CodePreview label="Requests">
         POST /api/problems/eight-puzzle/generate
         <br />
-        POST /api/problems/eight-puzzle/solve
+        POST /api/problems/eight-puzzle/{algorithm.id}/solve
         <br />
         row: {rows}, column: {columns}
-        <br />
-        algorithm: “{algorithm.id}”
       </CodePreview>
     </ControlPanel>
   )

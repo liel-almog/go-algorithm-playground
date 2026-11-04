@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/liel-almog/go-algorithm-playground/internal/httpapi"
 )
 
 func (s *Server) cors(next echo.HandlerFunc) echo.HandlerFunc {
@@ -35,7 +36,7 @@ func (s *Server) cors(next echo.HandlerFunc) echo.HandlerFunc {
 		if r.Method == http.MethodOptions {
 			w.Header().Add("Vary", "Access-Control-Request-Method")
 			if !allowedOrigin {
-				return writeError(c, http.StatusForbidden, errors.New("origin is not allowed"))
+				return httpapi.WriteError(c, http.StatusForbidden, errors.New("origin is not allowed"))
 			}
 			requestedMethod := r.Header.Get("Access-Control-Request-Method")
 			if !pathExists {
@@ -43,7 +44,7 @@ func (s *Server) cors(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			if _, methodExists := methods[requestedMethod]; requestedMethod == "" || !methodExists {
 				w.Header().Set("Allow", strings.Join(allowedMethods(methods), ", "))
-				return writeError(c, http.StatusMethodNotAllowed, errors.New("requested method is not allowed"))
+				return httpapi.WriteError(c, http.StatusMethodNotAllowed, errors.New("requested method is not allowed"))
 			}
 			return c.NoContent(http.StatusNoContent)
 		}

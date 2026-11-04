@@ -34,6 +34,18 @@ go build -o bin/algorithm-playground ./cmd/server
 
 The Docker image uses the same Go build path and runs the compiled binary directly. Air and its configuration are only used for local development and are excluded from the Docker build context.
 
+## Docker Compose
+
+From `backend/`, build and start the API with `docker compose up -d --build`.
+Set `CORS_ALLOWED_ORIGINS` in the shell or a Compose `.env` file if the frontend
+needs cross-origin access. Compose binds the API to `127.0.0.1:8080`, so the
+included `nginx/api.algorithms.lielalmog.com.conf` can proxy to it from the
+host without exposing the API directly on other interfaces. Port 8080 must be
+free before starting the Compose service.
+
+For an Nginx container later, attach it to the `algorithm-playground-api`
+network and use `proxy_pass http://backend:8080;` in its server block.
+
 ## Development checks
 
 ```bash
@@ -79,7 +91,7 @@ Each problem has a dedicated route group:
 
 | Problem             | Solve endpoint                                 | Generate endpoint                                 |
 | ------------------- | ---------------------------------------------- | ------------------------------------------------- |
-| Eight puzzle        | `POST /api/problems/eight-puzzle/solve`        | `POST /api/problems/eight-puzzle/generate`        |
+| Eight puzzle        | `POST /api/problems/eight-puzzle/{algorithm}/solve` | `POST /api/problems/eight-puzzle/generate`    |
 | Minimum cut         | `POST /api/problems/minimum-cut/solve`         | `POST /api/problems/minimum-cut/generate`         |
 | Matrix verification | `POST /api/problems/matrix-verification/solve` | `POST /api/problems/matrix-verification/generate` |
 | Polynomial identity | `POST /api/problems/polynomial-identity/solve` | `POST /api/problems/polynomial-identity/generate` |
@@ -141,9 +153,9 @@ rounds with `product` defaults to one.
 Example:
 
 ```bash
-curl -s http://localhost:8080/api/problems/eight-puzzle/solve \
+curl -s http://localhost:8080/api/problems/eight-puzzle/astar/solve \
   -H 'Content-Type: application/json' \
-  -d '{"algorithm":"astar","row":3,"column":3,"tiles":[1,2,3,4,5,6,0,7,8]}'
+  -d '{"row":3,"column":3,"tiles":[1,2,3,4,5,6,0,7,8]}'
 ```
 
 Zero represents the blank tile. A solved 3×3 board is `[1,2,3,4,5,6,7,8,0]`.

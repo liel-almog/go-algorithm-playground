@@ -138,10 +138,10 @@ export const api = {
     signal?: AbortSignal,
   ) =>
     post(
-      '/api/problems/eight-puzzle/solve',
+      `/api/problems/eight-puzzle/${algorithm}/solve`,
       puzzleSolveRequestSchema,
       puzzleSolveResultSchema(rows, columns, tiles, algorithm),
-      { row: rows, column: columns, tiles, algorithm },
+      { row: rows, column: columns, tiles },
       signal,
     ),
   minimumCut: (vertices: string[], edges: Edge[], trials: number) =>

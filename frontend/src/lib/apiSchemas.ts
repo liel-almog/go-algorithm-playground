@@ -328,7 +328,6 @@ export const puzzleSolveRequestSchema = puzzleGenerateRequestSchema
   .omit({ scramble: true })
   .extend({
     tiles: z.array(nonNegativeInteger).min(4).max(16),
-    algorithm: z.enum(['astar', 'bfs', 'dfs']),
   })
   .superRefine((puzzle, context) =>
     validateTiles(puzzle.tiles, puzzle.row, puzzle.column, context, ['tiles']),

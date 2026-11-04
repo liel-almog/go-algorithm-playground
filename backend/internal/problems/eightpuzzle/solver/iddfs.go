@@ -33,7 +33,7 @@ func (algorithm IDDFS) Solve(ctx context.Context, initial board.Board) (Result, 
 		}
 		search.moves = stack.NewSliceStack[string]()
 		search.onPath = map[string]bool{initial.Key(): true}
-		found, err := search.visit(ctx, initial, limit)
+		found, err := search.searchToDepth(ctx, initial, limit)
 		if err != nil {
 			return Result{}, err
 		}
@@ -93,58 +93,111 @@ type depthFirstSearch struct {
 	maxExpanded int
 }
 
-func (search *depthFirstSearch) visit(ctx context.Context, current board.Board, remaining int) (bool, error) {
-	if err := ctx.Err(); err != nil {
+type depthFirstFrame struct {
+	board           board.Board
+	move            string
+	remaining       int
+	neighbors       []board.Neighbor
+	nextNeighbor    int
+	startedVisiting bool
+}
+
+func (search *depthFirstSearch) searchToDepth(ctx context.Context, initial board.Board, limit int) (bool, error) {
+	frames := stack.NewSliceStack[depthFirstFrame]()
+	if err := frames.Push(depthFirstFrame{board: initial, remaining: limit}); err != nil {
 		return false, err
 	}
 
-	if current.IsGoal() {
-		return true, nil
-	}
+	for !frames.IsEmpty() {
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
 
-	if remaining == 0 {
-		return false, nil
-	}
+		frame, err := frames.Pop()
+		if err != nil {
+			return false, err
+		}
 
-	search.expanded++
-	if search.expanded > search.maxExpanded {
-		return false, ErrSearchLimit
-	}
+		if !frame.startedVisiting {
+			if frame.board.IsGoal() {
+				return true, nil
+			}
+			if frame.remaining == 0 {
+				if err := search.backtrack(frame); err != nil {
+					return false, err
+				}
+				continue
+			}
 
-	for _, neighbor := range current.Neighbors() {
+			search.expanded++
+			if search.expanded > search.maxExpanded {
+				return false, ErrSearchLimit
+			}
+
+			frame.neighbors = frame.board.Neighbors()
+			frame.startedVisiting = true
+		}
+
+		if frame.nextNeighbor == len(frame.neighbors) {
+			if err := search.backtrack(frame); err != nil {
+				return false, err
+			}
+			continue
+		}
+
+		neighbor := frame.neighbors[frame.nextNeighbor]
+		frame.nextNeighbor++
+		if err := frames.Push(frame); err != nil {
+			return false, err
+		}
+
 		key := neighbor.Board.Key()
 		if search.onPath[key] {
 			continue
 		}
 
-		search.generated++
-		search.onPath[key] = true
-		if err := search.path.Push(neighbor.Board); err != nil {
+		if err := search.pushNeighbor(neighbor); err != nil {
 			return false, err
 		}
-
-		if err := search.moves.Push(neighbor.Move); err != nil {
-			return false, err
-		}
-
-		if search.path.Len() > search.frontierMax {
-			search.frontierMax = search.path.Len()
-		}
-
-		found, err := search.visit(ctx, neighbor.Board, remaining-1)
-		if err != nil || found {
-			return found, err
-		}
-
-		delete(search.onPath, key)
-		if _, err := search.path.Pop(); err != nil {
-			return false, err
-		}
-
-		if _, err := search.moves.Pop(); err != nil {
+		if err := frames.Push(depthFirstFrame{
+			board:     neighbor.Board,
+			move:      neighbor.Move,
+			remaining: frame.remaining - 1,
+		}); err != nil {
 			return false, err
 		}
 	}
 
 	return false, nil
+}
+
+func (search *depthFirstSearch) pushNeighbor(neighbor board.Neighbor) error {
+	search.generated++
+	search.onPath[neighbor.Board.Key()] = true
+
+	if err := search.path.Push(neighbor.Board); err != nil {
+		return err
+	}
+	if err := search.moves.Push(neighbor.Move); err != nil {
+		return err
+	}
+	if search.path.Len() > search.frontierMax {
+		search.frontierMax = search.path.Len()
+	}
+	return nil
+}
+
+func (search *depthFirstSearch) backtrack(frame depthFirstFrame) error {
+	if frame.move == "" {
+		return nil
+	}
+
+	delete(search.onPath, frame.board.Key())
+	if _, err := search.path.Pop(); err != nil {
+		return err
+	}
+	if _, err := search.moves.Pop(); err != nil {
+		return err
+	}
+	return nil
 }

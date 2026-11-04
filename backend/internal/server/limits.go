@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
+	"github.com/liel-almog/go-algorithm-playground/internal/httpapi"
 )
 
 const (
 	algorithmTimeout = 5 * time.Second
-	maxRequestBytes  = 256 << 10
-	maxMinCutWork    = 250_000
 )
 
 func algorithmSlots() chan struct{} {
@@ -35,7 +34,7 @@ func (s *Server) limitAlgorithm(next echo.HandlerFunc) echo.HandlerFunc {
 		case s.algorithmSlots <- struct{}{}:
 			defer func() { <-s.algorithmSlots }()
 		case <-ctx.Done():
-			return writeError(c, http.StatusServiceUnavailable, errors.New("the server is busy; try again shortly"))
+			return httpapi.WriteError(c, http.StatusServiceUnavailable, errors.New("the server is busy; try again shortly"))
 		}
 
 		c.SetRequest(r.WithContext(ctx))

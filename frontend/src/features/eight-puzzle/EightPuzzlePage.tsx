@@ -29,7 +29,7 @@ export function EightPuzzlePage() {
           scramble={puzzle.scramble}
           rows={puzzle.rows}
           columns={puzzle.columns}
-          hasPuzzle={puzzle.tiles.length > 0}
+          hasPuzzle={puzzle.tiles.length > 0 && !puzzle.result}
           canReset={puzzle.initialTiles.length > 0}
           isGenerating={puzzle.isGenerating}
           isSolving={puzzle.isSolving}

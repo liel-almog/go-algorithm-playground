@@ -51,7 +51,7 @@ export function PuzzleAlgorithmPage({ algorithmId }: PuzzleAlgorithmPageProps) {
           error={lab.error}
           isGenerating={lab.isGenerating}
           isSolving={lab.isSolving}
-          canSolve={lab.tiles.length > 0}
+          canSolve={lab.tiles.length > 0 && !lab.result}
           onScrambleChange={lab.setScramble}
           onGenerate={() => void lab.generateProblem()}
           onSolve={() => void lab.runAlgorithm()}

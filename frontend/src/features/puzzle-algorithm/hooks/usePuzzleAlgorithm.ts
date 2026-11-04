@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { useRouter } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fallbackAlgorithmCatalog,
@@ -10,9 +11,11 @@ import type { SolveResult } from '../../../lib/api'
 import { generateLocalPuzzle } from '../../../lib/clientAlgorithms'
 import { algorithmQueries } from '../../algorithms/queries'
 import { puzzleMutations } from '../../eight-puzzle/mutations'
+import { puzzleQueries } from '../../eight-puzzle/queries'
 import { errorMessage } from '../puzzleAlgorithm'
 
 export function usePuzzleAlgorithm(algorithmId: string) {
+  const { queryClient } = useRouter().options.context
   const { data: serverAlgorithms } = useQuery({
     ...algorithmQueries.catalog(),
     placeholderData: fallbackAlgorithmCatalog,
@@ -29,12 +32,13 @@ export function usePuzzleAlgorithm(algorithmId: string) {
   const [isPlaying, setIsPlaying] = useState(false)
   const generatedFor = useRef('')
   const generation = useMutation(puzzleMutations.generate())
-  const solver = useMutation(puzzleMutations.solve())
-  const error = solver.error ? errorMessage(solver.error) : ''
+  const [isSolving, setIsSolving] = useState(false)
+  const [solveError, setSolveError] = useState<unknown>(null)
+  const error = solveError ? errorMessage(solveError) : ''
 
   const generateProblem = useCallback(async () => {
     generation.reset()
-    solver.reset()
+    setSolveError(null)
     setResult(null)
     setStep(0)
     setIsPlaying(false)
@@ -49,7 +53,7 @@ export function usePuzzleAlgorithm(algorithmId: string) {
       setTiles(generateLocalPuzzle(3, 3, scramble))
       generation.reset()
     }
-  }, [generation, scramble, solver])
+  }, [generation, scramble])
 
   useEffect(() => {
     if (algorithm && generatedFor.current !== algorithmId) {
@@ -72,21 +76,24 @@ export function usePuzzleAlgorithm(algorithmId: string) {
   }, [isPlaying, result, step])
 
   const runAlgorithm = async () => {
-    if (!algorithm || tiles.length === 0) return
-    solver.reset()
+    if (!algorithm || tiles.length === 0 || result || isSolving) return
+    const solveQuery = puzzleQueries.solve(3, 3, tiles, algorithm.id)
+    setSolveError(null)
     setResult(null)
     setStep(0)
+    setIsPlaying(false)
+    const cachedResult = queryClient.getQueryData(solveQuery.queryKey)
+    if (cachedResult) {
+      setResult(cachedResult)
+      return
+    }
+    setIsSolving(true)
     try {
-      setResult(
-        await solver.mutateAsync({
-          rows: 3,
-          columns: 3,
-          tiles,
-          algorithm: algorithm.id,
-        }),
-      )
-    } catch {
-      // The mutation keeps the backend error for the controls to display.
+      setResult(await queryClient.fetchQuery(solveQuery))
+    } catch (reason) {
+      setSolveError(reason)
+    } finally {
+      setIsSolving(false)
     }
   }
 
@@ -99,7 +106,7 @@ export function usePuzzleAlgorithm(algorithmId: string) {
     isPlaying,
     error,
     isGenerating: generation.isPending,
-    isSolving: solver.isPending,
+    isSolving,
     setScramble,
     setStep,
     setIsPlaying,

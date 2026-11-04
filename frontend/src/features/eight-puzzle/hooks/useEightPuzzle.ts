@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { useRouter } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   findPuzzleAlgorithm,
@@ -11,9 +12,11 @@ import type { SolveResult } from '../../../lib/api'
 import { generateLocalPuzzle } from '../../../lib/clientAlgorithms'
 import { areAdjacent, errorMessage, isSolved } from '../puzzle'
 import { puzzleMutations } from '../mutations'
+import { puzzleQueries } from '../queries'
 import { algorithmQueries } from '../../algorithms/queries'
 
 export function useEightPuzzle() {
+  const { queryClient } = useRouter().options.context
   const [algorithmId, setAlgorithmId] = useState('astar')
   const { data: serverAlgorithms } = useQuery({
     ...algorithmQueries.catalog(),
@@ -44,12 +47,9 @@ export function useEightPuzzle() {
     reset: resetGeneration,
     isPending: isGenerating,
   } = useMutation(puzzleMutations.generate())
-  const {
-    mutateAsync: solvePuzzle,
-    reset: resetSolve,
-    isPending: isSolving,
-    error: solveError,
-  } = useMutation(puzzleMutations.solve())
+  const [isSolving, setIsSolving] = useState(false)
+  const [solveError, setSolveError] = useState<unknown>(null)
+  const resetSolve = useCallback(() => setSolveError(null), [])
   const error = solveError ? errorMessage(solveError) : ''
   const playerSolved = isSolved(tiles, rows, columns)
 
@@ -123,28 +123,32 @@ export function useEightPuzzle() {
   }, [isPlaying, result, step])
 
   const runAlgorithm = useCallback(async () => {
-    if (tiles.length === 0) return
+    if (tiles.length === 0 || result || isSolving) return
+    const solveQuery = puzzleQueries.solve(rows, columns, tiles, algorithm.id)
     resetSolve()
     clearSolution()
+    const cachedResult = queryClient.getQueryData(solveQuery.queryKey)
+    if (cachedResult) {
+      setResult(cachedResult)
+      return
+    }
+    setIsSolving(true)
     try {
-      setResult(
-        await solvePuzzle({
-          rows,
-          columns,
-          tiles,
-          algorithm: algorithm.id,
-        }),
-      )
-    } catch {
-      // The mutation keeps the backend error for the controls to display.
+      setResult(await queryClient.fetchQuery(solveQuery))
+    } catch (reason) {
+      setSolveError(reason)
+    } finally {
+      setIsSolving(false)
     }
   }, [
     algorithm.id,
     clearSolution,
     columns,
+    isSolving,
+    queryClient,
     resetSolve,
+    result,
     rows,
-    solvePuzzle,
     tiles,
   ])
 

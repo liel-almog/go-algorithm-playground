@@ -6,7 +6,7 @@ import { Play, Shuffle } from 'lucide-react'
 import { PanelHeading } from '../../../components/PanelHeading'
 import { RangeControl } from '../../../components/RangeControl'
 import { Button } from '../../../components/ui/button'
-import type { Algorithm } from '../../../lib/api'
+import type { Algorithm } from '../../../lib/apiSchemas'
 
 interface PuzzleControlsProps {
   algorithm: Algorithm

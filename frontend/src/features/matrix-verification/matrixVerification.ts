@@ -1,4 +1,4 @@
-import type { MatrixClaim } from '../../lib/api'
+import type { MatrixClaim } from '../../lib/apiSchemas'
 
 type Matrix = number[][]
 

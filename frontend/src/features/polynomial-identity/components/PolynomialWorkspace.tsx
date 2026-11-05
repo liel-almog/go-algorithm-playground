@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import { DottedSurface, VisualizerPanel } from '../../../components/LabPanels'
 import { cn } from '../../../lib/utils'
-import type { PolynomialCheck } from '../../../lib/api'
+import type { PolynomialCheck } from '../../../lib/apiSchemas'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { CoefficientEditor } from './CoefficientEditor'
 

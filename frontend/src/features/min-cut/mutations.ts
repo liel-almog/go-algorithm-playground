@@ -1,6 +1,6 @@
 import { mutationOptions } from '@tanstack/react-query'
-import { api } from '../../lib/api'
-import type { Edge } from '../../lib/api'
+import { minCutService } from '../../services/min-cut.service'
+import type { Edge } from '../../lib/apiSchemas'
 import { problemMutationKeys } from '../problems/mutationKeys'
 
 export const minCutMutations = {
@@ -8,7 +8,7 @@ export const minCutMutations = {
     mutationOptions({
       mutationKey: problemMutationKeys.generate('minimum-cut'),
       mutationFn: (variables: { vertices: number }) =>
-        api.randomGraph(variables.vertices),
+        minCutService.generate(variables.vertices),
     }),
   solve: () =>
     mutationOptions({
@@ -18,6 +18,10 @@ export const minCutMutations = {
         edges: Edge[]
         trials: number
       }) =>
-        api.minimumCut(variables.vertices, variables.edges, variables.trials),
+        minCutService.solve(
+          variables.vertices,
+          variables.edges,
+          variables.trials,
+        ),
     }),
 }

@@ -1,6 +1,6 @@
 import { mutationOptions } from '@tanstack/react-query'
-import { api } from '../../lib/api'
-import type { MatrixClaim } from '../../lib/api'
+import { matrixVerificationService } from '../../services/matrix-verification.service'
+import type { MatrixClaim } from '../../lib/apiSchemas'
 import { problemMutationKeys } from '../problems/mutationKeys'
 
 const problemId = 'matrix-verification'
@@ -10,12 +10,12 @@ export const matrixVerificationMutations = {
     mutationOptions({
       mutationKey: problemMutationKeys.generate(problemId),
       mutationFn: (variables: { size: number }) =>
-        api.randomMatrices(variables.size),
+        matrixVerificationService.generate(variables.size),
     }),
   solve: () =>
     mutationOptions({
       mutationKey: problemMutationKeys.solve(problemId),
       mutationFn: ({ claim, rounds }: { claim: MatrixClaim; rounds: number }) =>
-        api.verifyMatrices(claim, rounds),
+        matrixVerificationService.solve(claim, rounds),
     }),
 }

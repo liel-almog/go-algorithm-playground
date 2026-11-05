@@ -1,5 +1,5 @@
 import { mutationOptions } from '@tanstack/react-query'
-import { api } from '../../lib/api'
+import { eightPuzzleService } from '../../services/eight-puzzle.service'
 import { problemMutationKeys } from '../problems/mutationKeys'
 
 const problemId = 'eight-puzzle'
@@ -13,6 +13,10 @@ export const puzzleMutations = {
         columns: number
         scramble: number
       }) =>
-        api.randomPuzzle(variables.rows, variables.columns, variables.scramble),
+        eightPuzzleService.generate(
+          variables.rows,
+          variables.columns,
+          variables.scramble,
+        ),
     }),
 }

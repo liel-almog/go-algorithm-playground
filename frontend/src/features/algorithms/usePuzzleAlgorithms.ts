@@ -4,7 +4,7 @@ import {
   isPuzzleAlgorithm,
   puzzleAlgorithms,
 } from '../../lib/algorithms'
-import type { AlgorithmCatalog } from '../../lib/api'
+import type { AlgorithmCatalog } from '../../lib/apiSchemas'
 import { algorithmQueries } from './queries'
 
 function selectPuzzleAlgorithms(catalog: AlgorithmCatalog) {

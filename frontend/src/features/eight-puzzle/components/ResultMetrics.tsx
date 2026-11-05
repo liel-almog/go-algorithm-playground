@@ -1,5 +1,5 @@
 import { MetricsPanel } from '../../../components/MetricsPanel'
-import type { SolveResult } from '../../../lib/api'
+import type { SolveResult } from '../../../lib/apiSchemas'
 import { formatDuration } from '../../../lib/formatDuration'
 
 interface ResultMetricsProps {

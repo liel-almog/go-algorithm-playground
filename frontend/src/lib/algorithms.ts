@@ -1,4 +1,4 @@
-import type { Algorithm, AlgorithmCatalog } from './api'
+import type { Algorithm, AlgorithmCatalog } from './apiSchemas'
 
 export type PuzzleAlgorithmId = 'astar' | 'bfs' | 'dfs'
 export type PuzzleAlgorithm = Algorithm & { id: PuzzleAlgorithmId }

@@ -1,6 +1,6 @@
 import { DottedSurface, VisualizerPanel } from '../../../components/LabPanels'
 import { cn } from '../../../lib/utils'
-import type { MatrixClaim, MatrixTrial } from '../../../lib/api'
+import type { MatrixClaim, MatrixTrial } from '../../../lib/apiSchemas'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { MatrixView } from './MatrixView'
 

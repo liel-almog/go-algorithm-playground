@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Graph, MinCutResult } from '../../../lib/api'
+import type { Graph, MinCutResult } from '../../../lib/apiSchemas'
 import { cn } from '../../../lib/utils'
 
 interface GraphVisualizerProps {

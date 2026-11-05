@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
-import { api, ApiError } from '../../lib/api'
+import { algorithmService } from '../../services/algorithm.service'
+import { ApiError } from '../../services/index.service'
 
 const fiveMinutes = 5 * 60 * 1000
 
@@ -8,7 +9,7 @@ export const algorithmQueries = {
   catalog: () =>
     queryOptions({
       queryKey: algorithmQueries.all(),
-      queryFn: ({ signal }) => api.algorithms(signal),
+      queryFn: ({ signal }) => algorithmService.all(signal),
       staleTime: fiveMinutes,
       retry: (failureCount, error) =>
         failureCount < 1 &&

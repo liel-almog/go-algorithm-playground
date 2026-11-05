@@ -1,6 +1,6 @@
 import { VisualizerPanel } from '../../../components/LabPanels'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
-import type { MinCutResult } from '../../../lib/api'
+import type { MinCutResult } from '../../../lib/apiSchemas'
 import type { GraphProblem } from '../minCut'
 import { GraphVisualizer } from './GraphVisualizer'
 

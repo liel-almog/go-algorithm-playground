@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { PuzzleAlgorithmId } from '../../lib/algorithms'
-import { api } from '../../lib/api'
+import { eightPuzzleService } from '../../services/eight-puzzle.service'
 
 export const puzzleQueries = {
   solve: (
@@ -20,7 +20,7 @@ export const puzzleQueries = {
         algorithm,
       ],
       queryFn: ({ signal }) =>
-        api.solvePuzzle(rows, columns, tiles, algorithm, signal),
+        eightPuzzleService.solve(rows, columns, tiles, algorithm, signal),
       retry: false,
       staleTime: 'static',
       gcTime: 5 * 60 * 1000,

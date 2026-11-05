@@ -1,6 +1,6 @@
 import { mutationOptions } from '@tanstack/react-query'
-import { api } from '../../lib/api'
-import type { PolynomialIdentity } from '../../lib/api'
+import { polynomialIdentityService } from '../../services/polynomial-identity.service'
+import type { PolynomialIdentity } from '../../lib/apiSchemas'
 import { problemMutationKeys } from '../problems/mutationKeys'
 
 const problemId = 'polynomial-identity'
@@ -10,7 +10,7 @@ export const polynomialIdentityMutations = {
     mutationOptions({
       mutationKey: problemMutationKeys.generate(problemId),
       mutationFn: (variables: { degree: number }) =>
-        api.randomPolynomial(variables.degree),
+        polynomialIdentityService.generate(variables.degree),
     }),
   solve: () =>
     mutationOptions({
@@ -18,6 +18,7 @@ export const polynomialIdentityMutations = {
       mutationFn: (variables: {
         identity: PolynomialIdentity
         rounds: number
-      }) => api.verifyPolynomial(variables.identity, variables.rounds),
+      }) =>
+        polynomialIdentityService.solve(variables.identity, variables.rounds),
     }),
 }

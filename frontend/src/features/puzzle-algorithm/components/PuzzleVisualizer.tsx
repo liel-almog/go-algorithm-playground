@@ -2,7 +2,7 @@ import { VisualizerPanel } from '../../../components/LabPanels'
 import { PuzzleStage } from '../../../components/PuzzleStage'
 import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
-import type { SolveResult } from '../../../lib/api'
+import type { SolveResult } from '../../../lib/apiSchemas'
 import { PuzzleBoard } from './PuzzleBoard'
 
 interface PuzzleVisualizerProps {

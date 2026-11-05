@@ -1,4 +1,4 @@
-import type { Edge } from '../../lib/api'
+import type { Edge } from '../../lib/apiSchemas'
 
 export type GraphProblem = { vertices: string[]; edges: Edge[] }
 

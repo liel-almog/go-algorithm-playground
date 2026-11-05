@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
-import type { MatrixClaim } from '../../../lib/api'
+import type { MatrixClaim } from '../../../lib/apiSchemas'
 import {
   claimsDiffer,
   generateLocalProblem,

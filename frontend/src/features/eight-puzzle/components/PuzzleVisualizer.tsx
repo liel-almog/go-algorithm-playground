@@ -1,7 +1,7 @@
 import { VisualizerPanel } from '../../../components/LabPanels'
 import { PuzzleStage } from '../../../components/PuzzleStage'
 import { PuzzlePlayback } from '../../../components/PuzzlePlayback'
-import type { SolveResult } from '../../../lib/api'
+import type { SolveResult } from '../../../lib/apiSchemas'
 import { VisualizerTopbar } from '../../../components/VisualizerTopbar'
 import { Button } from '../../../components/ui/button'
 import { PuzzleBoard } from './PuzzleBoard'

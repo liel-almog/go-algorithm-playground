@@ -1,5 +1,5 @@
 import { MetricsPanel } from '../../../components/MetricsPanel'
-import type { MinCutResult } from '../../../lib/api'
+import type { MinCutResult } from '../../../lib/apiSchemas'
 import { formatGraphTime } from '../minCut'
 
 interface MinCutMetricsProps {

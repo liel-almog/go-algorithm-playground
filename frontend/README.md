@@ -5,12 +5,13 @@ and Tailwind CSS. The Go API lives in `../backend`.
 
 ## Development
 
-The development server runs at `http://localhost:3000` and proxies `/api` to
-`http://localhost:8080`. Respect `AGENTS.md`: the servers are already running;
-do not start or restart them from an agent session.
+The development server runs at `http://localhost:3000`. Respect `AGENTS.md`:
+the servers are already running; do not start or restart them from an agent
+session.
 
-For a separate API origin, configure `VITE_API_BASE_URL` at build time and allow
-the frontend origin in the backend's `CORS_ALLOWED_ORIGINS` setting.
+API requests default to `https://api.algorithms.lielalmog.com/api`. Set
+`VITE_API_BASE_URL` at build time to override that URL, and allow the frontend
+origin in the backend's `CORS_ALLOWED_ORIGINS` setting.
 
 ## Checks
 
@@ -37,8 +38,8 @@ Do not create tests for this repository.
   Server results and request state belong to Query; editable inputs and playback
   state belong to React. Reset results when their inputs change.
 - `src/lib/apiSchemas.ts` defines runtime request and response contracts and
-  inferred TypeScript types. `src/lib/api.ts` handles bounded HTTP requests,
-  cancellation, error responses, and validation at the network boundary.
+  inferred TypeScript types. `src/services` groups API calls by problem and
+  shares Axios configuration, error handling, and response validation.
 - `src/components` contains shared accessible controls and Tailwind-based layout
   components. Keep styles on the elements they affect, use `cn` for conditional
   utilities, and use named variants for complex visual states. Extract repeated

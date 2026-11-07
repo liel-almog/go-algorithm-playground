@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/go-playground/validator/v10 v10.26.0
+	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v5 v5.4.2
 	gonum.org/v1/gonum v0.17.0
 )
@@ -17,4 +18,5 @@ require (
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 )

@@ -8,6 +8,7 @@ Network and web security vulnerabilities can lead to data leakage and unauthoriz
 2. HTTP servers MUST configure `ReadTimeout`, `WriteTimeout`, and `IdleTimeout`.
 3. Pprof endpoints MUST NEVER be exposed publicly.
 4. XML parsers MUST disable XXE — reject `<!DOCTYPE` and `<!ENTITY` declarations.
+5. Go HTTP servers MUST configure CORS with an explicit origin allowlist and preflight handling; an empty allowlist MUST deny cross-origin access.
 
 ---
 

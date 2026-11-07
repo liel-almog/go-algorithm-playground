@@ -20,7 +20,8 @@ go install github.com/air-verse/air@latest
 make run
 ```
 
-Open <http://localhost:8080/api/problems>. To use another port or restrict CORS:
+Open <http://localhost:8080/api/problems>. Set `CORS_ALLOWED_ORIGINS` to at least
+one exact frontend origin. To use another port and allow two frontend origins:
 
 ```bash
 PORT=3000 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000 make run
@@ -37,9 +38,11 @@ The Docker image uses the same Go build path and runs the compiled binary direct
 ## Docker Compose
 
 From `backend/`, build and start the API with `docker compose up -d --build`.
-Set `CORS_ALLOWED_ORIGINS` in the shell or a Compose `.env` file if the frontend
-needs cross-origin access. Compose binds the API to `127.0.0.1:8080`, so the
-included `nginx/api.algorithms.lielalmog.com.conf` can proxy to it from the
+Set `CORS_ALLOWED_ORIGINS` in the shell or a Compose `.env` file. List exact
+`http://` or `https://` origins, separated
+by commas; wildcards, paths, and malformed origins cause startup to fail. Compose
+binds the API to `127.0.0.1:8080`, so the included
+`nginx/api.algorithms.lielalmog.com.conf` can proxy to it from the
 host without exposing the API directly on other interfaces. Port 8080 must be
 free before starting the Compose service.
 
@@ -73,6 +76,10 @@ Every response includes a server-generated `X-Request-ID` and
 path, actual HTTP status, response size, and duration. CORS exposes the request
 ID so a browser client can attach it to a bug report. Request bodies and query
 strings are not logged.
+
+CORS only controls browser access to responses; it does not authenticate API
+clients. Preflight responses are limited to registered routes and methods, and
+the server caps request headers at 16 KiB.
 
 Unexpected panics are logged with a stack trace and return a generic error.
 Once a response has been committed, error handling does not append another

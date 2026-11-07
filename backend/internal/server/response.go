@@ -7,14 +7,16 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/liel-almog/go-algorithm-playground/internal/httpapi"
 )
 
-func (s *Server) handleHTTPError(c *echo.Context, err error) {
+func handleHTTPError(c *echo.Context, err error) {
 	status := http.StatusInternalServerError
 	message := errors.New("internal server error")
+	var panicErr *middleware.PanicStackError
 	var statusCoder echo.HTTPStatusCoder
-	if errors.As(err, &statusCoder) {
+	if !errors.As(err, &panicErr) && errors.As(err, &statusCoder) {
 		status = statusCoder.StatusCode()
 		message = errors.New(strings.ToLower(http.StatusText(status)))
 	}

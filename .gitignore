@@ -2,3 +2,4 @@
 /backend/tmp/
 /coverage.out
 .DS_Store
+.env

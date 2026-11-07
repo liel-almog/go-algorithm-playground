@@ -16,12 +16,13 @@ const (
 	readTimeout       = 15 * time.Second
 	writeTimeout      = 10 * time.Second
 	idleTimeout       = 60 * time.Second
+	maxHeaderBytes    = 16 << 10
 )
 
 // Run builds the server from the environment and serves it until ctx is
 // cancelled, then shuts down gracefully.
 func Run(ctx context.Context) error {
-	server := New(allowedOriginsFromEnv())
+	server := New()
 	return server.start(ctx, parsePort())
 }
 
@@ -35,6 +36,7 @@ func (s *Server) start(ctx context.Context, port string) error {
 			slog.Error("graceful shutdown failed", "error", err)
 		},
 		BeforeServeFunc: func(httpServer *http.Server) error {
+			httpServer.MaxHeaderBytes = maxHeaderBytes
 			httpServer.ReadHeaderTimeout = readHeaderTimeout
 			httpServer.ReadTimeout = readTimeout
 			httpServer.WriteTimeout = writeTimeout
@@ -42,7 +44,6 @@ func (s *Server) start(ctx context.Context, port string) error {
 			slog.Info("algorithm playground ready",
 				"url", "http://localhost:"+port,
 				"go", runtime.Version(),
-				"algorithms", s.catalog.AlgorithmCount(),
 			)
 			return nil
 		},

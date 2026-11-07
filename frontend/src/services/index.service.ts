@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ZodError } from 'zod'
 import type { z } from 'zod'
 
 const baseURL = (
@@ -8,39 +9,38 @@ const baseURL = (
 
 export const apiInstance = axios.create({ baseURL, timeout: 15_000 })
 
-export class ApiError extends Error {
-  readonly status: number
-
-  constructor(message: string, status: number) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-  }
-}
-
-export function errorHelper(error: unknown): Error {
+export function errorHelper(error: unknown, uncatchedMessage?: string): Error {
   if (axios.isAxiosError(error)) {
     if (error.response) {
       const data: unknown = error.response.data
-      const status = error.response.status
-      const message =
+
+      if (
         typeof data === 'object' &&
         data !== null &&
         'error' in data &&
         typeof data.error === 'string'
-          ? data.error
-          : `Request failed (${status})`
-      return new ApiError(message, status)
+      ) {
+        error.message = data.error
+      }
+    } else if (!axios.isCancel(error)) {
+      error.message =
+        error.code === axios.AxiosError.ECONNABORTED ||
+        error.code === axios.AxiosError.ETIMEDOUT
+          ? 'The request timed out. Please try again.'
+          : 'Could not reach the server. Check your connection and try again.'
     }
-    if (axios.isCancel(error)) return error
-    return new Error(
-      error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT'
-        ? 'The request timed out. Please try again.'
-        : 'Could not reach the server. Check your connection and try again.',
-      { cause: error },
-    )
+
+    return error
   }
-  return error instanceof Error ? error : new Error(String(error))
+
+  if (error instanceof ZodError) return error
+
+  return new Error(
+    uncatchedMessage ||
+      (error instanceof Error && error.message) ||
+      'An unexpected error occurred. Please try again.',
+    { cause: error },
+  )
 }
 
 export function parseResponse<TSchema extends z.ZodType>(
@@ -53,5 +53,6 @@ export function parseResponse<TSchema extends z.ZodType>(
       'The server returned an invalid response. Please try again.',
     )
   }
+
   return parsed.data
 }

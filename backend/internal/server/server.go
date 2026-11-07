@@ -2,43 +2,57 @@
 package server
 
 import (
-	"slices"
+	"log/slog"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/liel-almog/go-algorithm-playground/internal/controllers"
 	"github.com/liel-almog/go-algorithm-playground/internal/routes"
 	"github.com/liel-almog/go-algorithm-playground/internal/services"
 )
 
-// Server hosts a collection of independent problems. It owns only the
-// cross-cutting concerns: CORS, middleware, limits, errors, and discovery.
+// Server hosts a collection of independent problems and their HTTP middleware.
 type Server struct {
-	catalog        *services.Catalog
-	allowedOrigins []string
-	apiRoutes      apiRouteRegistry
-	handler        *echo.Echo
-	algorithmSlots chan struct{}
+	handler *echo.Echo
 }
 
-func New(allowedOrigins []string) *Server {
-	if len(allowedOrigins) == 0 {
-		allowedOrigins = []string{"*"}
-	}
-	server := &Server{
-		catalog:        services.NewCatalog(),
-		allowedOrigins: slices.Clone(allowedOrigins),
-		apiRoutes:      make(apiRouteRegistry),
-		algorithmSlots: algorithmSlots(),
-	}
+func New() *Server {
+	godotenv.Load()
+
 	e := echo.New()
-	e.HTTPErrorHandler = server.handleHTTPError
-	// Apply diagnostics and recovery before routing, including CORS preflights.
-	e.Pre(server.requestMetadata, server.logRequests, server.recoverPanic, server.cors)
-	routes.Register(e, controllers.New(server.catalog), server.registerAPI, server.limitAlgorithm)
-	e.RouteNotFound("/api", server.apiFallback)
-	e.RouteNotFound("/api/*", server.apiFallback)
-	server.handler = e
-	return server
+	e.HTTPErrorHandler = handleHTTPError
+
+	e.Use(
+		cors(),
+		middleware.Recover(),
+	)
+
+	e.Pre(
+		requestMetadata,
+		middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			HandleError:     true,
+			LogLatency:      true,
+			LogMethod:       true,
+			LogURIPath:      true,
+			LogStatus:       true,
+			LogResponseSize: true,
+			LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+				slog.InfoContext(c.Request().Context(), "request",
+					"requestId", c.Response().Header().Get(echo.HeaderXRequestID),
+					"method", v.Method,
+					"path", v.URIPath,
+					"status", v.Status,
+					"bytes", v.ResponseSize,
+					"duration", v.Latency,
+				)
+				return nil
+			},
+		}),
+	)
+
+	routes.Register(e, controllers.New(services.NewCatalog()), limitAlgorithm(algorithmSlots()))
+	return &Server{handler: e}
 }
 
 func (s *Server) Handler() *echo.Echo { return s.handler }

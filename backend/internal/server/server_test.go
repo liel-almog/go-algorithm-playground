@@ -10,8 +10,13 @@ import (
 	"testing"
 )
 
+func setupServer(t *testing.T) *Server {
+	t.Setenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+	return New()
+}
+
 func TestHealthAndCORS(t *testing.T) {
-	server := New([]string{"http://localhost:3000"})
+	server := setupServer(t)
 
 	request := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	request.Header.Set("Origin", "http://localhost:3000")
@@ -26,7 +31,8 @@ func TestHealthAndCORS(t *testing.T) {
 }
 
 func TestStaticAppIsServed(t *testing.T) {
-	server := New(nil)
+	server := setupServer(t)
+
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, request)
@@ -39,7 +45,8 @@ func TestStaticAppIsServed(t *testing.T) {
 }
 
 func TestPuzzleProblemAcceptsRowAndColumn(t *testing.T) {
-	server := New(nil)
+	server := setupServer(t)
+
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/api/problems/eight-puzzle/generate",
@@ -59,7 +66,8 @@ func TestPuzzleProblemAcceptsRowAndColumn(t *testing.T) {
 }
 
 func TestMatrixVerificationRoutesValidateRequests(t *testing.T) {
-	server := New(nil)
+	server := setupServer(t)
+
 	routes := []string{
 		"/api/problems/matrix-verification/solve",
 		"/api/problems/matrix-verification/freivalds/solve",

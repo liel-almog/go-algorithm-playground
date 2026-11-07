@@ -12,6 +12,8 @@ session.
 API requests default to `https://api.algorithms.lielalmog.com/api`. Set
 `VITE_API_BASE_URL` at build time to override that URL, and allow the frontend
 origin in the backend's `CORS_ALLOWED_ORIGINS` setting.
+The production build uses `.env.production` for that API URL. `npm run deploy`
+builds the frontend before uploading it to Cloudflare.
 
 ## Checks
 

@@ -53,6 +53,10 @@ Before writing or reviewing code, ask three questions:
 2. **What can an attacker control?** — Which inputs flow into sensitive operations? (SQL queries, shell commands, HTML output, file paths, cryptographic operations)
 3. **What is the blast radius?** — If this defense fails, what's the worst outcome? (Data leak, RCE, privilege escalation, denial of service)
 
+## CORS Rule
+
+Always configure CORS for Go HTTP servers. Use an explicit allowlist of trusted origins, handle preflight requests, and permit only the methods and headers the API needs. Do not combine wildcard origins with credentialed requests. An empty allowlist should deny cross-origin access; CORS does not replace authentication or CSRF protection.
+
 ## Severity Levels
 
 | Level | DREAD | Meaning |

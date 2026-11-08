@@ -17,6 +17,7 @@ export interface Problem {
   art: ProblemArtKind
   tone: number
   to: ProblemPath
+  apiInDevelopment?: boolean
 }
 
 export const problems: Problem[] = [
@@ -45,6 +46,7 @@ export const problems: Problem[] = [
     art: 'graph',
     tone: 1,
     to: '/problems/minimum-cut',
+    apiInDevelopment: true,
   },
   {
     number: '03',
@@ -71,6 +73,7 @@ export const problems: Problem[] = [
     art: 'polynomial',
     tone: 3,
     to: '/problems/polynomial-identity',
+    apiInDevelopment: true,
   },
 ]
 

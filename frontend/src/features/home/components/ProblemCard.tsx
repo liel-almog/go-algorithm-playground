@@ -19,11 +19,18 @@ export function ProblemCard({ problem }: ProblemCardProps) {
       to={problem.to}
       className={`flex min-h-[520px] flex-col overflow-hidden rounded-[14px] border border-border p-7 transition-[transform,box-shadow] duration-200 hover:-translate-y-[5px] hover:shadow-[var(--shadow)] max-[680px]:min-h-[470px] ${toneClasses[problem.tone] ?? toneClasses[0]}`}
     >
-      <div className="flex justify-between font-mono text-xs text-[#707970]">
+      <div className="flex items-start justify-between gap-3 font-mono text-xs text-[#707970]">
         <span>{problem.number}</span>
-        <i className="rounded-full bg-white/55 px-2 py-[5px] font-sans text-xs font-semibold">
-          {problem.type}
-        </i>
+        <div className="flex flex-wrap justify-end gap-2">
+          {problem.apiInDevelopment && (
+            <span className="rounded-full bg-[#f9e8d7] px-2 py-[5px] font-sans text-xs font-semibold text-[#8a4b1c]">
+              API in development
+            </span>
+          )}
+          <span className="rounded-full bg-white/55 px-2 py-[5px] font-sans text-xs font-semibold">
+            {problem.type}
+          </span>
+        </div>
       </div>
       <div className="grid min-h-[205px] place-items-center">
         <ProblemArt kind={problem.art} />

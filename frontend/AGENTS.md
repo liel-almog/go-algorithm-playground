@@ -1,7 +1,13 @@
-The server is ALWAYS open at http://localhost:3000 - DO NOT RUN it yourself
-MINIMIZE the amount of CSS classes you create, if you do use CSS MODULES, Use TAILWIND as much as you can
+# Frontend guidance
 
-for every component that you need to style, use the CSS module classes defined in the component's `.module.css` file. DO NOT use other CSS files that belong to another component.
+## Development server
+
+The server is already running at `http://localhost:3000`. Do not start or restart it.
+
+## Styling
+
+- Create as few CSS classes as possible. Use Tailwind as much as you can.
+- For each component you style, use classes from that component's `.module.css` file. Do not use CSS files belonging to another component.
 
 <!-- intent-skills:start -->
 

@@ -1,2 +1,4 @@
-Use as little amount of wrappers as you can
-Use golang built-in packages as much as possible
+# Backend guidance
+
+- Keep wrappers to a minimum.
+- Prefer Go's standard library whenever possible.

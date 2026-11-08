@@ -1,11 +1,12 @@
-Two folders
+# Repository guidance
 
-backend/ stores the go backend code
+## Project layout
 
-frontend/ stores the web - react-ts
+- `backend/` contains the Go backend.
+- `frontend/` contains the React and TypeScript web app.
 
-Use best practices for each language
+## Working rules
 
-DO NOT create tests - unless explicitly requested
-
-Codex SHOULD NOT run or restart the backend; it is already running.
+- Follow best practices for the language and framework in each folder.
+- Do not create tests unless the user explicitly requests them.
+- Do not run or restart the backend. It is already running.

@@ -1,0 +1,15 @@
+services:
+  backend:
+    image: ghcr.io/liel-almog/go-algorithm-playground-backend:main
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://algorithms.lielalmog.com,https://algoritms.lielalmog.com}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - api
+
+networks:
+  api:
+    name: algorithm-playground-api

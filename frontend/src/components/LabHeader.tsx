@@ -1,6 +1,7 @@
 import { PageSection } from './PageLayout'
 import { Eyebrow } from './Eyebrow'
 import { Link } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 
 interface LabHeaderProps {
   eyebrow: string
@@ -19,9 +20,10 @@ export function LabHeader({
     <PageSection className="pt-[38px] pb-[34px] max-[620px]:pt-[25px]">
       <Link
         to="/"
-        className="text-xs font-semibold text-muted-foreground hover:text-primary"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
       >
-        ← All problems
+        <ArrowLeft aria-hidden="true" className="size-3.5 shrink-0" />
+        <span>All problems</span>
       </Link>
       <div className="flex items-end justify-between gap-10 pt-[34px] max-[620px]:flex-col max-[620px]:items-start max-[620px]:gap-[18px]">
         <div>

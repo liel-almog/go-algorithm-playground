@@ -107,7 +107,7 @@ export function MatrixWorkspace({
             <div
               key={index}
               className={cn(
-                'flex justify-between rounded px-2 py-1.5 font-mono text-xs leading-[normal]',
+                'flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded px-2 py-1.5 font-mono text-xs leading-[normal]',
                 trial.passed
                   ? 'bg-[#e9f2eb] text-[#397155]'
                   : 'bg-[#f9e8e1] text-[#974f36]',

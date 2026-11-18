@@ -17,7 +17,7 @@ export function MinCutWorkspace({ graph, result }: MinCutWorkspaceProps) {
         detail={`${graph.vertices.length} vertices · ${graph.edges.length} edges`}
       />
       <GraphVisualizer graph={graph} result={result} />
-      <div className="flex h-[49px] items-center justify-end gap-5 border-t px-5 text-xs text-[#7f8881] max-[620px]:justify-center">
+      <div className="flex h-[49px] items-center justify-end gap-5 border-t px-5 text-xs text-[#7f8881] max-[620px]:h-auto max-[620px]:min-h-[49px] max-[620px]:flex-wrap max-[620px]:justify-center max-[620px]:gap-x-3 max-[620px]:gap-y-2 max-[620px]:px-3 max-[620px]:py-3">
         <span className="flex items-center gap-1.5">
           <i className="size-2 rounded-full bg-[#77aa87]" /> Partition A
         </span>

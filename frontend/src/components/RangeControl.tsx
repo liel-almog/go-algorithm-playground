@@ -31,7 +31,7 @@ export function RangeControl({
         {label} <strong className="font-mono text-foreground">{value}</strong>
       </span>
       <input
-        className="my-[15px] mb-2 h-1 w-full cursor-pointer accent-primary"
+        className="my-1 h-11 w-full cursor-pointer accent-primary"
         type="range"
         min={min}
         max={max}

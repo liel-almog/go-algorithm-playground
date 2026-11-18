@@ -75,7 +75,7 @@ export function ProblemCatalog() {
           ) : null}
         </div>
         <div
-          className="flex max-w-full gap-[5px] overflow-x-auto rounded-[9px] border border-border bg-[#eeefe9] p-1 max-[680px]:w-full"
+          className="flex max-w-full gap-[5px] flex-wrap rounded-[9px] border border-border bg-[#eeefe9] p-1 max-[680px]:w-full"
           role="group"
           aria-label="Filter by problem type"
         >
@@ -83,7 +83,7 @@ export function ProblemCatalog() {
             <Button
               variant="ghost"
               key={option}
-              className="min-h-[40px] rounded-md px-3 text-xs font-bold text-[#727b74] aria-pressed:bg-card aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_12px_#273d3020] max-[680px]:min-h-11"
+              className="min-h-[40px] rounded-md px-3 text-xs font-bold text-[#727b74] aria-pressed:bg-card aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_12px_#273d3020] max-[680px]:min-h-11 max-[680px]:flex-1"
               onClick={() => setFamily(option)}
               aria-pressed={family === option}
             >

@@ -17,7 +17,7 @@ export function ProblemCard({ problem }: ProblemCardProps) {
   return (
     <Link
       to={problem.to}
-      className={`flex min-h-[520px] flex-col overflow-hidden rounded-[14px] border border-border p-7 transition-[transform,box-shadow] duration-200 hover:-translate-y-[5px] hover:shadow-[var(--shadow)] max-[680px]:min-h-[470px] ${toneClasses[problem.tone] ?? toneClasses[0]}`}
+      className={`flex min-h-[520px] flex-col overflow-hidden rounded-[14px] border border-border p-7 transition-[transform,box-shadow] duration-200 hover:-translate-y-[5px] hover:shadow-[var(--shadow)] max-[680px]:min-h-0 max-[680px]:gap-5 max-[680px]:p-5 ${toneClasses[problem.tone] ?? toneClasses[0]}`}
     >
       <div className="flex items-start justify-between gap-3 font-mono text-xs text-[#707970]">
         <span>{problem.number}</span>
@@ -32,7 +32,7 @@ export function ProblemCard({ problem }: ProblemCardProps) {
           </span>
         </div>
       </div>
-      <div className="grid min-h-[205px] place-items-center">
+      <div className="grid min-h-[205px] place-items-center max-[680px]:min-h-[170px]">
         <ProblemArt kind={problem.art} />
       </div>
       <div>

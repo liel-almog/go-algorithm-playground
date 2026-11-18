@@ -6,9 +6,9 @@ import { buttonVariants } from '../../components/ui/button'
 export function HomePage() {
   return (
     <div>
-      <PageSection className="grid min-h-[520px] grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] items-end gap-12 py-[96px] max-[1100px]:min-h-0 max-[1100px]:grid-cols-1 max-[1100px]:gap-8 max-[680px]:py-[60px]">
+      <PageSection className="grid min-h-[520px] grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] items-end gap-12 py-[96px] max-[1100px]:min-h-0 max-[1100px]:grid-cols-1 max-[1100px]:gap-8 max-[680px]:gap-6 max-[680px]:py-10">
         <div>
-          <span className="flex items-center gap-[9px] text-xs font-bold tracking-[0.15em] text-primary uppercase">
+          <span className="flex items-center gap-[9px] text-xs max-[380px]:text-[0.65rem] font-bold tracking-[0.15em] text-primary uppercase">
             <span className="size-[7px] rounded-full bg-orange shadow-[0_0_0_5px_#e3835520]" />{' '}
             Interactive algorithm laboratory
           </span>
@@ -28,7 +28,9 @@ export function HomePage() {
           </p>
           <a
             href="#problems"
-            className={buttonVariants({ className: 'min-h-12 px-5' })}
+            className={buttonVariants({
+              className: 'min-h-12 px-5 max-[680px]:w-full',
+            })}
           >
             Choose a problem <span>↓</span>
           </a>

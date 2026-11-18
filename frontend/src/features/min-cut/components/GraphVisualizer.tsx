@@ -25,7 +25,7 @@ export function GraphVisualizer({ graph, result }: GraphVisualizerProps) {
     <div className="relative min-h-[405px] bg-[radial-gradient(circle_at_center,#f9faf6_0,#f3f4ef_70%)] max-[620px]:min-h-[330px]">
       <svg
         className="block h-[405px] w-full max-[620px]:h-[330px]"
-        viewBox="0 0 720 450"
+        viewBox="135 0 450 450"
         role="img"
         aria-label="Generated graph and minimum cut"
       >
@@ -79,7 +79,7 @@ export function GraphVisualizer({ graph, result }: GraphVisualizerProps) {
       </svg>
       <div
         className={cn(
-          'absolute bottom-[13px] left-1/2 -translate-x-1/2 rounded-[5px] border bg-white/87 px-[11px] py-[7px] text-xs',
+          'w-max max-w-[calc(100%-24px)] text-center absolute bottom-[13px] left-1/2 -translate-x-1/2 rounded-[5px] border bg-white/87 px-[11px] py-[7px] text-xs',
           result ? 'border-[#e6cbbf] text-[#8b4d34]' : 'text-[#879087]',
         )}
       >

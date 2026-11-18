@@ -9,7 +9,7 @@ export function PuzzleBoardFrame({
   return (
     <div
       className={cn(
-        'grid aspect-square w-[min(310px,76vw)] grid-cols-3 gap-[7px] rounded-xl bg-[#284838] p-3 shadow-[0_20px_38px_#1a382a2c,inset_0_0_0_1px_#ffffff1b]',
+        'grid aspect-square w-[min(310px,100%)] grid-cols-3 gap-[7px] rounded-xl bg-[#284838] p-3 shadow-[0_20px_38px_#1a382a2c,inset_0_0_0_1px_#ffffff1b]',
         className,
       )}
       {...props}

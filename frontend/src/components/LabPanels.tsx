@@ -20,7 +20,7 @@ export function VisualizerPanel({
   return (
     <section
       className={cn(
-        'min-h-[510px] min-w-0 overflow-hidden rounded-[9px] border bg-white/72 shadow-[0_15px_45px_#28352c0d]',
+        'min-h-[510px] max-[680px]:min-h-0 min-w-0 overflow-hidden rounded-[9px] border bg-white/72 shadow-[0_15px_45px_#28352c0d]',
         className,
       )}
       {...props}

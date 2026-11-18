@@ -39,7 +39,7 @@ function MatrixCell({
     <input
       aria-label={`${label}, row ${row + 1}, column ${column + 1}`}
       className={cn(
-        'aspect-square w-full min-w-0 rounded border border-[#dce3da] p-0 text-center font-mono text-xs leading-[normal] hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary',
+        'aspect-square w-full min-w-0 rounded border border-[#dce3da] p-0 text-center font-mono text-xs leading-[normal] max-[680px]:text-base hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary',
         highlight
           ? 'bg-[#f5d9cd] text-[#944e35]'
           : 'bg-[#f6f8f4] text-foreground',
@@ -91,11 +91,16 @@ export function MatrixView({
           {matrix.length} × {matrix.length}
         </span>
       </legend>
-      <div className="overflow-x-auto py-1">
+      {matrix.length > 4 && (
+        <p className="mb-2 text-xs text-muted-foreground min-[681px]:hidden">
+          Swipe across the matrix to edit more columns.
+        </p>
+      )}
+      <div className="overflow-x-auto overscroll-x-contain py-1">
         <div
-          className="mx-auto grid w-max gap-0.5"
+          className="mx-auto grid w-max min-w-0 gap-0.5 [--cell-size:32px] max-[680px]:[--cell-size:44px]"
           style={{
-            gridTemplateColumns: `repeat(${matrix.length}, 32px)`,
+            gridTemplateColumns: `repeat(${matrix.length}, var(--cell-size))`,
           }}
         >
           {matrix.flatMap((values, row) =>

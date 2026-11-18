@@ -21,7 +21,7 @@ function EvaluationRow({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
       className={cn(
-        'grid grid-cols-[minmax(100px,1.3fr)_minmax(55px,0.8fr)_minmax(55px,0.8fr)_minmax(75px,1fr)] gap-2 px-2.5 py-[7px] font-mono text-xs leading-[normal]',
+        'grid grid-cols-[minmax(100px,1.3fr)_minmax(55px,0.8fr)_minmax(55px,0.8fr)_minmax(75px,1fr)] gap-2 px-2.5 py-[7px] max-[680px]:grid-cols-[minmax(0,1.2fr)_repeat(2,minmax(0,0.7fr))_minmax(0,1fr)] max-[680px]:gap-1 max-[680px]:px-1 max-[680px]:wrap-anywhere font-mono text-xs leading-[normal]',
         className,
       )}
       {...props}
@@ -61,7 +61,7 @@ export function PolynomialWorkspace({
           }
         />
       </DottedSurface>
-      <div className="min-h-[135px] overflow-x-auto border-t px-5 py-3">
+      <div className="min-h-[135px] overflow-x-auto border-t px-5 py-3 max-[680px]:px-3">
         <EvaluationRow className="text-muted-foreground uppercase">
           <span>Random point</span>
           <span>P(r)</span>

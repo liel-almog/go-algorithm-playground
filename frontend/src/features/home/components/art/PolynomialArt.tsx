@@ -1,6 +1,6 @@
 export function PolynomialArt() {
   return (
-    <div className="relative flex items-center gap-[26px]">
+    <div className="relative flex items-center gap-[26px] max-[380px]:gap-3">
       <span className="rounded-full bg-white p-[22px] font-mono text-[1.15rem] leading-[normal] font-medium text-[#6f5360] shadow-[0_12px_25px_#51364614]">
         P(x)
       </span>

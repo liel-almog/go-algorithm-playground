@@ -19,7 +19,7 @@ export function VerificationRoundsControl({
       >
         Number of tries
       </label>
-      <div className="mt-2 grid grid-cols-[40px_1fr_40px] items-center gap-2 rounded-lg border border-input bg-background p-1">
+      <div className="mt-2 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 rounded-lg border border-input bg-background p-1">
         <Button
           variant="secondary"
           className="h-10 shadow-none"
@@ -67,7 +67,7 @@ export function VerificationRoundsControl({
             aria-pressed={rounds === tries}
             disabled={disabled}
             onClick={() => onChange(tries)}
-            className="rounded-md border border-border px-1 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 aria-pressed:border-primary aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-primary"
+            className="min-h-11 rounded-md border border-border px-1 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 aria-pressed:border-primary aria-pressed:bg-secondary aria-pressed:font-semibold aria-pressed:text-primary"
           >
             {tries}
           </button>

@@ -20,15 +20,15 @@ export function LabHeader({
     <PageSection className="pt-[38px] pb-[34px] max-[620px]:pt-[25px]">
       <Link
         to="/"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
+        className="inline-flex items-center min-h-11 gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
       >
         <ArrowLeft aria-hidden="true" className="size-3.5 shrink-0" />
         <span>All problems</span>
       </Link>
-      <div className="flex items-end justify-between gap-10 pt-[34px] max-[620px]:flex-col max-[620px]:items-start max-[620px]:gap-[18px]">
+      <div className="flex items-end justify-between gap-10 pt-[34px] max-[620px]:flex-col max-[620px]:items-start max-[620px]:gap-3 max-[620px]:pt-4">
         <div>
           <Eyebrow>{eyebrow}</Eyebrow>
-          <h1 className="mt-[7px] mb-[9px] text-[clamp(2.4rem,5vw,4.3rem)] leading-none font-semibold tracking-[-0.06em] max-[620px]:text-[2.8rem]">
+          <h1 className="mt-[7px] mb-[9px] text-[clamp(2.4rem,5vw,4.3rem)] leading-none font-semibold tracking-[-0.06em] max-[620px]:text-[clamp(2rem,9vw,2.8rem)] max-[620px]:wrap-anywhere">
             {title}
           </h1>
           <p className="max-w-[650px] text-[0.84rem] leading-[1.65] text-muted-foreground">
